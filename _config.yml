@@ -1,0 +1,44 @@
+# GitHub Pages Configuration
+# This file tells GitHub Pages how to build and deploy the site
+
+# Include all files except those in .gitignore
+include:
+  - _config.yml
+  - README.md
+  - index.html
+  - assets/
+
+# Exclude development files
+exclude:
+  - node_modules/
+  - .git/
+  - .gitignore
+  - README.md
+
+# Site settings
+title: "CertMate - SSL Certificate Management System"
+description: "Powerful SSL certificate management system with multi-DNS provider support and REST API"
+url: "https://fabriziosalmi.github.io"
+baseurl: "/certmate-website"
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+
+# GitHub Pages settings
+plugins:
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+# SEO settings
+author: Fabrizio Salmi
+twitter:
+  username: fabriziosalmi
+  card: summary_large_image
+
+# Social links
+github_username: fabriziosalmi
+repository: fabriziosalmi/certmate
+
+# Google Analytics (uncomment and add your tracking ID)
+# google_analytics: UA-XXXXXXXX-X

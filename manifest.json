@@ -1,0 +1,21 @@
+{
+  "name": "CertMate - SSL Certificate Management System",
+  "short_name": "CertMate",
+  "description": "Powerful SSL certificate management system with multi-DNS provider support and REST API",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "./assets/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "./assets/favicon.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon"
+    }
+  ]
+}

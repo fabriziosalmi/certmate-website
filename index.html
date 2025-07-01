@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CertMate - SSL Certificate Management System</title>
+    
+    <!-- Enhanced SEO Meta Tags -->
+    <meta name="author" content="Fabrizio Salmi">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="canonical" href="https://fabriziosalmi.github.io/certmate-website/">
+    
+    <!-- PWA Support -->
+    <link rel="manifest" href="./manifest.json">
+    
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "CertMate",
+        "description": "A powerful SSL certificate management system designed for modern infrastructure. Built with multi-DNS provider support, Docker containerization, and comprehensive REST API.",
+        "url": "https://fabriziosalmi.github.io/certmate-website/",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Linux, Windows, macOS",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "author": {
+            "@type": "Person",
+            "name": "Fabrizio Salmi",
+            "url": "https://github.com/fabriziosalmi"
+        },
+        "codeRepository": "https://github.com/fabriziosalmi/certmate",
+        "programmingLanguage": "Python",
+        "runtimePlatform": "Docker"
+    }
+    </script>
+    <meta name="description" content="CertMate is a powerful SSL certificate management system designed for modern infrastructure. Built with multi-DNS provider support, Docker containerization, and comprehensive REST API.">
+    <meta name="keywords" content="SSL certificates, Let's Encrypt, certificate management, Docker, API, multi-DNS provider, automation">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://fabriziosalmi.github.io/certmate-website/">
+    <meta property="og:title" content="CertMate - SSL Certificate Management System">
+    <meta property="og:description" content="Powerful SSL certificate management system with multi-DNS provider support and REST API">
+    <meta property="og:image" content="https://fabriziosalmi.github.io/certmate-website/assets/og-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://fabriziosalmi.github.io/certmate-website/">
+    <meta property="twitter:title" content="CertMate - SSL Certificate Management System">
+    <meta property="twitter:description" content="Powerful SSL certificate management system with multi-DNS provider support and REST API">
+    <meta property="twitter:image" content="https://fabriziosalmi.github.io/certmate-website/assets/og-image.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+    <link rel="icon" type="image/x-icon" href="./assets/favicon.ico">
+    <link rel="apple-touch-icon" href="./assets/favicon.svg">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="./assets/styles.css">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <!-- Navigation -->
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-shield-alt brand-icon" aria-hidden="true"></i>
+                <span class="brand-text">CertMate</span>
+            </div>
+            <div class="nav-menu" id="nav-menu">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#providers" class="nav-link">DNS Providers</a>
+                <a href="#installation" class="nav-link">Installation</a>
+                <a href="#api" class="nav-link">API</a>
+                <a href="#docs" class="nav-link">Documentation</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github" aria-hidden="true"></i>
+                    GitHub
+                    <span class="sr-only">(opens in new tab)</span>
+                </a>
+            </div>
+            <button class="nav-hamburger" id="nav-hamburger" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main content wrapper -->
+    <main id="main-content">
+
+    <!-- Hero Section -->
+    <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fas fa-certificate" aria-hidden="true"></i>
+                    <span>Enterprise-Ready SSL Management</span>
+                </div>
+                <h1 id="hero-title" class="hero-title">
+                    Secure Your Infrastructure with
+                    <span class="gradient-text">CertMate</span>
+                </h1>
+                <p class="hero-description">
+                    A powerful SSL certificate management system designed for modern infrastructure. 
+                    Built with multi-DNS provider support, Docker containerization, and comprehensive REST API.
+                </p>
+                <div class="hero-stats" role="img" aria-label="CertMate statistics">
+                    <div class="stat">
+                        <div class="stat-number" aria-label="19 plus">19+</div>
+                        <div class="stat-label">DNS Providers</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">Multi</div>
+                        <div class="stat-label">Account Support</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number" aria-label="250 plus">250+</div>
+                        <div class="stat-label">GitHub Stars</div>
+                    </div>
+                </div>
+                <div class="hero-buttons">
+                    <a href="#installation" class="btn btn-primary">
+                        <i class="fas fa-rocket" aria-hidden="true"></i>
+                        Get Started
+                    </a>
+                    <a href="https://github.com/fabriziosalmi/certmate" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
+                        <i class="fab fa-github" aria-hidden="true"></i>
+                        View on GitHub
+                        <span class="sr-only">(opens in new tab)</span>
+                    </a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="terminal-window" role="img" aria-label="CertMate terminal demonstration">
+                    <div class="terminal-header">
+                        <div class="terminal-buttons">
+                            <span class="btn-close" aria-hidden="true"></span>
+                            <span class="btn-minimize" aria-hidden="true"></span>
+                            <span class="btn-maximize" aria-hidden="true"></span>
+                        </div>
+                        <div class="terminal-title">CertMate Terminal</div>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-prompt" aria-hidden="true">$</span>
+                            <span class="terminal-command">docker-compose up -d</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-output">✅ CertMate started successfully</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt" aria-hidden="true">$</span>
+                            <span class="terminal-command">curl -X POST /api/settings/dns-providers/cloudflare/accounts \</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-command-continued">     -d '{"account_id": "production", "config": {...}}'</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-output">✅ Production account added</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-prompt" aria-hidden="true">$</span>
+                            <span class="terminal-command">curl -X POST /api/certificates/create \</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-command-continued">     -d '{"domain": "api.company.com", "account_id": "production"}'</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="terminal-output">🔐 Certificate created for api.company.com</span>
+                        </div>
+                        <div class="terminal-cursor" aria-hidden="true">_</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features" aria-labelledby="features-title">
+        <div class="container">
+            <div class="section-header">
+                <h2 id="features-title" class="section-title">Why Choose CertMate?</h2>
+                <p class="section-description">
+                    CertMate solves the complexity of SSL certificate management in modern distributed architectures
+                </p>
+            </div>
+            <div class="features-grid" role="list">
+                <div class="feature-card" role="listitem">
+                    <div class="feature-icon" aria-hidden="true">
+                        <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <h3 class="feature-title">Zero-Downtime Automation</h3>
+                    <p class="feature-description">
+                        Certificates renew automatically 30 days before expiry with intelligent scheduling
+                    </p>
+                </div>
+                <div class="feature-card" role="listitem">
+                    <div class="feature-icon" aria-hidden="true">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <h3 class="feature-title">Multi-Cloud Support</h3>
+                    <p class="feature-description">
+                        Works with 19 DNS providers including Cloudflare, AWS, Azure, GCP with multi-account support for enterprise environments
+                    </p>
+                </div>
+                <div class="feature-card" role="listitem">
+                    <div class="feature-icon" aria-hidden="true">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h3 class="feature-title">Enterprise-Ready</h3>
+                    <p class="feature-description">
+                        Docker, Kubernetes, REST API, and monitoring built-in for production use
+                    </p>
+                </div>
+                <div class="feature-card" role="listitem">
+                    <div class="feature-icon" aria-hidden="true">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="feature-title">Multi-Account Support</h3>
+                    <p class="feature-description">
+                        Manage multiple accounts per DNS provider for enterprise environments, staging/production separation, and multi-region deployments
+                    </p>
+                </div>
+                <div class="feature-card" role="listitem">
+                    <div class="feature-icon" aria-hidden="true">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <h3 class="feature-title">Simple Integration</h3>
+                    <p class="feature-description">
+                        One-URL certificate downloads for easy automation and deployment
+                    </p>
+                </div>
+                <div class="feature-card" role="listitem">
+                    <div class="feature-icon" aria-hidden="true">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="feature-title">Security-First</h3>
+                    <p class="feature-description">
+                        Bearer token authentication, secure file permissions, and audit logging
+                    </p>
+                </div>
+                <div class="feature-card" role="listitem">
+                    <div class="feature-icon" aria-hidden="true">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <h3 class="feature-title">REST API</h3>
+                    <p class="feature-description">
+                        Complete programmatic control with Swagger/OpenAPI documentation
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- DNS Providers Section -->
+    <section id="providers" class="providers">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Supported DNS Providers</h2>
+                <p class="section-description">
+                    CertMate supports 19 DNS providers with multi-account capabilities for enterprise environments
+                </p>
+            </div>
+            <div class="providers-grid">
+                <div class="provider-card">
+                    <div class="provider-icon cloudflare">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <h4>Cloudflare</h4>
+                    <p>Global CDN with multi-account support</p>
+                </div>
+                <div class="provider-card">
+                    <div class="provider-icon aws">
+                        <i class="fab fa-aws"></i>
+                    </div>
+                    <h4>AWS Route53</h4>
+                    <p>Multi-region, multi-account support</p>
+                </div>
+                <div class="provider-card">
+                    <div class="provider-icon azure">
+                        <i class="fab fa-microsoft"></i>
+                    </div>
+                    <h4>Azure DNS</h4>
+                    <p>Enterprise multi-subscription support</p>
+                </div>
+                <div class="provider-card">
+                    <div class="provider-icon gcp">
+                        <i class="fab fa-google"></i>
+                    </div>
+                    <h4>Google Cloud DNS</h4>
+                    <p>Google's high-performance DNS</p>
+                </div>
+                <div class="provider-card">
+                    <div class="provider-icon digitalocean">
+                        <i class="fab fa-digital-ocean"></i>
+                    </div>
+                    <h4>DigitalOcean</h4>
+                    <p>Cloud infrastructure DNS</p>
+                </div>
+                <div class="provider-card">
+                    <div class="provider-icon generic">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </div>
+                    <h4>+14 More</h4>
+                    <p>Linode, OVH, Namecheap, and more</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Enterprise Features Section -->
+    <section class="enterprise">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Enterprise-Grade Multi-Account Support</h2>
+                <p class="section-description">
+                    Manage multiple DNS provider accounts for complex enterprise environments
+                </p>
+            </div>
+            <div class="enterprise-grid">
+                <div class="enterprise-card">
+                    <div class="enterprise-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <h3>Environment Separation</h3>
+                    <p>Separate production, staging, and development accounts with isolated credentials and configurations</p>
+                    <div class="enterprise-example">
+                        <code>production → api.company.com</code>
+                        <code>staging → staging.company.com</code>
+                        <code>dev → dev.company.com</code>
+                    </div>
+                </div>
+                <div class="enterprise-card">
+                    <div class="enterprise-icon">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h3>Multi-Region Setup</h3>
+                    <p>Deploy certificates across multiple regions with region-specific DNS accounts and configurations</p>
+                    <div class="enterprise-example">
+                        <code>us-east → *.us.company.com</code>
+                        <code>eu-west → *.eu.company.com</code>
+                        <code>apac → *.asia.company.com</code>
+                    </div>
+                </div>
+                <div class="enterprise-card">
+                    <div class="enterprise-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Permission Separation</h3>
+                    <p>Use different accounts with varying permission levels for security and compliance requirements</p>
+                    <div class="enterprise-example">
+                        <code>admin → Full DNS control</code>
+                        <code>limited → Specific zones only</code>
+                        <code>cicd → Automated management</code>
+                    </div>
+                </div>
+                <div class="enterprise-card">
+                    <div class="enterprise-icon">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <h3>Disaster Recovery</h3>
+                    <p>Configure backup accounts for failover scenarios and disaster recovery procedures</p>
+                    <div class="enterprise-example">
+                        <code>primary → Main operations</code>
+                        <code>backup → DR scenarios</code>
+                        <code>emergency → Crisis management</code>
+                    </div>
+                </div>
+            </div>
+            <div class="enterprise-cta">
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">Multi-Account API Example</span>
+                        <button class="copy-btn" data-copy="multi-account-example" aria-label="Copy code to clipboard">
+                            <i class="fas fa-copy" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <pre id="multi-account-example"><code># Add production Cloudflare account
+curl -X POST "https://certmate.company.com/api/settings/dns-providers/cloudflare/accounts" \
+  -H "Authorization: Bearer your_token" \
+  -d '{"account_id": "production", "config": {"api_token": "prod_token"}}'
+
+# Create certificate using specific account
+curl -X POST "https://certmate.company.com/api/certificates/create" \
+  -H "Authorization: Bearer your_token" \
+  -d '{"domain": "api.company.com", "dns_provider": "cloudflare", "account_id": "production"}'</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Installation Section -->
+    <section id="installation" class="installation" aria-labelledby="installation-title">
+        <div class="container">
+            <div class="section-header">
+                <h2 id="installation-title" class="section-title">Quick Installation</h2>
+                <p class="section-description">
+                    Get CertMate running in under 5 minutes with Docker Compose
+                </p>
+            </div>
+            <div class="installation-tabs">
+                <div class="tab-buttons" role="tablist" aria-label="Installation methods">
+                    <button class="tab-button active" data-tab="docker" role="tab" aria-controls="docker" aria-selected="true" id="docker-tab">
+                        <i class="fab fa-docker" aria-hidden="true"></i>
+                        Docker
+                    </button>
+                    <button class="tab-button" data-tab="python" role="tab" aria-controls="python" aria-selected="false" id="python-tab">
+                        <i class="fab fa-python" aria-hidden="true"></i>
+                        Python
+                    </button>
+                    <button class="tab-button" data-tab="kubernetes" role="tab" aria-controls="kubernetes" aria-selected="false" id="kubernetes-tab">
+                        <i class="fas fa-dharmachakra" aria-hidden="true"></i>
+                        Kubernetes
+                    </button>
+                </div>
+                <div class="tab-content">
+                    <div class="tab-pane active" id="docker" role="tabpanel" aria-labelledby="docker-tab">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Docker Installation</span>
+                                <button class="copy-btn" data-copy="docker-code" aria-label="Copy Docker installation code to clipboard">
+                                    <i class="fas fa-copy" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <pre id="docker-code"><code># Clone the repository
+git clone https://github.com/fabriziosalmi/certmate.git
+cd certmate
+
+# Copy environment template
+cp .env.example .env
+
+# Edit .env with your DNS provider credentials
+# Set API_BEARER_TOKEN and DNS provider settings
+
+# Start all services
+docker-compose up -d
+
+# Check status
+docker-compose ps</code></pre>
+                        </div>
+                    </div>
+                    <div class="tab-pane" id="python" role="tabpanel" aria-labelledby="python-tab">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Python Installation</span>
+                                <button class="copy-btn" data-copy="python-code" aria-label="Copy Python installation code to clipboard">
+                                    <i class="fas fa-copy" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <pre id="python-code"><code># Create virtual environment
+python3 -m venv certmate-env
+source certmate-env/bin/activate
+
+# Clone and install
+git clone https://github.com/fabriziosalmi/certmate.git
+cd certmate
+pip install -r requirements.txt
+
+# Set environment variables
+export API_BEARER_TOKEN="your_token_here"
+export CLOUDFLARE_TOKEN="your_cloudflare_token"
+
+# Run the application
+python app.py</code></pre>
+                        </div>
+                    </div>
+                    <div class="tab-pane" id="kubernetes" role="tabpanel" aria-labelledby="kubernetes-tab">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-title">Kubernetes Deployment</span>
+                                <button class="copy-btn" data-copy="k8s-code" aria-label="Copy Kubernetes deployment code to clipboard">
+                                    <i class="fas fa-copy" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <pre id="k8s-code"><code># Create namespace
+kubectl create namespace certmate
+
+# Create secret for API token
+kubectl create secret generic certmate-secrets \
+  --from-literal=api-token=your_secure_token \
+  -n certmate
+
+# Apply deployment
+kubectl apply -f k8s/deployment.yaml -n certmate
+
+# Check status
+kubectl get pods -n certmate</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Section -->
+    <section id="api" class="api">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Powerful REST API</h2>
+                <p class="section-description">
+                    Complete programmatic control with comprehensive API endpoints
+                </p>
+            </div>
+            <div class="api-grid">
+                <div class="api-card">
+                    <div class="api-method post">POST</div>
+                    <div class="api-endpoint">/api/certificates/create</div>
+                    <div class="api-description">Create new SSL certificate with account selection</div>
+                </div>
+                <div class="api-card">
+                    <div class="api-method post">POST</div>
+                    <div class="api-endpoint">/api/settings/dns-providers/{provider}/accounts</div>
+                    <div class="api-description">Add new DNS provider account</div>
+                </div>
+                <div class="api-card">
+                    <div class="api-method get">GET</div>
+                    <div class="api-endpoint">/api/certificates</div>
+                    <div class="api-description">List all certificates with account info</div>
+                </div>
+                <div class="api-card">
+                    <div class="api-method get">GET</div>
+                    <div class="api-endpoint">/{domain}/tls</div>
+                    <div class="api-description">Download certificate ZIP</div>
+                </div>
+            </div>
+            <div class="api-example">
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-title">API Example</span>
+                        <button class="copy-btn" data-copy="api-example" aria-label="Copy API example code to clipboard">
+                            <i class="fas fa-copy" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <pre id="api-example"><code># Add multiple DNS accounts
+curl -X POST "https://certmate.example.com/api/settings/dns-providers/cloudflare/accounts" \
+  -H "Authorization: Bearer your_api_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{"account_id": "production", "config": {"api_token": "prod_token"}}'
+
+# Create certificate with specific account
+curl -X POST "https://certmate.example.com/api/certificates/create" \
+  -H "Authorization: Bearer your_api_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{"domain": "api.company.com", "dns_provider": "cloudflare", "account_id": "production"}'
+
+# Download certificate
+curl -H "Authorization: Bearer your_api_token_here" \
+     -o api.company.com-tls.zip \
+     "https://certmate.example.com/api.company.com/tls"</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <div class="cta-content">
+                <h2 class="cta-title">Ready to Secure Your Infrastructure?</h2>
+                <p class="cta-description">
+                    Join hundreds of developers and organizations using CertMate for their SSL certificate management
+                </p>
+                <div class="cta-buttons">
+                    <a href="https://github.com/fabriziosalmi/certmate" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
+                        <i class="fab fa-github" aria-hidden="true"></i>
+                        Get Started on GitHub
+                        <span class="sr-only">(opens in new tab)</span>
+                    </a>
+                    <a href="#docs" class="btn btn-secondary">
+                        <i class="fas fa-book" aria-hidden="true"></i>
+                        Read Documentation
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Documentation Section -->
+    <section id="docs" class="docs">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Documentation & Resources</h2>
+                <p class="section-description">
+                    Comprehensive guides and resources to get you started
+                </p>
+            </div>
+            <div class="docs-grid">
+                <a href="https://github.com/fabriziosalmi/certmate/blob/main/README.md" class="doc-card" target="_blank" rel="noopener noreferrer">
+                    <div class="doc-icon" aria-hidden="true">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <h3>Getting Started</h3>
+                    <p>Complete installation and setup guide</p>
+                    <span class="sr-only">(opens in new tab)</span>
+                </a>
+                <a href="https://github.com/fabriziosalmi/certmate/blob/main/DNS_PROVIDERS.md" class="doc-card" target="_blank" rel="noopener noreferrer">
+                    <div class="doc-icon" aria-hidden="true">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <h3>DNS Providers</h3>
+                    <p>Setup guides for all supported DNS providers</p>
+                    <span class="sr-only">(opens in new tab)</span>
+                </a>
+                <a href="https://github.com/fabriziosalmi/certmate/blob/main/INSTALLATION.md" class="doc-card" target="_blank" rel="noopener noreferrer">
+                    <div class="doc-icon" aria-hidden="true">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <h3>Installation Guide</h3>
+                    <p>Detailed installation instructions</p>
+                    <span class="sr-only">(opens in new tab)</span>
+                </a>
+                <a href="https://github.com/fabriziosalmi/certmate/blob/main/DOCKER_DEPLOYMENT.md" class="doc-card" target="_blank" rel="noopener noreferrer">
+                    <div class="doc-icon" aria-hidden="true">
+                        <i class="fab fa-docker"></i>
+                    </div>
+                    <h3>Docker Deployment</h3>
+                    <p>Production Docker deployment guide</p>
+                    <span class="sr-only">(opens in new tab)</span>
+                </a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="doc-card" target="_blank" rel="noopener noreferrer">
+                    <div class="doc-icon" aria-hidden="true">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3>API Reference</h3>
+                    <p>Complete REST API documentation</p>
+                    <span class="sr-only">(opens in new tab)</span>
+                </a>
+                <a href="https://github.com/fabriziosalmi/certmate/blob/main/CONTRIBUTING.md" class="doc-card" target="_blank" rel="noopener noreferrer">
+                    <div class="doc-icon" aria-hidden="true">
+                        <i class="fas fa-hands-helping"></i>
+                    </div>
+                    <h3>Contributing</h3>
+                    <p>How to contribute to the project</p>
+                    <span class="sr-only">(opens in new tab)</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>CertMate</span>
+                    </div>
+                    <p class="footer-description">
+                        Open-source SSL certificate management system for modern infrastructure
+                    </p>
+                    <div class="footer-social">
+                        <a href="https://github.com/fabriziosalmi/certmate" target="_blank" rel="noopener noreferrer" aria-label="CertMate on GitHub">
+                            <i class="fab fa-github" aria-hidden="true"></i>
+                        </a>
+                        <a href="https://hub.docker.com/r/certmate/certmate" target="_blank" rel="noopener noreferrer" aria-label="CertMate on Docker Hub">
+                            <i class="fab fa-docker" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-section">
+                        <h4>Product</h4>
+                        <a href="#features">Features</a>
+                        <a href="#providers">DNS Providers</a>
+                        <a href="#installation">Installation</a>
+                        <a href="#api">API</a>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Resources</h4>
+                        <a href="https://github.com/fabriziosalmi/certmate/blob/main/README.md" target="_blank" rel="noopener noreferrer">Documentation</a>
+                        <a href="https://github.com/fabriziosalmi/certmate/blob/main/INSTALLATION.md" target="_blank" rel="noopener noreferrer">Installation Guide</a>
+                        <a href="https://github.com/fabriziosalmi/certmate/issues" target="_blank" rel="noopener noreferrer">Support</a>
+                        <a href="https://github.com/fabriziosalmi/certmate/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Contributing</a>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Legal</h4>
+                        <a href="https://github.com/fabriziosalmi/certmate/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>
+                        <a href="https://github.com/fabriziosalmi/certmate/blob/main/CODE_OF_CONDUCT.md" target="_blank" rel="noopener noreferrer">Code of Conduct</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 CertMate. Licensed under MIT License.</p>
+                <p>Made with ❤️ by <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> and contributors</p>
+            </div>
+        </div>
+    </footer>
+    </main>
+
+    <!-- Scripts -->
+    <script src="./assets/script.js"></script>
+</body>
+</html>
