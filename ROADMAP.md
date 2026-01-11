@@ -61,7 +61,7 @@ Address enterprise needs for monitoring existing SSL certificate fleets across i
 - [ ] **Expiration Monitoring & Alerts**
   - Configurable alert thresholds (30, 14, 7 days)
   - Email notifications
-  - Webhook integrations (Slack, Teams, PagerDuty)
+  - Webhook integrations (Teams, Telegram, Gotify)
   - Integration with Prometheus/Grafana
 
 - [ ] **Certificate Health Checks**
