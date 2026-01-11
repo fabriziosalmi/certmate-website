@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getting Started - CertMate Documentation</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .doc-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content p {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+        }
+        .doc-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin: var(--spacing-6) 0;
+        }
+        .doc-content pre code {
+            background: none;
+            padding: 0;
+            color: white;
+        }
+        .doc-content ul, .doc-content ol {
+            margin: var(--spacing-4) 0;
+            padding-left: var(--spacing-8);
+        }
+        .doc-content li {
+            margin: var(--spacing-2) 0;
+            line-height: 1.8;
+        }
+        .alert {
+            padding: var(--spacing-4);
+            border-radius: var(--radius-lg);
+            margin: var(--spacing-6) 0;
+            border-left: 4px solid;
+        }
+        .alert-info {
+            background: #dbeafe;
+            border-color: #2563eb;
+            color: #1e40af;
+        }
+        .alert-warning {
+            background: #fef3c7;
+            border-color: #f59e0b;
+            color: #92400e;
+        }
+        .alert i {
+            margin-right: var(--spacing-2);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-shield-alt brand-icon"></i>
+                <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html#features" class="nav-link">Features</a>
+                <a href="../index.html#providers" class="nav-link">DNS Providers</a>
+                <a href="index.html" class="nav-link active">Documentation</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-rocket"></i> Getting Started</h1>
+                <p class="docs-subtitle">Get CertMate up and running in under 5 minutes</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <h2>🚀 Quick Start with Docker</h2>
+            
+            <h3>Prerequisites</h3>
+            <ul>
+                <li>Docker 20.10+</li>
+                <li>Docker Compose 2.0+</li>
+                <li>Domain with DNS managed by a supported provider</li>
+            </ul>
+
+            <h3>1. Clone and Setup</h3>
+            <pre><code># Clone the repository
+git clone https://github.com/fabriziosalmi/certmate.git
+cd certmate
+
+# Copy environment template
+cp .env.example .env</code></pre>
+
+            <h3>2. Configure Environment</h3>
+            <p>Edit <code>.env</code> file with your credentials:</p>
+            <pre><code># 🔒 Required: API Security
+API_BEARER_TOKEN=your_super_secure_api_token_here_change_this
+
+# 🌐 DNS Provider Configuration (choose one)
+# Option 1: Cloudflare (Recommended for beginners)
+CLOUDFLARE_TOKEN=your_cloudflare_api_token_here
+
+# Option 2: AWS Route53
+# AWS_ACCESS_KEY_ID=your_aws_access_key
+# AWS_SECRET_ACCESS_KEY=your_aws_secret_key
+
+# Option 3: Azure DNS
+# AZURE_SUBSCRIPTION_ID=your_azure_subscription_id
+# AZURE_TENANT_ID=your_tenant_id</code></pre>
+
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>Docker Hub:</strong> Pre-built multi-platform images are available at 
+                <a href="https://hub.docker.com/r/fabriziosalmi/certmate" target="_blank">fabriziosalmi/certmate</a>
+            </div>
+
+            <h3>3. Deploy</h3>
+            <pre><code># Start all services
+docker-compose up -d
+
+# Check status
+docker-compose ps
+
+# View logs
+docker-compose logs -f certmate</code></pre>
+
+            <h3>4. Access CertMate</h3>
+            <table style="width: 100%; border-collapse: collapse; margin: var(--spacing-6) 0;">
+                <thead>
+                    <tr style="background: var(--gray-100);">
+                        <th style="padding: var(--spacing-3); text-align: left; border: 1px solid var(--gray-300);">Service</th>
+                        <th style="padding: var(--spacing-3); text-align: left; border: 1px solid var(--gray-300);">URL</th>
+                        <th style="padding: var(--spacing-3); text-align: left; border: 1px solid var(--gray-300);">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: var(--spacing-3); border: 1px solid var(--gray-300);">Web Dashboard</td>
+                        <td style="padding: var(--spacing-3); border: 1px solid var(--gray-300);"><code>http://localhost:8000</code></td>
+                        <td style="padding: var(--spacing-3); border: 1px solid var(--gray-300);">Main interface</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--spacing-3); border: 1px solid var(--gray-300);">API Docs</td>
+                        <td style="padding: var(--spacing-3); border: 1px solid var(--gray-300);"><code>http://localhost:8000/docs/</code></td>
+                        <td style="padding: var(--spacing-3); border: 1px solid var(--gray-300);">Swagger UI</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--spacing-3); border: 1px solid var(--gray-300);">Health Check</td>
+                        <td style="padding: var(--spacing-3); border: 1px solid var(--gray-300);"><code>http://localhost:8000/health</code></td>
+                        <td style="padding: var(--spacing-3); border: 1px solid var(--gray-300);">Service health</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>5. Create Your First Certificate</h3>
+            
+            <h4>Using the Web Interface:</h4>
+            <ol>
+                <li>Navigate to <code>http://localhost:8000</code></li>
+                <li>Go to Settings and configure your DNS provider</li>
+                <li>Add your domain (e.g. <code>example.com</code>)</li>
+                <li>Click "Create Certificate"</li>
+            </ol>
+
+            <h4>Using the API:</h4>
+            <pre><code>curl -X POST "http://localhost:8000/api/certificates/create" \
+  -H "Authorization: Bearer your_api_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{"domain": "example.com"}'</code></pre>
+
+            <h2>📦 Alternative Installation Methods</h2>
+
+            <h3>Python Virtual Environment</h3>
+            <p>Ideal for development and testing:</p>
+            <pre><code># Create and activate virtual environment
+python3 -m venv certmate-env
+source certmate-env/bin/activate
+
+# Install dependencies
+git clone https://github.com/fabriziosalmi/certmate.git
+cd certmate
+pip install -r requirements.txt
+
+# Run the application
+python app.py</code></pre>
+
+            <h3>Kubernetes</h3>
+            <p>For container orchestration:</p>
+            <pre><code>kubectl apply -f kubernetes/deployment.yaml
+kubectl apply -f kubernetes/service.yaml
+kubectl apply -f kubernetes/ingress.yaml</code></pre>
+
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Security Note:</strong> Always change the default API bearer token before deploying to production!
+            </div>
+
+            <h2>🎯 Next Steps</h2>
+            <ul>
+                <li><a href="dns-providers.html">Configure DNS Providers</a> - Set up your DNS provider(s)</li>
+                <li><a href="api-reference.html">API Reference</a> - Learn about the REST API</li>
+                <li><a href="storage-backends.html">Storage Backends</a> - Configure enterprise storage</li>
+                <li><a href="backup-recovery.html">Backup & Recovery</a> - Set up backup procedures</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank">contributors</a></p>
+        </div>
+    </footer>
+
+    <script src="../assets/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Reference - CertMate Documentation</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .doc-content {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content h4 {
+            font-size: var(--font-size-xl);
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-top: var(--spacing-6);
+            margin-bottom: var(--spacing-3);
+        }
+        .doc-content p, .doc-content li {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-3);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+        }
+        .doc-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin: var(--spacing-6) 0;
+        }
+        .doc-content pre code {
+            background: none;
+            padding: 0;
+            color: white;
+        }
+        .api-endpoint {
+            background: white;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-5);
+            margin: var(--spacing-6) 0;
+        }
+        .api-method {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: var(--radius);
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-right: var(--spacing-3);
+        }
+        .method-get { background: #dbeafe; color: #1e40af; }
+        .method-post { background: #d1fae5; color: #065f46; }
+        .method-put { background: #fef3c7; color: #92400e; }
+        .method-delete { background: #fee2e2; color: #991b1b; }
+        .api-path {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 1.1rem;
+            color: var(--gray-800);
+        }
+        .alert {
+            padding: var(--spacing-4);
+            border-radius: var(--radius-lg);
+            margin: var(--spacing-6) 0;
+            border-left: 4px solid;
+        }
+        .alert-info {
+            background: #dbeafe;
+            border-color: #2563eb;
+            color: #1e40af;
+        }
+        .alert-warning {
+            background: #fef3c7;
+            border-color: #f59e0b;
+            color: #92400e;
+        }
+        .alert i {
+            margin-right: var(--spacing-2);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: var(--spacing-4) 0;
+        }
+        th, td {
+            padding: var(--spacing-3);
+            text-align: left;
+            border: 1px solid var(--gray-300);
+        }
+        th {
+            background: var(--gray-100);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-shield-alt brand-icon"></i>
+                <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html#features" class="nav-link">Features</a>
+                <a href="../index.html#providers" class="nav-link">DNS Providers</a>
+                <a href="index.html" class="nav-link active">Documentation</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-code"></i> API Reference</h1>
+                <p class="docs-subtitle">Complete REST API documentation with authentication and examples</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                Interactive Documentation: Visit <code>http://your-server:8000/docs/</code> for Swagger UI or <code>/redoc/</code> for ReDoc interface.
+            </div>
+
+            <h2>🔐 Authentication</h2>
+            <p>All API endpoints require Bearer token authentication. Include the Authorization header in all requests:</p>
+            <pre><code>Authorization: Bearer your_api_token_here</code></pre>
+
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                Security: Always change the default API token in production environments!
+            </div>
+
+            <h2>📍 Core Endpoints</h2>
+
+            <h3>Health & Status</h3>
+            <div class="api-endpoint">
+                <div><span class="api-method method-get">GET</span><span class="api-path">/health</span></div>
+                <p>Health check endpoint for monitoring</p>
+                <pre><code>curl http://localhost:8000/health</code></pre>
+            </div>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-get">GET</span><span class="api-path">/docs/</span></div>
+                <p>Interactive Swagger/OpenAPI documentation</p>
+            </div>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-get">GET</span><span class="api-path">/metrics</span></div>
+                <p>Prometheus-compatible metrics endpoint</p>
+            </div>
+
+            <h3>Certificate Management</h3>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-get">GET</span><span class="api-path">/api/certificates</span></div>
+                <p>List all managed certificates</p>
+                <pre><code>curl -H "Authorization: Bearer your_token" \
+  http://localhost:8000/api/certificates</code></pre>
+            </div>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-post">POST</span><span class="api-path">/api/certificates/create</span></div>
+                <p>Create a new certificate</p>
+                <p>Request Body:</p>
+                <table>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Required</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>domain</td>
+                        <td>string</td>
+                        <td>✅</td>
+                        <td>Domain name (e.g., example.com)</td>
+                    </tr>
+                    <tr>
+                        <td>dns_provider</td>
+                        <td>string</td>
+                        <td>❌</td>
+                        <td>DNS provider (defaults to settings)</td>
+                    </tr>
+                    <tr>
+                        <td>account_id</td>
+                        <td>string</td>
+                        <td>❌</td>
+                        <td>Specific account to use</td>
+                    </tr>
+                    <tr>
+                        <td>domain_alias</td>
+                        <td>string</td>
+                        <td>❌</td>
+                        <td>Domain alias for DNS validation</td>
+                    </tr>
+                </table>
+                <pre><code># Basic certificate creation
+curl -X POST "http://localhost:8000/api/certificates/create" \
+  -H "Authorization: Bearer your_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "domain": "example.com"
+  }'
+
+# With specific account
+curl -X POST "http://localhost:8000/api/certificates/create" \
+  -H "Authorization: Bearer your_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "domain": "staging.example.com",
+    "dns_provider": "cloudflare",
+    "account_id": "staging"
+  }'
+
+# With domain alias for centralized DNS validation
+curl -X POST "http://localhost:8000/api/certificates/create" \
+  -H "Authorization: Bearer your_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "domain": "example.com",
+    "dns_provider": "cloudflare",
+    "domain_alias": "_acme-challenge.validation.example.org"
+  }'</code></pre>
+            </div>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-post">POST</span><span class="api-path">/api/certificates/{domain}/renew</span></div>
+                <p>Manually renew a certificate</p>
+                <pre><code>curl -X POST "http://localhost:8000/api/certificates/example.com/renew" \
+  -H "Authorization: Bearer your_token"</code></pre>
+            </div>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-get">GET</span><span class="api-path">/api/certificates/{domain}/download</span></div>
+                <p>Download certificate as ZIP archive</p>
+                <pre><code>curl -H "Authorization: Bearer your_token" \
+  -o example.com.zip \
+  http://localhost:8000/api/certificates/example.com/download</code></pre>
+            </div>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-get">GET</span><span class="api-path">/{domain}/tls</span></div>
+                <p>🎯 Automation-friendly endpoint - Simple URL for certificate download</p>
+                <p>Returns ZIP file with: cert.pem, chain.pem, fullchain.pem, privkey.pem</p>
+                <pre><code>curl -H "Authorization: Bearer your_token" \
+  -o example.com-tls.zip \
+  https://certmate.company.com/example.com/tls</code></pre>
+            </div>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-get">GET</span><span class="api-path">/api/certificates/{domain}/deployment-status</span></div>
+                <p>Check if certificate is properly deployed</p>
+                <pre><code>curl -H "Authorization: Bearer your_token" \
+  http://localhost:8000/api/certificates/example.com/deployment-status</code></pre>
+            </div>
+
+            <h3>Settings Management</h3>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-get">GET</span><span class="api-path">/api/settings</span></div>
+                <p>Get current settings</p>
+                <pre><code>curl -H "Authorization: Bearer your_token" \
+  http://localhost:8000/api/settings</code></pre>
+            </div>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-post">POST</span><span class="api-path">/api/settings</span></div>
+                <p>Update settings</p>
+                <pre><code>curl -X POST "http://localhost:8000/api/settings" \
+  -H "Authorization: Bearer your_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "dns_provider": "cloudflare",
+    "email": "admin@example.com",
+    "auto_renew": true
+  }'</code></pre>
+            </div>
+
+            <h3>Multi-Account Management</h3>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-post">POST</span><span class="api-path">/api/settings/dns-providers/{provider}/accounts</span></div>
+                <p>Add a new DNS provider account</p>
+                <pre><code>curl -X POST "http://localhost:8000/api/settings/dns-providers/cloudflare/accounts" \
+  -H "Authorization: Bearer your_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account_id": "production",
+    "config": {
+      "name": "Production Environment",
+      "description": "Main production Cloudflare account",
+      "api_token": "your_production_token_here"
+    }
+  }'</code></pre>
+            </div>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-get">GET</span><span class="api-path">/api/settings/dns-providers/{provider}/accounts</span></div>
+                <p>List all accounts for a provider</p>
+                <pre><code>curl -H "Authorization: Bearer your_token" \
+  http://localhost:8000/api/settings/dns-providers/cloudflare/accounts</code></pre>
+            </div>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-put">PUT</span><span class="api-path">/api/settings/dns-providers/{provider}/default-account</span></div>
+                <p>Set default account for a provider</p>
+                <pre><code>curl -X PUT "http://localhost:8000/api/settings/dns-providers/cloudflare/default-account" \
+  -H "Authorization: Bearer your_token" \
+  -H "Content-Type: application/json" \
+  -d '{"account_id": "production"}'</code></pre>
+            </div>
+
+            <h3>Storage Backend Management</h3>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-get">GET</span><span class="api-path">/api/storage/info</span></div>
+                <p>Get current storage backend information</p>
+                <pre><code>curl -H "Authorization: Bearer your_token" \
+  http://localhost:8000/api/storage/info</code></pre>
+            </div>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-post">POST</span><span class="api-path">/api/storage/config</span></div>
+                <p>Update storage backend configuration</p>
+                <pre><code>curl -X POST "http://localhost:8000/api/storage/config" \
+  -H "Authorization: Bearer your_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "backend": "azure_keyvault",
+    "azure_keyvault": {
+      "vault_url": "https://yourvault.vault.azure.net/",
+      "tenant_id": "xxx",
+      "client_id": "xxx",
+      "client_secret": "xxx"
+    }
+  }'</code></pre>
+            </div>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-post">POST</span><span class="api-path">/api/storage/test</span></div>
+                <p>Test storage backend connectivity</p>
+                <pre><code>curl -X POST "http://localhost:8000/api/storage/test" \
+  -H "Authorization: Bearer your_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "backend": "aws_secrets_manager",
+    "config": {
+      "region": "us-east-1",
+      "access_key_id": "xxx",
+      "secret_access_key": "xxx"
+    }
+  }'</code></pre>
+            </div>
+
+            <h3>Backup Management</h3>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-get">GET</span><span class="api-path">/api/backups</span></div>
+                <p>List all available backups</p>
+                <pre><code>curl -H "Authorization: Bearer your_token" \
+  http://localhost:8000/api/backups</code></pre>
+            </div>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-post">POST</span><span class="api-path">/api/backups/create</span></div>
+                <p>Create a new unified backup (settings + certificates)</p>
+                <pre><code>curl -X POST "http://localhost:8000/api/backups/create" \
+  -H "Authorization: Bearer your_token" \
+  -H "Content-Type: application/json" \
+  -d '{"reason": "manual_backup"}'</code></pre>
+            </div>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-get">GET</span><span class="api-path">/api/backups/download/unified/{filename}</span></div>
+                <p>Download a specific backup</p>
+                <pre><code>curl -H "Authorization: Bearer your_token" \
+  -o backup.zip \
+  "http://localhost:8000/api/backups/download/unified/unified_backup_20260111_120000.zip"</code></pre>
+            </div>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-post">POST</span><span class="api-path">/api/backups/restore/unified</span></div>
+                <p>Restore from backup</p>
+                <pre><code>curl -X POST "http://localhost:8000/api/backups/restore/unified" \
+  -H "Authorization: Bearer your_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "filename": "unified_backup_20260111_120000.zip",
+    "create_backup_before_restore": true
+  }'</code></pre>
+            </div>
+
+            <h2>💼 Integration Examples</h2>
+
+            <h3>Python SDK Example</h3>
+            <pre><code>import requests
+import zipfile
+from pathlib import Path
+
+class CertMateClient:
+    def __init__(self, base_url, token):
+        self.base_url = base_url.rstrip('/')
+        self.headers = {"Authorization": f"Bearer {token}"}
+    
+    def create_certificate(self, domain, dns_provider=None, account_id=None):
+        """Create a new certificate"""
+        data = {"domain": domain}
+        if dns_provider:
+            data["dns_provider"] = dns_provider
+        if account_id:
+            data["account_id"] = account_id
+        
+        response = requests.post(
+            f"{self.base_url}/api/certificates/create",
+            headers=self.headers,
+            json=data
+        )
+        return response.json()
+    
+    def download_certificate(self, domain, extract_to=None):
+        """Download certificate as ZIP file"""
+        response = requests.get(
+            f"{self.base_url}/{domain}/tls",
+            headers=self.headers
+        )
+        
+        if extract_to and response.status_code == 200:
+            Path(extract_to).mkdir(parents=True, exist_ok=True)
+            with zipfile.ZipFile(io.BytesIO(response.content)) as zip_file:
+                zip_file.extractall(extract_to)
+        
+        return response
+
+# Usage
+client = CertMateClient("https://certmate.company.com", "your_token")
+client.create_certificate("api.company.com", "cloudflare", "production")
+client.download_certificate("api.company.com", "/etc/ssl/certs/api/")</code></pre>
+
+            <h3>Bash Automation Script</h3>
+            <pre><code>#!/bin/bash
+set -euo pipefail
+
+CERTMATE_URL="https://certmate.company.com"
+API_TOKEN="${CERTMATE_TOKEN}"
+DOMAIN="${1:-example.com}"
+CERT_DIR="/etc/ssl/certs/${DOMAIN}"
+
+# Download certificate
+curl -f -H "Authorization: Bearer $API_TOKEN" \
+     -o "${DOMAIN}-tls.zip" \
+     "$CERTMATE_URL/$DOMAIN/tls"
+
+# Extract to directory
+mkdir -p "$CERT_DIR"
+unzip -o "${DOMAIN}-tls.zip" -d "$CERT_DIR"
+chmod 600 "$CERT_DIR"/*.pem
+
+# Reload services
+systemctl reload nginx
+echo "Certificate updated for ${DOMAIN}"</code></pre>
+
+            <h2>🔗 Next Steps</h2>
+            <ul>
+                <li><a href="getting-started.html">Getting Started</a> - Initial setup</li>
+                <li><a href="dns-providers.html">DNS Providers</a> - Configure DNS</li>
+                <li><a href="storage-backends.html">Storage Backends</a> - Enterprise storage</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank">contributors</a></p>
+        </div>
+    </footer>
+
+    <script src="../assets/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNS Providers - CertMate Documentation</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .doc-content {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content h4 {
+            font-size: var(--font-size-xl);
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-top: var(--spacing-6);
+            margin-bottom: var(--spacing-3);
+        }
+        .doc-content p, .doc-content li {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-3);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+        }
+        .doc-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin: var(--spacing-6) 0;
+        }
+        .doc-content pre code {
+            background: none;
+            padding: 0;
+            color: white;
+        }
+        .provider-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--spacing-4);
+            margin: var(--spacing-8) 0;
+        }
+        .provider-box {
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-5);
+            transition: var(--transition);
+        }
+        .provider-box:hover {
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow-md);
+        }
+        .provider-box h4 {
+            margin: 0 0 var(--spacing-2) 0;
+            color: var(--primary-color);
+        }
+        .provider-box p a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .provider-box p a:hover {
+            text-decoration: underline;
+        }
+        .alert {
+            padding: var(--spacing-4);
+            border-radius: var(--radius-lg);
+            margin: var(--spacing-6) 0;
+            border-left: 4px solid;
+        }
+        .alert-info {
+            background: #dbeafe;
+            border-color: #2563eb;
+            color: #1e40af;
+        }
+        .alert i {
+            margin-right: var(--spacing-2);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: var(--spacing-6) 0;
+        }
+        th, td {
+            padding: var(--spacing-3);
+            text-align: left;
+            border: 1px solid var(--gray-300);
+        }
+        th {
+            background: var(--gray-100);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-shield-alt brand-icon"></i>
+                <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html#features" class="nav-link">Features</a>
+                <a href="../index.html#providers" class="nav-link">DNS Providers</a>
+                <a href="index.html" class="nav-link active">Documentation</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-cloud"></i> DNS Providers</h1>
+                <p class="docs-subtitle">Configure any of 22 supported DNS providers with multi-account support</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <h2>🌐 Supported DNS Providers</h2>
+            <p>CertMate supports 22 DNS providers through Let's Encrypt DNS-01 challenge. Multi-account support is available for major providers, enabling enterprise-grade deployments.</p>
+
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>Multi-Account Support:</strong> Providers marked with ✅ support multiple accounts for environment separation (prod/staging/dev), multi-region deployments, and permission scoping.
+            </div>
+
+            <h3>🏢 Enterprise Multi-Account Providers</h3>
+            <div class="provider-grid">
+                <div class="provider-box">
+                    <h4><i class="fas fa-cloud" style="color: #f6821f;"></i> Cloudflare</h4>
+                    <p><strong>Credentials:</strong> API Token</p>
+                    <p>Global CDN with edge locations worldwide. Free tier available.</p>
+                    <p><a href="https://developers.cloudflare.com/fundamentals/api/get-started/create-token/" target="_blank">📖 Official Docs</a></p>
+                </div>
+                
+                <div class="provider-box">
+                    <h4><i class="fab fa-aws" style="color: #ff9900;"></i> AWS Route53</h4>
+                    <p><strong>Credentials:</strong> Access Key, Secret Key</p>
+                    <p>Amazon's scalable DNS service integrated with AWS infrastructure.</p>
+                    <p><a href="https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/Welcome.html" target="_blank">📖 Official Docs</a></p>
+                </div>
+                
+                <div class="provider-box">
+                    <h4><i class="fab fa-microsoft" style="color: #0078d4;"></i> Azure DNS</h4>
+                    <p><strong>Credentials:</strong> Service Principal</p>
+                    <p>Microsoft's cloud DNS solution with enterprise features.</p>
+                    <p><a href="https://learn.microsoft.com/azure/dns/dns-overview" target="_blank">📖 Official Docs</a></p>
+                </div>
+                
+                <div class="provider-box">
+                    <h4><i class="fab fa-google" style="color: #4285f4;"></i> Google Cloud DNS</h4>
+                    <p><strong>Credentials:</strong> Service Account JSON</p>
+                    <p>Google's high-performance DNS infrastructure.</p>
+                    <p><a href="https://cloud.google.com/dns/docs" target="_blank">📖 Official Docs</a></p>
+                </div>
+                
+                <div class="provider-box">
+                    <h4><i class="fab fa-digital-ocean" style="color: #0080ff;"></i> DigitalOcean</h4>
+                    <p><strong>Credentials:</strong> API Token</p>
+                    <p>Simple cloud infrastructure with integrated DNS.</p>
+                    <p><a href="https://docs.digitalocean.com/products/networking/dns/" target="_blank">📖 Official Docs</a></p>
+                </div>
+                
+                <div class="provider-box">
+                    <h4><i class="fas fa-server"></i> PowerDNS</h4>
+                    <p><strong>Credentials:</strong> API URL, API Key</p>
+                    <p>Open-source DNS server with REST API support.</p>
+                    <p><a href="https://doc.powerdns.com/authoritative/http-api/" target="_blank">📖 Official Docs</a></p>
+                </div>
+                
+                <div class="provider-box">
+                    <h4><i class="fas fa-network-wired"></i> RFC2136</h4>
+                    <p><strong>Credentials:</strong> Nameserver, TSIG Key</p>
+                    <p>Standard DNS update protocol for BIND and compatible servers.</p>
+                    <p><a href="https://datatracker.ietf.org/doc/html/rfc2136" target="_blank">📖 Official Docs</a></p>
+                </div>
+            </div>
+
+            <h3>🌍 Additional Providers</h3>
+            <div class="provider-grid">
+                <div class="provider-box">
+                    <span class="badge badge-single">Single Account</span>
+                    <h4>Linode</h4>
+                    <p><strong>Credentials:</strong> API Key</p>
+                    <p>Cloud hosting with DNS management.</p>
+                </div>
+                
+                <div class="provider-box">
+                    <span class="badge badge-single">Single Account</span>
+                    <h4>Gandi</h4>
+                    <p><strong>Credentials:</strong> API Token</p>
+                    <p>European domain registrar and hosting.</p>
+                </div>
+                
+                <div class="provider-box">
+                    <span class="badge badge-single">Single Account</span>
+                    <h4>OVH</h4>
+                    <p><strong>Credentials:</strong> API Credentials</p>
+                    <p>Major European hosting provider.</p>
+                </div>
+                
+                <div class="provider-box">
+                    <span class="badge badge-single">Single Account</span>
+                    <h4>Namecheap</h4>
+                    <p><strong>Credentials:</strong> Username, API Key</p>
+                    <p>Popular domain registrar.</p>
+                </div>
+                
+                <div class="provider-box">
+                    <span class="badge badge-single">Single Account</span>
+                    <h4>Vultr</h4>
+                    <p><strong>Credentials:</strong> API Key</p>
+                    <p>Global cloud infrastructure.</p>
+                </div>
+                
+                <div class="provider-box">
+                    <span class="badge badge-single">Single Account</span>
+                    <h4>DNS Made Easy</h4>
+                    <p><strong>Credentials:</strong> API Key, Secret</p>
+                    <p>Enterprise DNS management.</p>
+                </div>
+                
+                <div class="provider-box">
+                    <span class="badge badge-single">Single Account</span>
+                    <h4>NS1</h4>
+                    <p><strong>Credentials:</strong> API Key</p>
+                    <p>Intelligent DNS platform.</p>
+                </div>
+                
+                <div class="provider-box">
+                    <span class="badge badge-single">Single Account</span>
+                    <h4>Hetzner</h4>
+                    <p><strong>Credentials:</strong> API Token</p>
+                    <p>European cloud hosting.</p>
+                </div>
+                
+                <div class="provider-box">
+                    <span class="badge badge-single">Single Account</span>
+                    <h4>Porkbun</h4>
+                    <p><strong>Credentials:</strong> API Key, Secret</p>
+                    <p>Domain registrar with DNS.</p>
+                </div>
+                
+                <div class="provider-box">
+                    <span class="badge badge-single">Single Account</span>
+                    <h4>GoDaddy</h4>
+                    <p><strong>Credentials:</strong> API Key, Secret</p>
+                    <p>Popular domain registrar.</p>
+                </div>
+                
+                <div class="provider-box">
+                    <span class="badge badge-single">Single Account</span>
+                    <h4>Hurricane Electric</h4>
+                    <p><strong>Credentials:</strong> Username, Password</p>
+                    <p>Free DNS hosting service.</p>
+                </div>
+                
+                <div class="provider-box">
+                    <span class="badge badge-single">Single Account</span>
+                    <h4>Dynu</h4>
+                    <p><strong>Credentials:</strong> API Token</p>
+                    <p>Dynamic DNS service.</p>
+                </div>
+                
+                <div class="provider-box">
+                    <span class="badge badge-single">Single Account</span>
+                    <h4>ArvanCloud</h4>
+                    <p><strong>Credentials:</strong> API Key</p>
+                    <p>Iranian cloud provider.</p>
+                </div>
+                
+                <div class="provider-box">
+                    <span class="badge badge-single">Single Account</span>
+                    <h4>Infomaniak</h4>
+                    <p><strong>Credentials:</strong> API Token</p>
+                    <p>Swiss ISP and cloud provider.</p>
+                </div>
+                
+                <div class="provider-box">
+                    <span class="badge badge-single">Single Account</span>
+                    <h4>ACME-DNS</h4>
+                    <p><strong>Credentials:</strong> JSON Config</p>
+                    <p>Generic ACME-DNS server support.</p>
+                </div>
+            </div>
+
+            <h2>⚙️ Configuration Examples</h2>
+
+            <h3>Cloudflare Setup</h3>
+            <ol>
+                <li>Go to <a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank">Cloudflare API Tokens</a></li>
+                <li>Click "Create Token" → "Custom token"</li>
+                <li>Set permissions: Zone → DNS:Edit + Zone:Read</li>
+                <li>Copy the generated token</li>
+            </ol>
+            <pre><code># Environment variable
+CLOUDFLARE_TOKEN=your_cloudflare_api_token_here</code></pre>
+
+            <h3>AWS Route53 Setup</h3>
+            <ol>
+                <li>Create IAM user with Route53 permissions</li>
+                <li>Attach policy: <code>Route53FullAccess</code> or custom policy</li>
+            </ol>
+            <pre><code>{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": [
+      "route53:ListHostedZones",
+      "route53:GetChange",
+      "route53:ChangeResourceRecordSets"
+    ],
+    "Resource": "*"
+  }]
+}</code></pre>
+            <pre><code># Environment variables
+AWS_ACCESS_KEY_ID=your_access_key_id
+AWS_SECRET_ACCESS_KEY=your_secret_access_key
+AWS_DEFAULT_REGION=us-east-1</code></pre>
+
+            <h3>Azure DNS Setup</h3>
+            <pre><code># Create Service Principal
+az ad sp create-for-rbac --name "CertMate" \
+  --role "DNS Zone Contributor" \
+  --scopes "/subscriptions/{subscription-id}/resourceGroups/{resource-group}"</code></pre>
+            <pre><code># Environment variables
+AZURE_SUBSCRIPTION_ID=your_subscription_id
+AZURE_RESOURCE_GROUP=your_resource_group_name
+AZURE_TENANT_ID=your_tenant_id
+AZURE_CLIENT_ID=your_client_id
+AZURE_CLIENT_SECRET=your_client_secret</code></pre>
+
+            <h2>🏢 Multi-Account Configuration</h2>
+            <p>For enterprise deployments, configure multiple accounts per DNS provider:</p>
+            
+            <h3>Via Web Interface</h3>
+            <ol>
+                <li>Navigate to Settings → DNS Providers</li>
+                <li>Select your provider (e.g., Cloudflare)</li>
+                <li>Click "Add Account"</li>
+                <li>Enter account details and credentials</li>
+                <li>Save configuration</li>
+            </ol>
+
+            <h3>Via API</h3>
+            <pre><code># Add production account
+curl -X POST "http://localhost:8000/api/settings/dns-providers/cloudflare/accounts" \
+  -H "Authorization: Bearer your_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account_id": "production",
+    "config": {
+      "name": "Production Environment",
+      "description": "Main production account",
+      "api_token": "prod_token_here"
+    }
+  }'
+
+# Add staging account
+curl -X POST "http://localhost:8000/api/settings/dns-providers/cloudflare/accounts" \
+  -H "Authorization: Bearer your_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account_id": "staging",
+    "config": {
+      "name": "Staging Environment",
+      "description": "Development and testing",
+      "api_token": "staging_token_here"
+    }
+  }'</code></pre>
+
+            <h3>Using Specific Accounts for Certificates</h3>
+            <pre><code># Create certificate with specific account
+curl -X POST "http://localhost:8000/api/certificates/create" \
+  -H "Authorization: Bearer your_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "domain": "api.company.com",
+    "dns_provider": "cloudflare",
+    "account_id": "production"
+  }'</code></pre>
+
+            <h2>💡 Multi-Account Use Cases</h2>
+            <ul>
+                <li><strong>Environment Separation:</strong> Different accounts for production, staging, and development</li>
+                <li><strong>Multi-Region Management:</strong> Separate accounts for different geographical regions</li>
+                <li><strong>Team Isolation:</strong> Department-specific accounts with tailored permissions</li>
+                <li><strong>Disaster Recovery:</strong> Backup accounts for high-availability scenarios</li>
+                <li><strong>Permission Scoping:</strong> Accounts with minimal required permissions for security</li>
+            </ul>
+
+            <h2>🔗 Next Steps</h2>
+            <ul>
+                <li><a href="getting-started.html">Getting Started</a> - Initial setup guide</li>
+                <li><a href="api-reference.html">API Reference</a> - Complete API documentation</li>
+                <li><a href="troubleshooting.html">Troubleshooting</a> - DNS-specific issues</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank">contributors</a></p>
+        </div>
+    </footer>
+
+    <script src="../assets/script.js"></script>
+</body>
+</html>

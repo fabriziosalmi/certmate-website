@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker Deployment - CertMate</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-shield-alt brand-icon"></i>
+                <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+        </div>
+    </nav>
+    <main style="max-width: 900px; margin: 100px auto; padding: 40px 20px;">
+        <h1><i class="fab fa-docker"></i> Docker Deployment</h1>
+        <p>Multi-platform Docker deployment available on <a href="https://hub.docker.com/r/fabriziosalmi/certmate" target="_blank">Docker Hub</a></p>
+        <pre><code>docker pull fabriziosalmi/certmate:latest
+docker run -d --name certmate -p 8000:8000 --env-file .env fabriziosalmi/certmate:latest</code></pre>
+        <p><a href="getting-started.html">← Back to Getting Started</a></p>
+    </main>
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank">contributors</a></p>
+        </div>
+    </footer>
+</body>
+</html>

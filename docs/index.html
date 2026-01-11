@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CertMate Documentation</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-shield-alt brand-icon"></i>
+                <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html#features" class="nav-link">Features</a>
+                <a href="../index.html#providers" class="nav-link">DNS Providers</a>
+                <a href="index.html" class="nav-link active">Documentation</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main content -->
+    <main id="main-content">
+        <!-- Header -->
+        <section class="docs-hero">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-book"></i> CertMate Documentation</h1>
+                <p class="docs-subtitle">Everything you need to get started with CertMate SSL certificate management</p>
+            </div>
+        </section>
+
+        <!-- Documentation Grid -->
+        <section class="docs-section">
+            <div class="container">
+                <div class="docs-grid">
+                    <!-- Getting Started -->
+                    <a href="getting-started.html" class="docs-card">
+                        <div class="docs-card-icon getting-started">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <h3>Getting Started</h3>
+                        <p>Quick start guide with Docker, installation instructions, and basic configuration</p>
+                        <span class="docs-card-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </a>
+
+                    <!-- DNS Providers -->
+                    <a href="dns-providers.html" class="docs-card">
+                        <div class="docs-card-icon dns-providers">
+                            <i class="fas fa-cloud"></i>
+                        </div>
+                        <h3>DNS Providers</h3>
+                        <p>Configuration guides for all 22 supported DNS providers including multi-account setup</p>
+                        <span class="docs-card-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </a>
+
+                    <!-- API Reference -->
+                    <a href="api-reference.html" class="docs-card">
+                        <div class="docs-card-icon api">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <h3>API Reference</h3>
+                        <p>Complete REST API documentation with examples and authentication details</p>
+                        <span class="docs-card-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </a>
+
+                    <!-- Docker Deployment -->
+                    <a href="docker-deployment.html" class="docs-card">
+                        <div class="docs-card-icon docker">
+                            <i class="fab fa-docker"></i>
+                        </div>
+                        <h3>Docker Deployment</h3>
+                        <p>Production-ready Docker deployment with multi-platform support and orchestration</p>
+                        <span class="docs-card-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </a>
+
+                    <!-- Storage Backends -->
+                    <a href="storage-backends.html" class="docs-card">
+                        <div class="docs-card-icon storage">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <h3>Storage Backends</h3>
+                        <p>Azure Key Vault, AWS Secrets Manager, HashiCorp Vault, and more</p>
+                        <span class="docs-card-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </a>
+
+                    <!-- Backup & Recovery -->
+                    <a href="backup-recovery.html" class="docs-card">
+                        <div class="docs-card-icon backup">
+                            <i class="fas fa-save"></i>
+                        </div>
+                        <h3>Backup & Recovery</h3>
+                        <p>Unified backup system for certificates and settings with restore procedures</p>
+                        <span class="docs-card-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </a>
+
+                    <!-- Security -->
+                    <a href="security.html" class="docs-card">
+                        <div class="docs-card-icon security">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>Security Best Practices</h3>
+                        <p>Authentication, authorization, file permissions, and compliance guidelines</p>
+                        <span class="docs-card-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </a>
+
+                    <!-- Troubleshooting -->
+                    <a href="troubleshooting.html" class="docs-card">
+                        <div class="docs-card-icon troubleshooting">
+                            <i class="fas fa-wrench"></i>
+                        </div>
+                        <h3>Troubleshooting</h3>
+                        <p>Common issues, debug mode, and solutions for DNS and certificate problems</p>
+                        <span class="docs-card-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </a>
+
+                    <!-- Contributing -->
+                    <a href="contributing.html" class="docs-card">
+                        <div class="docs-card-icon contributing">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3>Contributing</h3>
+                        <p>How to contribute to CertMate: bug reports, features, and pull requests</p>
+                        <span class="docs-card-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Links -->
+        <section class="docs-quick-links">
+            <div class="container">
+                <h2>Quick Links</h2>
+                <div class="quick-links-grid">
+                    <a href="https://github.com/fabriziosalmi/certmate" target="_blank" rel="noopener" class="quick-link">
+                        <i class="fab fa-github"></i>
+                        <span>GitHub Repository</span>
+                    </a>
+                    <a href="https://hub.docker.com/r/fabriziosalmi/certmate" target="_blank" rel="noopener" class="quick-link">
+                        <i class="fab fa-docker"></i>
+                        <span>Docker Hub</span>
+                    </a>
+                    <a href="https://github.com/fabriziosalmi/certmate/issues" target="_blank" rel="noopener" class="quick-link">
+                        <i class="fas fa-bug"></i>
+                        <span>Report Issues</span>
+                    </a>
+                    <a href="https://github.com/fabriziosalmi/certmate/discussions" target="_blank" rel="noopener" class="quick-link">
+                        <i class="fas fa-comments"></i>
+                        <span>Discussions</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener">Fabrizio Salmi</a></p>
+            <p>Licensed under MIT License</p>
+        </div>
+    </footer>
+
+    <script src="../assets/script.js"></script>
+</body>
+</html>
