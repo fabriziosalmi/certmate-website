@@ -3,10 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security Best Practices - CertMate</title>
+    <title>Security Best Practices - CertMate Documentation</title>
     <link rel="stylesheet" href="../assets/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .doc-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h1 {
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-6);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content p, .doc-content li {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+        }
+        .doc-content ul, .doc-content ol {
+            margin: var(--spacing-4) 0;
+            padding-left: var(--spacing-8);
+        }
+        .doc-content li {
+            margin: var(--spacing-2) 0;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -15,11 +63,27 @@
                 <i class="fas fa-shield-alt brand-icon"></i>
                 <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
             </div>
+            <div class="nav-menu">
+                <a href="../index.html#features" class="nav-link">Features</a>
+                <a href="../index.html#providers" class="nav-link">DNS Providers</a>
+                <a href="index.html" class="nav-link active">Documentation</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
         </div>
     </nav>
-    <main style="max-width: 900px; margin: 100px auto; padding: 40px 20px;">
-        <h1><i class="fas fa-shield-alt"></i> Security Best Practices</h1>
-        <h2>Authentication</h2>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-shield-alt"></i> Security Best Practices</h1>
+                <p class="docs-subtitle">Essential security guidelines for production deployments</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <h2>Authentication</h2>
         <ul>
             <li><strong>Strong Bearer Tokens:</strong> Use cryptographically secure tokens (32+ characters)</li>
             <li><strong>Token Rotation:</strong> Regularly rotate API tokens</li>
@@ -37,7 +101,16 @@
             <li>Use reverse proxy (nginx/haproxy) for production</li>
             <li>Enable audit logging for compliance</li>
         </ul>
+
+        <h2>🔗 Next Steps</h2>
+        <ul>
+            <li><a href="getting-started.html">Getting Started</a> - Initial setup</li>
+            <li><a href="backup-recovery.html">Backup & Recovery</a> - Data protection</li>
+            <li><a href="api-reference.html">API Reference</a> - Authentication details</li>
+        </ul>
+        </section>
     </main>
+
     <footer class="footer">
         <div class="container">
             <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank">contributors</a></p>
