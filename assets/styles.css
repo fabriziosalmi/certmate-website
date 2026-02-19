@@ -265,6 +265,19 @@ p {
     font-size: var(--font-size-2xl);
 }
 
+.brand-logo {
+    height: 36px;
+    width: auto;
+    object-fit: contain;
+}
+
+.footer-brand-logo {
+    height: 28px;
+    width: auto;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+}
+
 .nav-menu {
     display: flex;
     align-items: center;
@@ -1313,6 +1326,11 @@ p {
 .footer-logo i {
     color: var(--primary-color);
     font-size: var(--font-size-2xl);
+}
+
+.footer-logo img {
+    height: 28px;
+    width: auto;
 }
 
 .footer-description {
