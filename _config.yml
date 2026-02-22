@@ -18,8 +18,8 @@ exclude:
 # Site settings
 title: "CertMate - SSL Certificate Management System"
 description: "Powerful SSL certificate management system with multi-DNS provider support and REST API"
-url: "https://fabriziosalmi.github.io"
-baseurl: "/certmate-website"
+url: "https://www.certmate.org"
+baseurl: ""
 
 # Build settings
 markdown: kramdown
