@@ -1,171 +1,90 @@
 # CertMate Website
 
-Beautiful landing page for the CertMate SSL Certificate Management System.
+Landing page and documentation site for [CertMate](https://github.com/fabriziosalmi/certmate), an open-source SSL certificate management system.
 
-## 🌟 Features
+**Live site:** [www.certmate.org](https://www.certmate.org)
 
-- **Modern Design**: Clean, professional design with smooth animations
-- **Responsive**: Fully responsive design that works on all devices
-- **Performance**: Optimized for fast loading and smooth interactions
-- **Accessibility**: WCAG compliant with keyboard navigation support
-- **SEO Optimized**: Proper meta tags and semantic HTML structure
-
-## 🚀 Quick Start
-
-This website is designed to be hosted on GitHub Pages. Simply push to the `main` branch and enable GitHub Pages in your repository settings.
-
-### Local Development
-
-1. Clone the repository:
-```bash
-git clone https://github.com/fabriziosalmi/certmate-website.git
-cd certmate-website
-```
-
-2. Open `index.html` in your browser or serve with a local server:
-```bash
-# Using Python 3
-python -m http.server 8080
-
-# Using Node.js (if you have http-server installed)
-npx http-server
-
-# Using PHP
-php -S localhost:8080
-```
-
-3. Visit `http://localhost:8080` to view the website
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 certmate-website/
-├── index.html              # Main HTML file
+├── index.html                  Main landing page
+├── _config.yml                 Jekyll / GitHub Pages configuration
+├── CNAME                       Custom domain (www.certmate.org)
+├── manifest.json               PWA manifest
+├── sw.js                       Service worker for offline support
 ├── assets/
-│   ├── styles.css          # Main stylesheet
-│   ├── script.js           # JavaScript functionality
-│   └── favicon-placeholder.txt
-├── README.md               # This file
-└── .gitignore             # Git ignore file
+│   ├── styles.css              Stylesheet (CSS custom properties)
+│   ├── script.js               Navigation, tabs, clipboard, animations
+│   ├── certmate_logo.png       Logo
+│   ├── favicon.svg             SVG favicon
+│   └── favicon.ico             ICO favicon
+└── docs/
+    ├── index.html              Documentation hub
+    ├── getting-started.html    Installation and setup
+    ├── dns-providers.html      All 22 DNS provider guides
+    ├── api-reference.html      REST API reference
+    ├── docker-deployment.html  Docker deployment guide
+    ├── storage-backends.html   Storage backend configuration
+    ├── backup-recovery.html    Backup and restore procedures
+    ├── security.html           Security best practices
+    ├── troubleshooting.html    Common issues and solutions
+    └── contributing.html       Contribution guidelines
 ```
 
-## 🎨 Design System
+## Local Development
 
-### Colors
-- **Primary**: #2563eb (Blue)
-- **Secondary**: #f59e0b (Amber)
-- **Accent**: #10b981 (Emerald)
-- **Gray Scale**: From #f9fafb to #111827
+Clone and serve locally:
 
-### Typography
-- **Font Family**: Inter (Google Fonts)
-- **Responsive sizing**: From 0.75rem to 3.75rem
+```bash
+git clone https://github.com/fabriziosalmi/certmate-website.git
+cd certmate-website
+python -m http.server 8080
+```
 
-### Components
-- Modern gradient buttons with hover effects
-- Animated terminal window
-- Interactive tab system
-- Responsive navigation with mobile menu
-- Copy-to-clipboard functionality
-- Smooth scroll animations
+Open `http://localhost:8080` in your browser.
 
-## 🔧 Customization
+## Deployment
 
-### Updating Content
-Edit the `index.html` file to update:
-- Hero section text and stats
-- Feature descriptions
-- DNS provider information
-- Installation instructions
-- API documentation links
+The site is deployed via GitHub Pages from the `main` branch. Pushing to `main` triggers a build automatically.
 
-### Styling Changes
-Modify `assets/styles.css` to customize:
-- Color scheme (CSS custom properties in `:root`)
-- Typography settings
-- Component styling
-- Responsive breakpoints
+Custom domain is configured through the `CNAME` file pointing to `www.certmate.org`.
 
-### Adding Functionality
-Enhance `assets/script.js` to add:
-- New interactive features
-- Analytics tracking
-- Form handling
-- Additional animations
+## Technical Details
 
-## 🌐 GitHub Pages Setup
+- **Stack:** Vanilla HTML, CSS, JavaScript (no build step, no framework)
+- **Hosting:** GitHub Pages with Jekyll
+- **Fonts:** Inter via Google Fonts
+- **Icons:** Font Awesome 6.4.0 (CDN)
+- **PWA:** Service worker with asset caching
+- **SEO:** Open Graph, Twitter Cards, JSON-LD structured data, jekyll-sitemap
 
-1. Go to your repository settings
-2. Scroll down to "Pages" section
-3. Select "Deploy from a branch"
-4. Choose "main" branch and "/ (root)" folder
-5. Click "Save"
+### Browser Support
 
-Your website will be available at: `https://fabriziosalmi.github.io/certmate-website/`
+Chrome 60+, Firefox 60+, Safari 12+, Edge 79+, iOS Safari 12+, Chrome Mobile 60+.
 
-## 📱 Browser Support
+Requires CSS Grid, Flexbox, CSS Custom Properties, and Intersection Observer.
 
-- **Modern Browsers**: Chrome 60+, Firefox 60+, Safari 12+, Edge 79+
-- **Mobile**: iOS Safari 12+, Chrome Mobile 60+
-- **Features**: CSS Grid, Flexbox, CSS Custom Properties, Intersection Observer
+### Accessibility
 
-## 🔍 SEO Features
+WCAG 2.1 AA compliant. Keyboard navigation, skip-to-content link, ARIA attributes, focus indicators, reduced-motion support.
 
-- Semantic HTML5 structure
-- Open Graph meta tags for social media
-- Twitter Card meta tags
-- Proper heading hierarchy
-- Alt text for images
-- Structured data ready
-
-## 🚀 Performance
-
-- **CSS**: Optimized with custom properties for maintainability
-- **JavaScript**: Vanilla JS for maximum performance
-- **Images**: Lazy loading support built-in
-- **Fonts**: Google Fonts with preconnect for faster loading
-- **Icons**: Font Awesome CDN with efficient loading
-
-## 🎯 Accessibility
-
-- WCAG 2.1 AA compliant
-- Keyboard navigation support
-- Screen reader friendly
-- Focus indicators
-- Semantic HTML structure
-- Color contrast ratios meet guidelines
-
-## 📊 Analytics
-
-The website includes Google Analytics tracking code placeholders. To enable analytics:
-
-1. Get your Google Analytics tracking ID
-2. Add the tracking code to the `<head>` section of `index.html`
-3. Uncomment the analytics functions in `script.js`
-
-## 🤝 Contributing
-
-To contribute to the website:
+## Contributing
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/new-feature`
-3. Make your changes
-4. Test locally
-5. Commit: `git commit -am 'Add new feature'`
-6. Push: `git push origin feature/new-feature`
-7. Create a Pull Request
+2. Create a feature branch
+3. Test locally
+4. Open a pull request
 
-## 📄 License
+See [contributing.html](docs/contributing.html) for details.
 
-This website is licensed under the MIT License - see the main CertMate project for details.
+## License
 
-## 🔗 Related Links
+MIT License. See the [main CertMate project](https://github.com/fabriziosalmi/certmate) for full license text.
 
-- [CertMate Main Project](https://github.com/fabriziosalmi/certmate)
-- [Documentation](https://github.com/fabriziosalmi/certmate/blob/main/README.md)
-- [DNS Providers](https://github.com/fabriziosalmi/certmate/blob/main/docs/dns-providers.md)
-- [CA Providers](https://github.com/fabriziosalmi/certmate/blob/main/docs/ca-providers.md)
+## Links
 
----
-
-Made with ❤️ by [Fabrizio Salmi](https://github.com/fabriziosalmi)
+- [CertMate repository](https://github.com/fabriziosalmi/certmate)
+- [Documentation](https://www.certmate.org/docs/)
+- [Docker Hub](https://hub.docker.com/r/fabriziosalmi/certmate)
+- [Issue tracker](https://github.com/fabriziosalmi/certmate-website/issues)
