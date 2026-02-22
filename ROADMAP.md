@@ -2,7 +2,7 @@
 
 Based on community feedback from [Hacker News discussion](https://news.ycombinator.com/item?id=44427452) and user requests.
 
-## ✅ Recently Completed (v1.4.0 - v1.5.0)
+## ✅ Recently Completed (v1.4.0 - v2.0.1)
 
 ### Multi-Account Support
 - ✅ Multiple accounts per DNS provider
@@ -221,7 +221,8 @@ resource "certmate_certificate" "api" {
 
 ### Security
 - [ ] mTLS support for API
-- [ ] RBAC (Role-Based Access Control)
+- ✅ RBAC (Role-Based Access Control) — Released in v2.0.0
+- ✅ Scoped API Keys — Released in v2.0.0
 - [ ] Audit log encryption
 - [ ] Security scanning integration (Snyk, Trivy)
 
@@ -241,4 +242,4 @@ Join the discussion on:
 
 **Note:** Priorities and timelines may change based on community feedback and contributions. All features are subject to feasibility analysis and may be adjusted during development.
 
-*Last updated: January 11, 2026*
+*Last updated: February 22, 2026*

@@ -163,8 +163,8 @@ This website is licensed under the MIT License - see the main CertMate project f
 
 - [CertMate Main Project](https://github.com/fabriziosalmi/certmate)
 - [Documentation](https://github.com/fabriziosalmi/certmate/blob/main/README.md)
-- [Installation Guide](https://github.com/fabriziosalmi/certmate/blob/main/INSTALLATION.md)
-- [DNS Providers](https://github.com/fabriziosalmi/certmate/blob/main/DNS_PROVIDERS.md)
+- [DNS Providers](https://github.com/fabriziosalmi/certmate/blob/main/docs/dns-providers.md)
+- [CA Providers](https://github.com/fabriziosalmi/certmate/blob/main/docs/ca-providers.md)
 
 ---
 

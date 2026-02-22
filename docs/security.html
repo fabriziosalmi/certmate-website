@@ -84,11 +84,19 @@
         </section>
 
         <section class="doc-content">
-            <h2>Authentication</h2>
+            <h2>Authentication & Authorization</h2>
         <ul>
-            <li><strong>Strong Bearer Tokens:</strong> Use cryptographically secure tokens (32+ characters)</li>
-            <li><strong>Token Rotation:</strong> Regularly rotate API tokens</li>
+            <li><strong>Role-Based Access Control (RBAC):</strong> Built-in roles (admin, operator, viewer) with granular permission levels</li>
+            <li><strong>Scoped API Keys:</strong> Create API keys with specific scopes and expiration dates for fine-grained access control</li>
+            <li><strong>Local Authentication:</strong> Setup wizard for first-run user creation with secure session management</li>
             <li><strong>HTTPS Only:</strong> Always use HTTPS in production</li>
+        </ul>
+        <h2>Rate Limiting & Protection</h2>
+        <ul>
+            <li><strong>Built-in Rate Limiting:</strong> Configurable rate limits to prevent API abuse</li>
+            <li><strong>CSRF Protection:</strong> Cross-site request forgery protection on all state-changing endpoints</li>
+            <li><strong>Content Security Policy:</strong> Strict CSP headers to prevent XSS attacks</li>
+            <li><strong>Secure Cookies:</strong> HttpOnly, Secure, SameSite=Strict session cookies</li>
         </ul>
         <h2>File Permissions</h2>
         <ul>
@@ -100,7 +108,8 @@
         <ul>
             <li>Implement firewall rules to restrict API access</li>
             <li>Use reverse proxy (nginx/haproxy) for production</li>
-            <li>Enable audit logging for compliance</li>
+            <li>Enable structured JSON audit logging for compliance</li>
+            <li>Prometheus metrics endpoint for monitoring (<code>/metrics</code>)</li>
         </ul>
 
         <h2>🔗 Next Steps</h2>

@@ -40,7 +40,7 @@
     }
     </script>
     <meta name="description" content="CertMate is a powerful SSL certificate management system designed for modern infrastructure. Built with multi-DNS provider support, Docker containerization, and comprehensive REST API.">
-    <meta name="keywords" content="SSL certificates, Let's Encrypt, certificate management, Docker, API, multi-DNS provider, automation">
+    <meta name="keywords" content="SSL certificates, Let's Encrypt, certificate management, Docker, API, multi-DNS provider, automation, RBAC, private CA, ACME">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
@@ -124,7 +124,7 @@
                 </p>
                 <div class="hero-stats" role="img" aria-label="CertMate statistics">
                     <div class="stat">
-                        <div class="stat-number" aria-label="21 plus">21</div>
+                        <div class="stat-number" aria-label="22 plus">22</div>
                         <div class="stat-label">DNS Providers</div>
                     </div>
                     <div class="stat">
@@ -209,20 +209,20 @@
                 <div class="update-card highlight">
                     <div class="update-badge milestone">
                         <i class="fas fa-star"></i>
-                        Milestone
+                        v2.0
                     </div>
-                    <h3>🎉 1000+ GitHub Stars!</h3>
-                    <p>Thank you to our amazing community for the support! CertMate has surpassed 1000 stars on GitHub.</p>
-                    <div class="update-date">January 2026</div>
+                    <h3>CertMate v2.0 Released</h3>
+                    <p>Major release with RBAC, scoped API keys, setup wizard, keyboard shortcuts, dark mode, deploy hooks, and a completely redesigned UI.</p>
+                    <div class="update-date">February 2026</div>
                 </div>
                 <div class="update-card">
-                    <div class="update-badge feature">
-                        <i class="fas fa-rocket"></i>
-                        Feature
+                    <div class="update-badge fix">
+                        <i class="fas fa-wrench"></i>
+                        Fix
                     </div>
-                    <h3>Docker Hub Auto-Publishing</h3>
-                    <p>Automated multi-platform Docker builds with semantic versioning. Pull the latest version from <a href="https://hub.docker.com/r/fabriziosalmi/certmate" target="_blank" rel="noopener">Docker Hub</a>.</p>
-                    <div class="update-date">January 2026</div>
+                    <h3>v2.0.1 - Private CA & Logout Fix</h3>
+                    <p>Fixed Private CA support for internal networks (step-ca) and resolved logout button visibility issue.</p>
+                    <div class="update-date">February 2026</div>
                 </div>
                 <div class="update-card">
                     <div class="update-badge feature">
@@ -298,7 +298,7 @@
                     </div>
                     <h3 class="feature-title">Multi-Cloud Support</h3>
                     <p class="feature-description">
-                        Works with 21 DNS providers including Cloudflare, AWS, Azure, GCP, Hetzner, Porkbun, GoDaddy, ArvanCloud, Infomaniak, ACME-DNS with multi-account support for enterprise environments
+                        Works with 22 DNS providers including Cloudflare, AWS, Azure, GCP, Hetzner, Porkbun, GoDaddy, ArvanCloud, Infomaniak, ACME-DNS with multi-account support for enterprise environments
                     </p>
                 </div>
                 <div class="feature-card" role="listitem">
@@ -334,7 +334,7 @@
                     </div>
                     <h3 class="feature-title">Security-First</h3>
                     <p class="feature-description">
-                        Bearer token authentication, secure file permissions, and audit logging
+                        Role-based access control (RBAC), scoped API keys, rate limiting, and audit logging
                     </p>
                 </div>
                 <div class="feature-card" role="listitem">
@@ -353,6 +353,24 @@
                     <h3 class="feature-title">REST API</h3>
                     <p class="feature-description">
                         Complete programmatic control with Swagger/OpenAPI documentation
+                    </p>
+                </div>
+                <div class="feature-card" role="listitem">
+                    <div class="feature-icon" aria-hidden="true">
+                        <i class="fas fa-terminal"></i>
+                    </div>
+                    <h3 class="feature-title">Auto-Deploy Hooks</h3>
+                    <p class="feature-description">
+                        Run shell commands automatically after certificate creation or renewal for seamless deployment
+                    </p>
+                </div>
+                <div class="feature-card" role="listitem">
+                    <div class="feature-icon" aria-hidden="true">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h3 class="feature-title">Flexible Challenges</h3>
+                    <p class="feature-description">
+                        DNS-01 and HTTP-01 challenge support with domain aliases and multi-master DNS configurations
                     </p>
                 </div>
             </div>
@@ -378,7 +396,7 @@
                     </div>
                     <h3>Hacker News</h3>
                     <p>39 points • 23 comments</p>
-                    <div class="community-meta">Featured 6 months ago</div>
+                    <div class="community-meta">Featured on Hacker News</div>
                     <span class="sr-only">(opens in new tab)</span>
                 </a>
                 <a href="https://www.reddit.com/r/homelab/comments/1lv1s69/certmate_ssl_certificate_management_system_api_ui/" class="community-card" target="_blank" rel="noopener noreferrer">
@@ -387,7 +405,7 @@
                     </div>
                     <h3>Reddit r/homelab</h3>
                     <p>Community discussion</p>
-                    <div class="community-meta">Posted 6 months ago</div>
+                    <div class="community-meta">Featured on Reddit</div>
                     <span class="sr-only">(opens in new tab)</span>
                 </a>
                 <a href="https://github.com/fabriziosalmi/certmate" class="community-card" target="_blank" rel="noopener noreferrer">
@@ -461,8 +479,8 @@
                     <div class="provider-icon generic">
                         <i class="fas fa-ellipsis-h"></i>
                     </div>
-                    <h4>+14 More</h4>
-                    <p>Linode, OVH, Namecheap, and more</p>
+                    <h4>+17 More</h4>
+                    <p>Hetzner, Porkbun, GoDaddy, Linode, OVH, and more</p>
                 </div>
             </div>
         </div>
@@ -844,7 +862,7 @@ curl -H "Authorization: Bearer your_api_token_here" \
                     <div class="footer-section">
                         <h4>Resources</h4>
                         <a href="https://github.com/fabriziosalmi/certmate/blob/main/README.md" target="_blank" rel="noopener noreferrer">Documentation</a>
-                        <a href="https://github.com/fabriziosalmi/certmate/blob/main/INSTALLATION.md" target="_blank" rel="noopener noreferrer">Installation Guide</a>
+                        <a href="docs/getting-started.html">Installation Guide</a>
                         <a href="https://github.com/fabriziosalmi/certmate/issues" target="_blank" rel="noopener noreferrer">Support</a>
                         <a href="https://github.com/fabriziosalmi/certmate/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Contributing</a>
                     </div>
