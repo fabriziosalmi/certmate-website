@@ -27,10 +27,7 @@ const docs = [
     <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {
         docs.map((d) => (
-          <a
-            href={d.href}
-            class="card group flex flex-col gap-3 hover:-translate-y-0.5 transition-transform"
-          >
+          <a href={d.href} class="card group flex flex-col gap-3">
             <div
               class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-primary dark:bg-blue-900/30 dark:text-blue-300"
               aria-hidden="true"
@@ -39,8 +36,12 @@ const docs = [
             </div>
             <h3 class="text-base font-semibold text-gray-900 dark:text-white">{d.title}</h3>
             <p class="text-sm text-gray-600 dark:text-gray-300">{d.body}</p>
-            <span class="mt-1 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
-              Read more <i class="fas fa-arrow-right ml-0.5" aria-hidden="true" />
+            <span class="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition-opacity duration-200 group-hover:opacity-100 motion-reduce:transition-none">
+              Read more
+              <i
+                class="fas fa-arrow-right transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transform-none"
+                aria-hidden="true"
+              />
             </span>
           </a>
         ))

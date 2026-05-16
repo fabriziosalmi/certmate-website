@@ -131,4 +131,14 @@ const links = [
     const open = mobile?.classList.toggle('hidden') === false;
     burger.setAttribute('aria-expanded', String(open));
   });
+
+  // Auto-close the mobile menu after the user taps a link — otherwise the
+  // disclosure stays open over the destination section and the user has
+  // to tap the hamburger again to dismiss it.
+  mobile?.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', () => {
+      mobile.classList.add('hidden');
+      burger?.setAttribute('aria-expanded', 'false');
+    });
+  });
 </script>

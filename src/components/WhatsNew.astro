@@ -31,7 +31,7 @@ const badgeClasses: Record<string, string> = {
           return (
             <CardTag
               {...wrap}
-              class={`card flex flex-col gap-3 ${u.highlight ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-gray-950' : ''} ${u.href ? 'hover:-translate-y-0.5 transition-transform' : ''}`}
+              class={`card group flex flex-col gap-3 ${u.highlight ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-gray-950' : ''}`}
             >
               <div class="flex items-center justify-between gap-2">
                 <span class={`badge ring-1 ring-inset ${badgeClasses[u.badge]}`}>
@@ -43,8 +43,12 @@ const badgeClasses: Record<string, string> = {
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{u.title}</h3>
               <p class="text-sm text-gray-600 dark:text-gray-300">{u.description}</p>
               {u.href && (
-                <span class="mt-1 text-xs font-medium text-primary">
-                  Release notes <i class="fas fa-arrow-right ml-0.5" aria-hidden="true" />
+                <span class="mt-1 text-xs font-medium text-primary inline-flex items-center gap-1">
+                  Release notes
+                  <i
+                    class="fas fa-arrow-right transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:transform-none"
+                    aria-hidden="true"
+                  />
                 </span>
               )}
             </CardTag>
