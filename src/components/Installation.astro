@@ -1,0 +1,143 @@
+---
+const docker = `# Clone the repository
+git clone https://github.com/fabriziosalmi/certmate.git
+cd certmate
+
+# Copy environment template
+cp .env.example .env
+
+# Edit .env with your DNS provider credentials
+# Set API_BEARER_TOKEN and DNS provider settings
+
+# Start all services
+docker-compose up -d
+
+# Check status
+docker-compose ps`;
+
+const python = `# Create virtual environment
+python3 -m venv certmate-env
+source certmate-env/bin/activate
+
+# Clone and install
+git clone https://github.com/fabriziosalmi/certmate.git
+cd certmate
+pip install -r requirements.txt
+
+# Set environment variables
+export API_BEARER_TOKEN="your_token_here"
+export CLOUDFLARE_TOKEN="your_cloudflare_token"
+
+# Run the application
+python app.py`;
+
+const k8s = `# Create namespace
+kubectl create namespace certmate
+
+# Create secret for API token
+kubectl create secret generic certmate-secrets \\
+  --from-literal=api-token=your_secure_token \\
+  -n certmate
+
+# Apply deployment
+kubectl apply -f k8s/deployment.yaml -n certmate
+
+# Check status
+kubectl get pods -n certmate`;
+
+const tabs = [
+  { id: 'docker',     label: 'Docker',     icon: 'fab fa-docker',         code: docker },
+  { id: 'python',     label: 'Python',     icon: 'fab fa-python',         code: python },
+  { id: 'kubernetes', label: 'Kubernetes', icon: 'fas fa-dharmachakra',   code: k8s },
+];
+---
+
+<section id="installation" class="border-b border-gray-200 py-20 dark:border-gray-800" aria-labelledby="installation-title">
+  <div class="container-x">
+    <div class="mx-auto max-w-2xl text-center">
+      <h2 id="installation-title" class="section-title">Quick Installation</h2>
+      <p class="section-description">
+        Get CertMate running in under 5 minutes with Docker Compose
+      </p>
+    </div>
+
+    <div class="mx-auto mt-12 max-w-3xl">
+      <div class="flex gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-800 dark:bg-gray-900" role="tablist" aria-label="Installation methods">
+        {
+          tabs.map((t, i) => (
+            <button
+              type="button"
+              role="tab"
+              id={`${t.id}-tab`}
+              aria-controls={t.id}
+              aria-selected={i === 0 ? 'true' : 'false'}
+              data-tab={t.id}
+              class={`tab-button flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${i === 0 ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}`}
+            >
+              <i class={`${t.icon} mr-1.5`} aria-hidden="true" />
+              {t.label}
+            </button>
+          ))
+        }
+      </div>
+
+      <div class="mt-4">
+        {
+          tabs.map((t, i) => (
+            <div
+              id={t.id}
+              role="tabpanel"
+              aria-labelledby={`${t.id}-tab`}
+              class={`tab-pane ${i === 0 ? '' : 'hidden'}`}
+            >
+              <div class="code-block">
+                <div class="code-block-header">
+                  <span>{t.label} Installation</span>
+                  <button
+                    class="copy-btn rounded p-1 text-gray-400 hover:bg-gray-800 hover:text-gray-200"
+                    data-copy-target={`${t.id}-code`}
+                    aria-label={`Copy ${t.label} installation code to clipboard`}
+                  >
+                    <i class="fas fa-copy" aria-hidden="true" />
+                  </button>
+                </div>
+                <pre id={`${t.id}-code`}><code>{t.code}</code></pre>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Tab disclosure for the installation section.
+  const buttons = document.querySelectorAll<HTMLButtonElement>('.tab-button');
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.dataset.tab;
+      if (!targetId) return;
+
+      // Update tab visuals + aria.
+      buttons.forEach((b) => {
+        const isActive = b === btn;
+        b.setAttribute('aria-selected', String(isActive));
+        b.classList.toggle('bg-white', isActive);
+        b.classList.toggle('text-gray-900', isActive);
+        b.classList.toggle('shadow-sm', isActive);
+        b.classList.toggle('dark:bg-gray-700', isActive);
+        b.classList.toggle('dark:text-white', isActive);
+        b.classList.toggle('text-gray-600', !isActive);
+        b.classList.toggle('hover:text-gray-900', !isActive);
+        b.classList.toggle('dark:text-gray-400', !isActive);
+        b.classList.toggle('dark:hover:text-white', !isActive);
+      });
+
+      // Toggle panels.
+      document.querySelectorAll<HTMLElement>('.tab-pane').forEach((pane) => {
+        pane.classList.toggle('hidden', pane.id !== targetId);
+      });
+    });
+  });
+</script>

@@ -1,0 +1,71 @@
+---
+const items = [
+  {
+    href: 'https://news.ycombinator.com/item?id=44427452',
+    icon: 'fab fa-hacker-news',
+    iconBg: 'bg-orange-500',
+    title: 'Hacker News',
+    meta: '39 points · 23 comments',
+    sub: 'Featured on Hacker News',
+  },
+  {
+    href: 'https://www.reddit.com/r/homelab/comments/1lv1s69/certmate_ssl_certificate_management_system_api_ui/',
+    icon: 'fab fa-reddit',
+    iconBg: 'bg-orange-600',
+    title: 'Reddit r/homelab',
+    meta: 'Community discussion',
+    sub: 'Featured on Reddit',
+  },
+  {
+    href: 'https://github.com/fabriziosalmi/certmate',
+    icon: 'fab fa-github',
+    iconBg: 'bg-gray-900 dark:bg-gray-700',
+    title: 'GitHub',
+    meta: '1000+ stars · Active development',
+    sub: 'Open Source Project',
+  },
+  {
+    href: 'https://hub.docker.com/r/fabriziosalmi/certmate',
+    icon: 'fab fa-docker',
+    iconBg: 'bg-sky-600',
+    title: 'Docker Hub',
+    meta: 'Multi-platform builds · Auto-published',
+    sub: 'Latest version available',
+  },
+];
+---
+
+<section class="border-b border-gray-200 py-20 dark:border-gray-800" aria-labelledby="community-title">
+  <div class="container-x">
+    <div class="mx-auto max-w-2xl text-center">
+      <h2 id="community-title" class="section-title">
+        <i class="fas fa-heart mr-2 text-rose-500" aria-hidden="true"></i>
+        Community & Featured
+      </h2>
+      <p class="section-description">
+        Join our growing community and see where CertMate has been featured
+      </p>
+    </div>
+
+    <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {
+        items.map((i) => (
+          <a
+            href={i.href}
+            class="card flex flex-col items-start gap-3 hover:-translate-y-0.5 transition-transform"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <div class={`flex h-10 w-10 items-center justify-center rounded-lg text-white ${i.iconBg}`} aria-hidden="true">
+              <i class={i.icon} />
+            </div>
+            <h3 class="text-base font-semibold text-gray-900 dark:text-white">{i.title}</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300">{i.meta}</p>
+            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">{i.sub}</span>
+            <span class="sr-only">(opens in new tab)</span>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</section>

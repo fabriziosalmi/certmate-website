@@ -1,0 +1,100 @@
+---
+// Copy preserved from the static site — every card title + body identical
+// so anchor signal and accumulated SEO weight stay intact.
+const cards = [
+  {
+    icon: 'fa-building',
+    title: 'Environment Separation',
+    body: 'Separate production, staging, and development accounts with isolated credentials and configurations.',
+    rows: [
+      'production → api.company.com',
+      'staging → staging.company.com',
+      'dev → dev.company.com',
+    ],
+  },
+  {
+    icon: 'fa-globe',
+    title: 'Multi-Region Setup',
+    body: 'Deploy certificates across multiple regions with region-specific DNS accounts and configurations.',
+    rows: [
+      'us-east → *.us.company.com',
+      'eu-west → *.eu.company.com',
+      'apac → *.asia.company.com',
+    ],
+  },
+  {
+    icon: 'fa-shield-alt',
+    title: 'Permission Separation',
+    body: 'Use different accounts with varying permission levels for security and compliance requirements.',
+    rows: [
+      'admin → Full DNS control',
+      'limited → Specific zones only',
+      'cicd → Automated management',
+    ],
+  },
+  {
+    icon: 'fa-exchange-alt',
+    title: 'Disaster Recovery',
+    body: 'Configure backup accounts for failover scenarios and disaster recovery procedures.',
+    rows: [
+      'primary → Main operations',
+      'backup → DR scenarios',
+      'emergency → Crisis management',
+    ],
+  },
+];
+
+const example = `# Add production Cloudflare account
+curl -X POST "https://certmate.company.com/api/settings/dns-providers/cloudflare/accounts" \\
+  -H "Authorization: Bearer your_token" \\
+  -d '{"account_id": "production", "config": {"api_token": "prod_token"}}'
+
+# Create certificate using specific account
+curl -X POST "https://certmate.company.com/api/certificates/create" \\
+  -H "Authorization: Bearer your_token" \\
+  -d '{"domain": "api.company.com", "dns_provider": "cloudflare", "account_id": "production"}'`;
+---
+
+<section class="border-b border-gray-200 bg-gray-50 py-20 dark:border-gray-800 dark:bg-gray-900/30">
+  <div class="container-x">
+    <div class="mx-auto max-w-2xl text-center">
+      <h2 class="section-title">Enterprise-Grade Multi-Account Support</h2>
+      <p class="section-description">
+        Manage multiple DNS provider accounts for complex enterprise environments
+      </p>
+    </div>
+
+    <div class="mt-12 grid gap-6 lg:grid-cols-2">
+      {
+        cards.map((c) => (
+          <div class="card flex flex-col gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-primary dark:bg-blue-900/30 dark:text-blue-300" aria-hidden="true">
+              <i class={`fas ${c.icon}`} />
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{c.title}</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300">{c.body}</p>
+            <ul class="mt-2 space-y-1 rounded-md bg-gray-100 p-3 font-mono text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+              {c.rows.map((r) => <li>{r}</li>)}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="mt-10">
+      <div class="code-block">
+        <div class="code-block-header">
+          <span>Multi-Account API Example</span>
+          <button
+            class="copy-btn rounded p-1 text-gray-400 hover:bg-gray-800 hover:text-gray-200"
+            data-copy-target="enterprise-example"
+            aria-label="Copy code to clipboard"
+          >
+            <i class="fas fa-copy" aria-hidden="true"></i>
+          </button>
+        </div>
+        <pre id="enterprise-example"><code>{example}</code></pre>
+      </div>
+    </div>
+  </div>
+</section>

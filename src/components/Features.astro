@@ -1,0 +1,31 @@
+---
+import { features } from '~/data/features';
+---
+
+<section id="features" class="border-b border-gray-200 py-20 dark:border-gray-800" aria-labelledby="features-title">
+  <div class="container-x">
+    <div class="mx-auto max-w-2xl text-center">
+      <h2 id="features-title" class="section-title">Why Choose CertMate?</h2>
+      <p class="section-description">
+        CertMate solves the complexity of SSL certificate management in modern distributed architectures
+      </p>
+    </div>
+
+    <ul class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" role="list">
+      {
+        features.map((f) => (
+          <li class="card flex flex-col gap-3" role="listitem">
+            <div
+              class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-primary dark:bg-blue-900/30 dark:text-blue-300"
+              aria-hidden="true"
+            >
+              <i class={`fas ${f.icon}`} />
+            </div>
+            <h3 class="text-base font-semibold text-gray-900 dark:text-white">{f.title}</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300">{f.body}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>

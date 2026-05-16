@@ -8,75 +8,88 @@ Landing page and documentation site for [CertMate](https://github.com/fabriziosa
 
 ```
 certmate-website/
-├── index.html                  Main landing page
-├── _config.yml                 Jekyll / GitHub Pages configuration
-├── CNAME                       Custom domain (www.certmate.org)
-├── manifest.json               PWA manifest
-├── sw.js                       Service worker for offline support
-├── assets/
-│   ├── styles.css              Stylesheet (CSS custom properties)
-│   ├── script.js               Navigation, tabs, clipboard, animations
-│   ├── certmate_logo.png       Logo
-│   ├── favicon.svg             SVG favicon
-│   └── favicon.ico             ICO favicon
-└── docs/
-    ├── index.html              Documentation hub
-    ├── getting-started.html    Installation and setup
-    ├── dns-providers.html      All 22 DNS provider guides
-    ├── api-reference.html      REST API reference
-    ├── docker-deployment.html  Docker deployment guide
-    ├── storage-backends.html   Storage backend configuration
-    ├── backup-recovery.html    Backup and restore procedures
-    ├── security.html           Security best practices
-    ├── troubleshooting.html    Common issues and solutions
-    └── contributing.html       Contribution guidelines
+├── astro.config.mjs               Astro configuration (sitemap, tailwind, mdx)
+├── tailwind.config.mjs            Tailwind theme (CertMate palette, dark mode)
+├── package.json                   Node dependencies
+├── src/
+│   ├── pages/
+│   │   └── index.astro            Home page (Hero → WhatsNew → Features → ...)
+│   ├── layouts/
+│   │   └── BaseLayout.astro       SEO meta, JSON-LD, dark-mode FOUC guard
+│   ├── components/
+│   │   ├── Navbar.astro           Sticky nav with theme toggle + mobile menu
+│   │   ├── Hero.astro             Headline + stats + terminal demo
+│   │   ├── WhatsNew.astro         Release timeline (data in src/data/whats-new.ts)
+│   │   ├── Features.astro         Why-choose-CertMate grid
+│   │   ├── Community.astro        HN / Reddit / GitHub / Docker Hub cards
+│   │   ├── DnsProviders.astro     Provider sample grid
+│   │   ├── Enterprise.astro       Multi-account use cases + curl example
+│   │   ├── Installation.astro     Docker / Python / Kubernetes tabs
+│   │   ├── Api.astro              REST endpoint sample + curl recipe
+│   │   ├── Cta.astro              Mid-page conversion band
+│   │   ├── Docs.astro             Documentation links grid
+│   │   └── Footer.astro           Brand, link columns, copyright
+│   ├── data/
+│   │   ├── whats-new.ts           Release timeline data
+│   │   └── features.ts            Features grid data
+│   └── styles/
+│       └── global.css             Tailwind layer overrides + components
+├── public/
+│   ├── CNAME                      Custom domain (www.certmate.org)
+│   ├── manifest.json              PWA manifest
+│   ├── sw.js                      Service worker
+│   ├── assets/                    Images, favicons, legacy JS / CSS
+│   └── docs/                      Static documentation HTML
+└── .github/workflows/deploy.yml   Build + deploy to GitHub Pages
 ```
 
 ## Local Development
 
-Clone and serve locally:
+Requires Node 20+ and npm.
 
 ```bash
 git clone https://github.com/fabriziosalmi/certmate-website.git
 cd certmate-website
-python -m http.server 8080
+npm install
+npm run dev          # dev server with HMR on http://localhost:4321
+npm run build        # production build into ./dist
+npm run preview      # serve the production build locally
 ```
-
-Open `http://localhost:8080` in your browser.
 
 ## Deployment
 
-The site is deployed via GitHub Pages from the `main` branch. Pushing to `main` triggers a build automatically.
+Pushing to `main` triggers `.github/workflows/deploy.yml`, which builds the
+Astro site (`npm run build`) and deploys the static output (`./dist`) to
+GitHub Pages via the official `actions/deploy-pages@v4` flow. The first
+deploy after the migration requires switching GitHub Pages settings from
+"Deploy from a branch" to "GitHub Actions" in the repo settings.
 
-Custom domain is configured through the `CNAME` file pointing to `www.certmate.org`.
+The custom domain `www.certmate.org` is configured via the `public/CNAME`
+file (copied verbatim into the build output).
 
 ## Technical Details
 
-- **Stack:** Vanilla HTML, CSS, JavaScript (no build step, no framework)
-- **Hosting:** GitHub Pages with Jekyll
-- **Fonts:** Inter via Google Fonts
+- **Stack:** [Astro 5](https://astro.build), [Tailwind CSS 3](https://tailwindcss.com), TypeScript
+- **Hosting:** GitHub Pages (deployed via Actions, not Jekyll)
+- **Fonts:** Inter + JetBrains Mono via Google Fonts
 - **Icons:** Font Awesome 6.4.0 (CDN)
 - **PWA:** Service worker with asset caching
-- **SEO:** Open Graph, Twitter Cards, JSON-LD structured data, jekyll-sitemap
+- **SEO:** Open Graph, Twitter Cards, JSON-LD structured data, `@astrojs/sitemap`
+- **Dark mode:** Class-based, persisted in `localStorage`, FOUC-prevented inline script in BaseLayout
+- **Accessibility:** Skip-to-content link, ARIA attributes, focus indicators, semantic landmarks
 
 ### Browser Support
 
-Chrome 60+, Firefox 60+, Safari 12+, Edge 79+, iOS Safari 12+, Chrome Mobile 60+.
-
-Requires CSS Grid, Flexbox, CSS Custom Properties, and Intersection Observer.
-
-### Accessibility
-
-WCAG 2.1 AA compliant. Keyboard navigation, skip-to-content link, ARIA attributes, focus indicators, reduced-motion support.
+Modern evergreen browsers (Chrome / Firefox / Safari / Edge). The dark-mode toggle and tab interactions use standard DOM APIs available since 2018.
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
-3. Test locally
+3. Run `npm run build` locally to confirm a green build
 4. Open a pull request
 
-See [contributing.html](docs/contributing.html) for details.
+See [contributing.html](public/docs/contributing.html) for details.
 
 ## License
 

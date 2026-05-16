@@ -1,0 +1,53 @@
+---
+// The card grid is illustrative — the canonical list lives in the main repo
+// at docs/dns-providers.md and grows over time. Neutral wording on the
+// section description (kept identical to the verb-tense pattern of the
+// previous static site) avoids drifting with every provider added.
+const providers = [
+  { icon: 'fas fa-cloud',          name: 'Cloudflare',        sub: 'Global CDN with multi-account support',     accent: 'text-orange-500' },
+  { icon: 'fab fa-aws',             name: 'AWS Route53',       sub: 'Multi-region, multi-account support',        accent: 'text-amber-500' },
+  { icon: 'fab fa-microsoft',       name: 'Azure DNS',         sub: 'Enterprise multi-subscription support',      accent: 'text-blue-500' },
+  { icon: 'fab fa-google',          name: 'Google Cloud DNS',  sub: "Google's high-performance DNS",              accent: 'text-red-500' },
+  { icon: 'fab fa-digital-ocean',   name: 'DigitalOcean',      sub: 'Cloud infrastructure DNS',                   accent: 'text-sky-500' },
+  { icon: 'fas fa-ellipsis-h',      name: 'And more',          sub: 'Hetzner, Porkbun, GoDaddy, Linode, OVH, ...', accent: 'text-gray-500' },
+];
+---
+
+<section id="providers" class="border-b border-gray-200 py-20 dark:border-gray-800">
+  <div class="container-x">
+    <div class="mx-auto max-w-2xl text-center">
+      <h2 class="section-title">Supported DNS Providers</h2>
+      <p class="section-description">
+        CertMate supports a wide range of DNS providers with multi-account capabilities for enterprise environments.
+      </p>
+    </div>
+
+    <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        providers.map((p) => (
+          <div class="card flex items-start gap-4">
+            <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800" aria-hidden="true">
+              <i class={`${p.icon} ${p.accent}`} />
+            </div>
+            <div>
+              <h3 class="text-base font-semibold text-gray-900 dark:text-white">{p.name}</h3>
+              <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">{p.sub}</p>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+
+    <p class="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
+      Full list with credential formats:
+      <a
+        class="font-medium text-primary hover:underline"
+        href="https://github.com/fabriziosalmi/certmate/wiki/DNS-Providers"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        DNS Providers wiki page
+      </a>
+    </p>
+  </div>
+</section>

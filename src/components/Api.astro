@@ -1,0 +1,99 @@
+---
+const endpoints = [
+  { method: 'POST', path: '/api/certificates/create',                       desc: 'Create new SSL certificate with account selection' },
+  { method: 'POST', path: '/api/settings/dns-providers/{provider}/accounts', desc: 'Add new DNS provider account' },
+  { method: 'GET',  path: '/api/certificates',                              desc: 'List all certificates with account info' },
+  { method: 'GET',  path: '/{domain}/tls',                                   desc: 'Download certificate ZIP' },
+];
+
+const example = `# Add multiple DNS accounts
+curl -X POST "https://certmate.example.com/api/settings/dns-providers/cloudflare/accounts" \\
+  -H "Authorization: Bearer your_api_token_here" \\
+  -H "Content-Type: application/json" \\
+  -d '{"account_id": "production", "config": {"api_token": "prod_token"}}'
+
+# Create certificate with specific account
+curl -X POST "https://certmate.example.com/api/certificates/create" \\
+  -H "Authorization: Bearer your_api_token_here" \\
+  -H "Content-Type: application/json" \\
+  -d '{"domain": "api.company.com", "dns_provider": "cloudflare", "account_id": "production"}'
+
+# Download certificate
+curl -H "Authorization: Bearer your_api_token_here" \\
+     -o api.company.com-tls.zip \\
+     "https://certmate.example.com/api.company.com/tls"`;
+
+const methodColors: Record<string, string> = {
+  GET:  'bg-emerald-100 text-emerald-800 ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:ring-emerald-800',
+  POST: 'bg-blue-100 text-blue-800 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-800',
+};
+---
+
+<section id="api" class="border-b border-gray-200 py-20 dark:border-gray-800">
+  <div class="container-x">
+    <div class="mx-auto max-w-2xl text-center">
+      <h2 class="section-title">Powerful REST API</h2>
+      <p class="section-description">
+        Complete programmatic control with comprehensive API endpoints
+      </p>
+    </div>
+
+    <div class="mt-12 grid gap-4 sm:grid-cols-2">
+      {
+        endpoints.map((e) => (
+          <div class="card flex flex-col gap-2">
+            <span class={`badge ring-1 ring-inset self-start font-mono ${methodColors[e.method]}`}>{e.method}</span>
+            <code class="text-sm text-gray-900 dark:text-gray-100">{e.path}</code>
+            <p class="text-sm text-gray-600 dark:text-gray-300">{e.desc}</p>
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="mx-auto mt-10 max-w-3xl">
+      <div class="code-block">
+        <div class="code-block-header">
+          <span>API Example</span>
+          <button
+            class="copy-btn rounded p-1 text-gray-400 hover:bg-gray-800 hover:text-gray-200"
+            data-copy-target="api-example"
+            aria-label="Copy API example code to clipboard"
+          >
+            <i class="fas fa-copy" aria-hidden="true"></i>
+          </button>
+        </div>
+        <pre id="api-example"><code>{example}</code></pre>
+      </div>
+    </div>
+
+    <p class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+      Full Swagger/OpenAPI docs ship at <code>/docs/</code> on any running instance.
+    </p>
+  </div>
+</section>
+
+<script>
+  // Wire up every copy button on the page. Used by Enterprise, Installation, Api.
+  document.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const targetId = btn.dataset.copyTarget;
+      if (!targetId) return;
+      const target = document.getElementById(targetId);
+      if (!target) return;
+      try {
+        await navigator.clipboard.writeText(target.textContent ?? '');
+        const icon = btn.querySelector('i');
+        if (icon) {
+          icon.classList.remove('fa-copy');
+          icon.classList.add('fa-check', 'text-emerald-400');
+          setTimeout(() => {
+            icon.classList.add('fa-copy');
+            icon.classList.remove('fa-check', 'text-emerald-400');
+          }, 1500);
+        }
+      } catch (_) {
+        /* clipboard API blocked — no UI affordance available */
+      }
+    });
+  });
+</script>

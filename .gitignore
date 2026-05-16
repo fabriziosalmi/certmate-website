@@ -85,3 +85,6 @@ temp/
 # Build files
 dist/
 build/
+
+# Astro
+.astro/

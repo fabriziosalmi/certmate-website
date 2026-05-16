@@ -1,0 +1,123 @@
+---
+import '~/styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  canonical?: string;
+  ogImage?: string;
+}
+
+const {
+  // Preserved verbatim from the previous static index.html so existing
+  // search-engine signal stays intact across the Astro migration.
+  title = 'CertMate - SSL Certificate Management System',
+  description = 'CertMate is a powerful SSL certificate management system designed for modern infrastructure. Built with multi-DNS provider support, Docker containerization, and comprehensive REST API.',
+  canonical = 'https://www.certmate.org/',
+  ogImage = 'https://www.certmate.org/assets/certmate_logo.png',
+} = Astro.props;
+
+// The previous index.html shipped this structured-data block verbatim;
+// keep the same shape so SoftwareApplication rich-result eligibility
+// carries over without re-indexing.
+const ldJson = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'CertMate',
+  description: 'A powerful SSL certificate management system designed for modern infrastructure. Built with multi-DNS provider support, Docker containerization, and comprehensive REST API.',
+  url: 'https://www.certmate.org/',
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Linux, Windows, macOS',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  author: {
+    '@type': 'Person',
+    name: 'Fabrizio Salmi',
+    url: 'https://github.com/fabriziosalmi',
+  },
+  codeRepository: 'https://github.com/fabriziosalmi/certmate',
+  programmingLanguage: 'Python',
+  runtimePlatform: 'Docker',
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+
+    <!-- Enhanced SEO Meta Tags — preserved from the static site. -->
+    <meta name="author" content="Fabrizio Salmi" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#2563eb" />
+    <link rel="canonical" href={canonical} />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Structured data -->
+    <script
+      is:inline
+      type="application/ld+json"
+      set:html={JSON.stringify(ldJson)}
+    />
+
+    <meta name="description" content={description} />
+    <meta
+      name="keywords"
+      content="SSL certificates, Let's Encrypt, certificate management, Docker, API, multi-DNS provider, automation, RBAC, private CA, ACME"
+    />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={canonical} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <meta property="twitter:image" content={ogImage} />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
+    <link rel="apple-touch-icon" href="/assets/favicon.svg" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      crossorigin
+    />
+
+    <!-- Dark-mode FOUC fix: apply the stored choice (or system preference)
+         before the first paint. -->
+    <script is:inline>
+      (() => {
+        try {
+          const stored = localStorage.getItem('theme');
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const isDark = stored ? stored === 'dark' : prefersDark;
+          if (isDark) document.documentElement.classList.add('dark');
+        } catch (_) {}
+      })();
+    </script>
+  </head>
+  <body class="min-h-screen flex flex-col">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <slot />
+  </body>
+</html>
