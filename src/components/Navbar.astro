@@ -17,13 +17,20 @@ const links = [
   aria-label="Main navigation"
 >
   <div class="container-x flex h-16 items-center justify-between">
-    <a href="/" class="flex items-center gap-2.5">
+    <a href="/" class="flex items-center gap-2.5" aria-label="CertMate home">
+      <!-- Logo at 40px renders crisp on the 64px nav strip without dwarfing
+           the brand text alongside it. The previous 32px size felt
+           anaemic on retina displays. width/height attrs match the
+           rendered size so the browser does not need to reflow on
+           load. -->
       <img
         src="/assets/certmate_logo.png"
-        alt="CertMate Logo"
-        class="h-8 w-8"
-        width="32"
-        height="32"
+        alt="CertMate logo"
+        class="h-10 w-10"
+        width="40"
+        height="40"
+        loading="eager"
+        decoding="async"
       />
       <span class="text-lg font-bold tracking-tight">CertMate</span>
     </a>
