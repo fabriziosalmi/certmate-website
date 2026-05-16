@@ -83,10 +83,16 @@ const ldJson = {
     <meta property="twitter:description" content={description} />
     <meta property="twitter:image" content={ogImage} />
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
-    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
-    <link rel="apple-touch-icon" href="/assets/favicon.svg" />
+    <!-- Favicon: the brand PNG resized into the sizes browsers actually pick
+         up. The previous static site referenced a generic Font Awesome
+         shield SVG that did not match the brand at all. Modern browsers
+         prefer the largest <link rel="icon"> that fits, so listing both
+         32 and 192 lets a desktop tab pull the small one and an Android
+         homescreen the large one. apple-touch-icon stays 180px (the iOS
+         standard). -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
 
     <!-- Fonts + icon CDN: pair every cross-origin stylesheet with a
          preconnect so the TLS handshake happens in parallel with HTML
