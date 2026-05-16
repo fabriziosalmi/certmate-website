@@ -1,0 +1,71 @@
+---
+// The doc cards still point at the existing /docs/*.html pages (the static
+// HTML docs migrated from the previous Jekyll build are preserved in
+// public/docs/ at the project root so old links continue to resolve).
+const docs = [
+  { href: '/docs/index.html',                icon: 'fa-book-open',  title: 'Getting Started',  body: 'Complete installation and setup guide' },
+  { href: '/docs/dns-providers.html',        icon: 'fa-server',     title: 'DNS Providers',    body: 'Setup guides for all supported DNS providers' },
+  { href: '/docs/api-reference.html',        icon: 'fa-code',       title: 'API Reference',    body: 'Complete REST API documentation' },
+  { href: '/docs/docker-deployment.html',    icon: 'fa-docker',     title: 'Docker Deployment',body: 'Production Docker deployment guide',  fab: true },
+  { href: '/docs/storage-backends.html',     icon: 'fa-database',   title: 'Storage Backends', body: 'Local, Azure, AWS, HashiCorp Vault, Infisical' },
+  { href: '/docs/backup-recovery.html',      icon: 'fa-save',       title: 'Backup & Recovery',body: 'Unified backup system and restore procedures' },
+  { href: '/docs/security.html',             icon: 'fa-shield-alt', title: 'Security',         body: 'Best practices and security guidelines' },
+  { href: '/docs/troubleshooting.html',      icon: 'fa-wrench',     title: 'Troubleshooting',  body: 'Common issues and solutions' },
+  { href: '/docs/contributing.html',         icon: 'fa-hands-helping', title: 'Contributing',  body: 'How to contribute to the project' },
+];
+---
+
+<section id="docs" class="py-20">
+  <div class="container-x">
+    <div class="mx-auto max-w-2xl text-center">
+      <h2 class="section-title">Documentation & Resources</h2>
+      <p class="section-description">
+        Comprehensive guides and resources to get you started
+      </p>
+    </div>
+
+    <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        docs.map((d) => (
+          <a
+            href={d.href}
+            class="card group flex flex-col gap-3 hover:-translate-y-0.5 transition-transform"
+          >
+            <div
+              class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-primary dark:bg-blue-900/30 dark:text-blue-300"
+              aria-hidden="true"
+            >
+              <i class={`${d.fab ? 'fab' : 'fas'} ${d.icon}`} />
+            </div>
+            <h3 class="text-base font-semibold text-gray-900 dark:text-white">{d.title}</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300">{d.body}</p>
+            <span class="mt-1 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+              Read more <i class="fas fa-arrow-right ml-0.5" aria-hidden="true" />
+            </span>
+          </a>
+        ))
+      }
+    </div>
+
+    <div class="mt-10 grid gap-3 sm:grid-cols-2 max-w-2xl mx-auto">
+      <a
+        href="https://github.com/fabriziosalmi/certmate/wiki"
+        class="btn btn-secondary justify-center"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <i class="fab fa-github" aria-hidden="true"></i>
+        Wiki on GitHub
+      </a>
+      <a
+        href="https://github.com/fabriziosalmi/certmate/discussions/categories/q-a"
+        class="btn btn-secondary justify-center"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <i class="fas fa-question-circle" aria-hidden="true"></i>
+        Q&amp;A Discussions
+      </a>
+    </div>
+  </div>
+</section>

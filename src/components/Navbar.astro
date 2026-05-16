@@ -1,0 +1,134 @@
+---
+// Section anchors are preserved (#features, #providers, #installation, #api,
+// #docs) so external links that point to certmate.org/#features keep landing
+// where they did pre-migration.
+const links = [
+  { href: '#features', label: 'Features' },
+  { href: '#providers', label: 'DNS Providers' },
+  { href: '#installation', label: 'Installation' },
+  { href: '#api', label: 'API' },
+  { href: '#docs', label: 'Documentation' },
+];
+---
+
+<nav
+  class="sticky top-0 z-40 border-b border-gray-200 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:border-gray-800 dark:bg-gray-950/80 dark:supports-[backdrop-filter]:bg-gray-950/60"
+  role="navigation"
+  aria-label="Main navigation"
+>
+  <div class="container-x flex h-16 items-center justify-between">
+    <a href="/" class="flex items-center gap-2.5">
+      <img
+        src="/assets/certmate_logo.png"
+        alt="CertMate Logo"
+        class="h-8 w-8"
+        width="32"
+        height="32"
+      />
+      <span class="text-lg font-bold tracking-tight">CertMate</span>
+    </a>
+
+    <ul class="hidden items-center gap-1 md:flex" id="nav-menu">
+      {
+        links.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              class="rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+            >
+              {link.label}
+            </a>
+          </li>
+        ))
+      }
+      <li>
+        <a
+          href="https://github.com/fabriziosalmi/certmate"
+          class="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <i class="fab fa-github" aria-hidden="true"></i>
+          GitHub
+          <span class="sr-only">(opens in new tab)</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="flex items-center gap-2">
+      <!-- Theme toggle: pure-CSS-class flip wired through localStorage. -->
+      <button
+        id="theme-toggle"
+        type="button"
+        class="rounded-md p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+        aria-label="Toggle color theme"
+      >
+        <i class="fas fa-sun hidden dark:inline" aria-hidden="true"></i>
+        <i class="fas fa-moon inline dark:hidden" aria-hidden="true"></i>
+      </button>
+
+      <button
+        id="nav-hamburger"
+        type="button"
+        class="rounded-md p-2 text-gray-600 hover:bg-gray-100 md:hidden dark:text-gray-300 dark:hover:bg-gray-800"
+        aria-label="Toggle navigation menu"
+        aria-expanded="false"
+        aria-controls="nav-menu-mobile"
+      >
+        <i class="fas fa-bars text-lg" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile menu -->
+  <div
+    id="nav-menu-mobile"
+    class="hidden border-t border-gray-200 bg-white md:hidden dark:border-gray-800 dark:bg-gray-950"
+  >
+    <ul class="container-x flex flex-col gap-1 py-3">
+      {
+        links.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              class="block rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              {link.label}
+            </a>
+          </li>
+        ))
+      }
+      <li>
+        <a
+          href="https://github.com/fabriziosalmi/certmate"
+          class="block rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <i class="fab fa-github mr-1" aria-hidden="true"></i> GitHub
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<script>
+  // Theme toggle: persist user choice in localStorage; the FOUC-prevention
+  // inline script in BaseLayout reads the same key.
+  const toggle = document.getElementById('theme-toggle');
+  toggle?.addEventListener('click', () => {
+    const html = document.documentElement;
+    const next = html.classList.toggle('dark') ? 'dark' : 'light';
+    try {
+      localStorage.setItem('theme', next);
+    } catch (_) {}
+  });
+
+  // Mobile-menu disclosure.
+  const burger = document.getElementById('nav-hamburger');
+  const mobile = document.getElementById('nav-menu-mobile');
+  burger?.addEventListener('click', () => {
+    const open = mobile?.classList.toggle('hidden') === false;
+    burger.setAttribute('aria-expanded', String(open));
+  });
+</script>

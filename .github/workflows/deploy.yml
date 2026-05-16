@@ -1,0 +1,60 @@
+name: Build and deploy Astro to GitHub Pages
+
+# Build the site on every push to main + on demand.
+# Replaces the previous Jekyll auto-build that GitHub Pages did natively;
+# now the static output of `astro build` is what gets served.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Single concurrent deploy per ref — newer pushes cancel an in-flight job
+# so the deployment always reflects the latest commit.
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build site
+        run: npm run build
+        env:
+          # Astro picks up `site:` from astro.config.mjs; this is just here so
+          # any custom prerender step that reads `process.env.SITE` works too.
+          SITE: https://www.certmate.org
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

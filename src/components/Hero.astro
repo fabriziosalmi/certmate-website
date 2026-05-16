@@ -1,0 +1,109 @@
+---
+// Hero copy is preserved VERBATIM from the static index.html so the H1, the
+// hero description and the value-prop counters do not drift from what the
+// search index has been carrying. The stat counters use neutral wording for
+// the DNS-provider count (the source-of-truth table now sits in the main
+// repo's docs/ and grows over time — fixing the number here would just
+// race those edits forever). Emoji that used to live in the GitHub Stars
+// row have been replaced with a Font Awesome glyph for a11y + consistency.
+---
+
+<section
+  class="relative overflow-hidden border-b border-gray-200 dark:border-gray-800"
+  aria-labelledby="hero-title"
+>
+  <!-- Soft background so the rest of the page can stay white/dark cleanly. -->
+  <div
+    class="absolute inset-0 -z-10 bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-gray-950 dark:via-gray-950 dark:to-gray-900"
+    aria-hidden="true"
+  >
+  </div>
+  <div
+    class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.08),_transparent_60%)] dark:bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.15),_transparent_60%)]"
+    aria-hidden="true"
+  >
+  </div>
+
+  <div class="container-x grid items-center gap-12 py-16 sm:py-20 lg:grid-cols-2 lg:py-24">
+    <div>
+      <div
+        class="badge bg-blue-50 text-primary ring-1 ring-inset ring-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-800"
+      >
+        <i class="fas fa-certificate" aria-hidden="true"></i>
+        <span>Enterprise-Ready SSL Management</span>
+      </div>
+
+      <h1
+        id="hero-title"
+        class="mt-5 text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl"
+      >
+        Secure Your Infrastructure with <span class="gradient-text">CertMate</span>
+      </h1>
+
+      <p class="mt-5 max-w-xl text-lg text-gray-600 dark:text-gray-300">
+        A powerful SSL certificate management system designed for modern infrastructure.
+        Built with multi-DNS provider support, Docker containerization, and comprehensive
+        REST API.
+      </p>
+
+      <div class="mt-8 grid grid-cols-3 gap-4 sm:gap-6" role="img" aria-label="CertMate statistics">
+        <div>
+          <div class="text-3xl font-bold text-primary sm:text-4xl">20+</div>
+          <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">DNS Providers</div>
+        </div>
+        <div>
+          <div class="text-3xl font-bold text-primary sm:text-4xl">Multi</div>
+          <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">Account Support</div>
+        </div>
+        <div>
+          <div class="text-3xl font-bold text-primary sm:text-4xl">1000+</div>
+          <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <i class="fas fa-star text-yellow-500" aria-hidden="true"></i> GitHub Stars
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href="#installation" class="btn btn-primary">
+          <i class="fas fa-rocket" aria-hidden="true"></i>
+          Get Started
+        </a>
+        <a
+          href="https://github.com/fabriziosalmi/certmate"
+          class="btn btn-secondary"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <i class="fab fa-github" aria-hidden="true"></i>
+          View on GitHub
+          <span class="sr-only">(opens in new tab)</span>
+        </a>
+      </div>
+    </div>
+
+    {/* Terminal demo. The previous static version put Unicode emoji glyphs
+       in the simulated output; replaced with Font Awesome icons so the
+       assistive-tech reading is predictable and styling renders
+       consistently across OS-level emoji fonts. */}
+    <div
+      class="overflow-hidden rounded-xl border border-gray-200 bg-gray-950 shadow-2xl dark:border-gray-800"
+      role="img"
+      aria-label="CertMate terminal demonstration"
+    >
+      <div class="flex items-center gap-2 border-b border-gray-800 bg-gray-900 px-4 py-2.5">
+        <span class="h-3 w-3 rounded-full bg-red-500" aria-hidden="true"></span>
+        <span class="h-3 w-3 rounded-full bg-yellow-500" aria-hidden="true"></span>
+        <span class="h-3 w-3 rounded-full bg-green-500" aria-hidden="true"></span>
+        <span class="ml-3 text-xs font-medium text-gray-400">CertMate Terminal</span>
+      </div>
+      <pre class="overflow-x-auto p-4 text-xs leading-relaxed text-gray-100 font-mono sm:text-sm"><code><span class="text-emerald-400">$</span> <span class="text-gray-100">docker-compose up -d</span>
+<span class="text-emerald-400"><i class="fas fa-check" aria-hidden="true"></i></span> CertMate started successfully
+<span class="text-emerald-400">$</span> <span class="text-gray-100">curl -X POST /api/settings/dns-providers/cloudflare/accounts \</span>
+     <span class="text-gray-300">-d '&#123;"account_id": "production", "config": &#123;...&#125;&#125;'</span>
+<span class="text-emerald-400"><i class="fas fa-check" aria-hidden="true"></i></span> Production account added
+<span class="text-emerald-400">$</span> <span class="text-gray-100">curl -X POST /api/certificates/create \</span>
+     <span class="text-gray-300">-d '&#123;"domain": "api.company.com", "account_id": "production"&#125;'</span>
+<span class="text-emerald-400"><i class="fas fa-lock" aria-hidden="true"></i></span> Certificate created for api.company.com<span class="animate-pulse">_</span></code></pre>
+    </div>
+  </div>
+</section>
