@@ -1,4 +1,5 @@
 ---
+import { Icon } from 'astro-icon/components';
 // Three installation paths, ordered from "30 seconds to a running cert
 // manager" to "full source build". The first tab is the single
 // `docker run` command — the previous flow led with a `git clone` +
@@ -64,10 +65,10 @@ kubectl apply -f k8s/deployment.yaml -n certmate
 kubectl get pods -n certmate`;
 
 const tabs = [
-  { id: 'docker-oneshot', label: 'docker run',     icon: 'fab fa-docker',         code: dockerOneShot },
-  { id: 'docker',         label: 'Docker Compose', icon: 'fab fa-docker',         code: docker },
-  { id: 'python',         label: 'Python',         icon: 'fab fa-python',         code: python },
-  { id: 'kubernetes',     label: 'Kubernetes',     icon: 'fas fa-dharmachakra',   code: k8s },
+  { id: 'docker-oneshot', label: 'docker run',     icon: 'fa6-brands:docker',       code: dockerOneShot },
+  { id: 'docker',         label: 'Docker Compose', icon: 'fa6-brands:docker',       code: docker },
+  { id: 'python',         label: 'Python',         icon: 'fa6-brands:python',       code: python },
+  { id: 'kubernetes',     label: 'Kubernetes',     icon: 'fa6-solid:dharmachakra',  code: k8s },
 ];
 ---
 
@@ -93,7 +94,7 @@ const tabs = [
               data-tab={t.id}
               class={`tab-button flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${i === 0 ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}`}
             >
-              <i class={`${t.icon} mr-1.5`} aria-hidden="true" />
+              <Icon name={t.icon} class="mr-1.5" aria-hidden="true" />
               {t.label}
             </button>
           ))
@@ -117,7 +118,7 @@ const tabs = [
                     data-copy-target={`${t.id}-code`}
                     aria-label={`Copy ${t.label} installation code to clipboard`}
                   >
-                    <i class="fas fa-copy" aria-hidden="true" />
+                    <Icon name="fa6-solid:copy" aria-hidden="true" />
                   </button>
                 </div>
                 <pre id={`${t.id}-code`}><code>{t.code}</code></pre>

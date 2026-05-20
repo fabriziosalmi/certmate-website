@@ -28,7 +28,7 @@ export const updates: UpdateCard[] = [
   {
     badge: 'milestone',
     badgeLabel: 'v2.7.0',
-    icon: 'fa-id-badge',
+    icon: 'fa6-solid:id-badge',
     title: 'v2.7.0 — OIDC / SSO authentication',
     description:
       'Authorization Code + PKCE via Authlib, IdP-claim-based role mapping (case-insensitive, first-match-wins), JIT or link-by-email provisioning with mandatory `email_verified` gate against account-takeover via self-service-signup IdPs. Dedicated audit-logged settings endpoint kept separate from the bulk settings POST so a scoped key cannot mutate OIDC config. Concurrency-safe JIT path routed through the settings RLock.',
@@ -39,7 +39,7 @@ export const updates: UpdateCard[] = [
   {
     badge: 'security',
     badgeLabel: 'Audit',
-    icon: 'fa-shield-alt',
+    icon: 'fa6-solid:shield-halved',
     title: 'Internal security audit — 11 findings closed in one day',
     description:
       'Four-angle audit on authz/scope coverage, secrets handling, path traversal completeness and shell injection. Closed: backup ZIP plaintext credentials (mask-by-default + admin opt-in for full DR, chmod 0600), settings-mutating routes that destroyed credentials on round-trip POST, path traversal at the WRITE boundary on `/api/certificates/create`, client-cert API role + private-key gating, certbot stderr leak on credential-file parse errors, acme-dns shared-secret masking, settings GET cross-tenant domain disclosure. ~115 regression tests added.',
@@ -50,7 +50,7 @@ export const updates: UpdateCard[] = [
   {
     badge: 'feature',
     badgeLabel: 'v2.6.x',
-    icon: 'fa-network-wired',
+    icon: 'fa6-solid:network-wired',
     title: 'v2.6.x — Azure Key Vault + nested-subdomain wildcards + storage hot-reload',
     description:
       'Native Azure Key Vault Certificate-object storage mode (AKS / App Service / Front Door consume it directly). Wildcard cert issuance for nested subdomains against the parent hosted zone, with per-provider zone discovery (Azure today, registry-keyed for future providers). Storage backend hot-reloads when `certificate_storage` changes — no restart required. Configurable cert key shape (RSA 2048/3072/4096 or ECDSA P-256/P-384).',
@@ -60,7 +60,7 @@ export const updates: UpdateCard[] = [
   {
     badge: 'fix',
     badgeLabel: 'v2.6.9',
-    icon: 'fa-wrench',
+    icon: 'fa6-solid:wrench',
     title: 'v2.6.9 — Azure DNS sp_* keys + zoneN mapping',
     description:
       '`certbot-dns-azure` 2.x expects `dns_azure_sp_client_id` / `dns_azure_sp_client_secret` and parses subscription + resource group out of `dns_azure_zoneN` lines. The previous bare-key format was silently ignored by the plugin and aborted with "No authentication methods have been configured for Azure DNS" before any DNS challenge could run.',
@@ -70,7 +70,7 @@ export const updates: UpdateCard[] = [
   {
     badge: 'milestone',
     badgeLabel: 'v2.5.x',
-    icon: 'fa-star',
+    icon: 'fa6-solid:star',
     title: 'v2.5.x — UI rewrite + multi-audit response',
     description:
       'Full template sweep (51 fixes across all templates), standardized modal macro with Esc/backdrop/focus-trap, accessibility passes, deploy-hook parameter-expansion bypass closed, metadata RMW race fixed, corrupt-metadata quarantine, scheduler /health surfacing. +160 unit tests on previously-uncovered crypto-critical modules (Private CA, CSR handler, OCSP/CRL, storage backends).',
@@ -80,7 +80,7 @@ export const updates: UpdateCard[] = [
   {
     badge: 'feature',
     badgeLabel: 'Feature',
-    icon: 'fa-certificate',
+    icon: 'fa6-solid:certificate',
     title: 'Client Certificates Management',
     description:
       'Complete client certificate lifecycle with OCSP responder, CRL distribution, batch CSV import (up to 100 identities per call), audit logging, and per-file role gating — viewers pull cert/chain/csr, operators pull privkey, admins revoke.',
@@ -89,7 +89,7 @@ export const updates: UpdateCard[] = [
   {
     badge: 'security',
     badgeLabel: 'Security',
-    icon: 'fa-key',
+    icon: 'fa6-solid:key',
     title: 'Scoped API Keys + RBAC',
     description:
       'Three-tier role model (admin / operator / viewer) plus scoped API keys with allowed_domains enforcement. Bearer-token rotation, audit log for sensitive setting changes, per-IP rate limiting on auth endpoints.',

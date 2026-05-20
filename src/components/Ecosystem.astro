@@ -1,4 +1,5 @@
 ---
+import { Icon } from 'astro-icon/components';
 /**
  * "Ecosystem" cards — sister projects that live alongside the main CertMate
  * repository. Two cards today (Agent + Tools). Copy is deliberately short:
@@ -15,7 +16,7 @@
 const projects = [
   {
     href: 'https://agent.certmate.org',
-    icon: 'fa-comments',
+    icon: 'fa6-solid:comments',
     title: 'CertMate Agent',
     tagline: 'Conversational control plane',
     body:
@@ -24,7 +25,7 @@ const projects = [
   },
   {
     href: 'https://tools.certmate.org',
-    icon: 'fa-toolbox',
+    icon: 'fa6-solid:toolbox',
     title: 'CertMate Tools',
     tagline: 'Privacy-first online utilities',
     body:
@@ -38,7 +39,7 @@ const projects = [
   <div class="container-x">
     <div class="mx-auto max-w-2xl text-center">
       <h2 id="ecosystem-title" class="section-title">
-        <i class="fas fa-cubes mr-2 text-primary" aria-hidden="true"></i>
+        <Icon name="fa6-solid:cubes" class="mr-2 text-primary" aria-hidden="true" />
         Ecosystem
       </h2>
       <p class="section-description">
@@ -56,7 +57,7 @@ const projects = [
               class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-primary dark:bg-blue-900/30 dark:text-blue-300"
               aria-hidden="true"
             >
-              <i class={`fas ${p.icon}`} />
+              <Icon name={p.icon} />
             </div>
             <div>
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
@@ -75,7 +76,7 @@ const projects = [
                 class="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
               >
                 Open {p.href.replace('https://', '')}
-                <i class="fas fa-arrow-up-right-from-square text-[0.65rem]" aria-hidden="true" />
+                <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.65rem]" aria-hidden="true" />
                 <span class="sr-only">(opens in new tab)</span>
               </a>
               <span aria-hidden="true" class="text-gray-300 dark:text-gray-700">·</span>
@@ -85,7 +86,7 @@ const projects = [
                 rel="noopener noreferrer"
                 class="inline-flex items-center gap-1.5 text-gray-500 hover:text-primary dark:text-gray-400"
               >
-                <i class="fab fa-github" aria-hidden="true" />
+                <Icon name="fa6-brands:github" aria-hidden="true" />
                 Source
                 <span class="sr-only">(opens in new tab)</span>
               </a>

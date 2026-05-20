@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>API Reference - CertMate Documentation</title>
     <link rel="stylesheet" href="../assets/styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"></noscript>
     <style>
         .doc-content {
             max-width: 1100px;
@@ -119,6 +119,43 @@
             background: var(--gray-100);
             font-weight: 600;
         }
+    
+    /* In-page TOC, injected by toc.js. Sticky right column on lg+
+       viewports; collapsed to a top disclosure on smaller screens. */
+    .doc-toc {
+      display: none;
+    }
+    @media (min-width: 1100px) {
+      .doc-toc {
+        display: block;
+        position: fixed;
+        top: 100px;
+        right: max(24px, calc((100vw - 900px) / 2 - 240px));
+        width: 220px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+      }
+    }
+    .doc-toc-inner {
+      border-left: 2px solid var(--gray-200);
+      padding-left: 16px;
+    }
+    .doc-toc-list { list-style: none; padding: 0; margin: 0; }
+    .doc-toc-item { margin: 4px 0; line-height: 1.4; }
+    .doc-toc-item-h3 { padding-left: 12px; }
+    .doc-toc-link {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: block;
+      padding: 2px 0;
+      transition: color 120ms ease;
+    }
+    .doc-toc-link:hover { color: var(--gray-900); }
+    .doc-toc-link.is-active {
+      color: var(--blue-600, #2563eb);
+      font-weight: 600;
+    }
     </style>
 </head>
 <body>
@@ -153,7 +190,7 @@
                 Interactive Documentation: Visit <code>http://your-server:8000/docs/</code> for Swagger UI or <code>/redoc/</code> for ReDoc interface.
             </div>
 
-            <h2>🔐 Authentication</h2>
+            <h2>Authentication</h2>
             <p>All API endpoints require Bearer token authentication. Include the Authorization header in all requests:</p>
             <pre><code>Authorization: Bearer your_api_token_here</code></pre>
 
@@ -162,7 +199,7 @@
                 Security: Always change the default API token in production environments!
             </div>
 
-            <h2>📍 Core Endpoints</h2>
+            <h2>Core Endpoints</h2>
 
             <h3>Health & Status</h3>
             <div class="api-endpoint">
@@ -530,5 +567,6 @@ echo "Certificate updated for ${DOMAIN}"</code></pre>
     </footer>
 
     <script src="../assets/script.js"></script>
+    <script src="toc.js" defer></script>
 </body>
 </html>

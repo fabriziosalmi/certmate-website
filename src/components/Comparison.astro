@@ -1,4 +1,5 @@
 ---
+import { Icon } from 'astro-icon/components';
 /**
  * Honest comparison vs the tools a CertMate evaluator most often comes
  * from: cert-manager (Kubernetes-native, the de-facto k8s certificate
@@ -103,7 +104,7 @@ function cellTint(v: string): string {
   <div class="container-x">
     <div class="mx-auto max-w-2xl text-center">
       <h2 id="comparison-title" class="section-title">
-        <i class="fas fa-balance-scale mr-2 text-primary" aria-hidden="true"></i>
+        <Icon name="fa6-solid:scale-balanced" class="mr-2 text-primary" aria-hidden="true" />
         How does CertMate compare?
       </h2>
       <p class="section-description">

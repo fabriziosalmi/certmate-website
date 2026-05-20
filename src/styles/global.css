@@ -1,3 +1,17 @@
+/* Self-hosted Inter via @fontsource/inter — the previous build pulled
+   Google Fonts and the Font Awesome CDN as two render-blocking <link
+   rel=stylesheet>, costing ~80ms LCP on cold loads + a third-party
+   trust hop. Importing the weight subsets we actually use here makes
+   the CSS local + the woff2 files cache under /_astro/ with the rest
+   of the build. Weights match the ones the design uses: 400 body,
+   500 medium chips, 600 semibold subheads, 700 bold headlines, 800
+   for the hero. */
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/inter/800.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

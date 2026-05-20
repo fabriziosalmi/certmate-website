@@ -1,4 +1,5 @@
 ---
+import { Icon } from 'astro-icon/components';
 const endpoints = [
   { method: 'POST', path: '/api/certificates/create',                       desc: 'Create new SSL certificate with account selection' },
   { method: 'POST', path: '/api/settings/dns-providers/{provider}/accounts', desc: 'Add new DNS provider account' },
@@ -59,7 +60,7 @@ const methodColors: Record<string, string> = {
             data-copy-target="api-example"
             aria-label="Copy API example code to clipboard"
           >
-            <i class="fas fa-copy" aria-hidden="true"></i>
+            <Icon name="fa6-solid:copy" aria-hidden="true" />
           </button>
         </div>
         <pre id="api-example"><code>{example}</code></pre>

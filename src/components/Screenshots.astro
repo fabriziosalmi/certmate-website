@@ -1,0 +1,83 @@
+---
+/**
+ * Screenshots section: two real UI captures from a running CertMate
+ * instance. The previous version of the site shipped a fabricated
+ * terminal block in the hero — a placeholder that hid the actual
+ * product. A visitor evaluating CertMate vs. cert-manager / Caddy
+ * needs to see the dashboard and the settings page to decide whether
+ * the UX matches what they want.
+ *
+ * Images are resized to web-friendly widths by `node scripts/build-og.mjs`
+ * (well, sharp invoked separately — the source PNGs live in the main
+ * `certmate` repo at the project root: screenshot_1.png / screenshot_2.png,
+ * resized to public/assets/screenshot-{dashboard,settings}.png).
+ *
+ * Lazy-loaded so they do not block the rest of the page; explicit width
+ * and height attributes preserve layout (no CLS).
+ */
+
+interface Shot {
+  src: string;
+  alt: string;
+  caption: string;
+  /** Intrinsic dimensions of the actual file (post-resize), in px. */
+  width: number;
+  height: number;
+  /** Whether to span both columns on the desktop grid. */
+  full?: boolean;
+}
+
+const shots: Shot[] = [
+  {
+    src: '/assets/screenshot-dashboard.png',
+    alt: 'CertMate certificate dashboard: list of issued TLS certificates with status, expiry, DNS provider and deployment columns.',
+    caption: 'Certificate dashboard — every TLS cert under management, expiry + deployment status surfaced at a glance.',
+    width: 1600,
+    height: 698,
+    full: true,
+  },
+  {
+    src: '/assets/screenshot-settings.png',
+    alt: 'CertMate settings page: DNS provider grid, certificate authority configuration, storage backend, backup and restore.',
+    caption: 'Settings — DNS providers grid, CA configuration, storage backend selector and unified backup / restore.',
+    width: 900,
+    height: 1530,
+  },
+];
+---
+
+<section id="screenshots" class="border-b border-gray-200 py-20 dark:border-gray-800" aria-labelledby="screenshots-title">
+  <div class="container-x">
+    <div class="mx-auto max-w-2xl text-center">
+      <h2 id="screenshots-title" class="section-title">What it looks like</h2>
+      <p class="section-description">
+        Real UI captures from a running instance. The web interface is
+        designed for operators — at-a-glance status on the dashboard,
+        provider configuration without leaving the page on settings.
+      </p>
+    </div>
+
+    <div class="mt-12 grid gap-6 lg:grid-cols-2">
+      {
+        shots.map((s) => (
+          <figure
+            class={`overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 ${s.full ? 'lg:col-span-2' : ''}`}
+          >
+            <img
+              src={s.src}
+              alt={s.alt}
+              width={s.width}
+              height={s.height}
+              loading="lazy"
+              decoding="async"
+              class="block h-auto w-full"
+            />
+            <figcaption class="border-t border-gray-200 bg-gray-50 px-4 py-3 text-xs text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 sm:text-sm">
+              {s.caption}
+            </figcaption>
+          </figure>
+        ))
+      }
+    </div>
+  </div>
+</section>

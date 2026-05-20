@@ -1,4 +1,5 @@
 ---
+import { Icon } from 'astro-icon/components';
 // Canonical provider list pulled from modules/core/utils.py
 // (_DNS_PROVIDER_CREDENTIALS) — every name on this grid corresponds to
 // a provider CertMate can issue against today. Listed in roughly the
@@ -12,30 +13,30 @@
 // provider in 2 seconds, not read a paragraph about each one.
 
 const providers = [
-  { icon: 'fab fa-cloudflare',      name: 'Cloudflare',     note: 'multi-account' },
-  { icon: 'fab fa-aws',             name: 'AWS Route53',    note: 'multi-account' },
-  { icon: 'fab fa-microsoft',       name: 'Azure DNS',      note: 'multi-subscription' },
-  { icon: 'fab fa-google',          name: 'Google Cloud DNS', note: 'multi-account' },
-  { icon: 'fab fa-digital-ocean',   name: 'DigitalOcean',   note: 'multi-account' },
-  { icon: 'fas fa-server',          name: 'PowerDNS',       note: 'self-hosted' },
-  { icon: 'fas fa-cube',            name: 'Linode',         note: 'multi-account' },
-  { icon: 'fas fa-leaf',            name: 'Gandi',          note: 'EU registrar' },
-  { icon: 'fas fa-globe',           name: 'OVH',            note: 'EU cloud' },
-  { icon: 'fas fa-tag',             name: 'Namecheap',      note: 'registrar' },
-  { icon: 'fas fa-cloud',           name: 'ArvanCloud',     note: 'multi-account' },
-  { icon: 'fas fa-mountain',        name: 'Infomaniak',     note: 'EU cloud' },
-  { icon: 'fas fa-shield-halved',   name: 'ACME-DNS',       note: 'CNAME delegation' },
-  { icon: 'fas fa-feather',         name: 'DuckDNS',        note: 'free dynamic DNS' },
-  { icon: 'fas fa-server',          name: 'Vultr',          note: 'multi-account' },
-  { icon: 'fas fa-bolt',            name: 'DNS Made Easy',  note: 'multi-account' },
-  { icon: 'fas fa-circle',          name: 'NS1',            note: 'managed DNS' },
-  { icon: 'fas fa-h-square',        name: 'Hetzner DNS',    note: 'EU hosting' },
-  { icon: 'fas fa-server',          name: 'Hetzner Cloud',  note: 'EU hosting' },
-  { icon: 'fas fa-piggy-bank',      name: 'Porkbun',        note: 'registrar' },
-  { icon: 'fas fa-golf-ball-tee',   name: 'GoDaddy',        note: 'registrar' },
-  { icon: 'fas fa-network-wired',   name: 'Hurricane Electric', note: 'free DDNS' },
-  { icon: 'fas fa-d',               name: 'Dynu DNS',       note: 'dynamic DNS' },
-  { icon: 'fas fa-network-wired',   name: 'Akamai EdgeDNS', note: 'enterprise CDN' },
+  { icon: 'fa6-brands:cloudflare',    name: 'Cloudflare',         note: 'multi-account' },
+  { icon: 'fa6-brands:aws',           name: 'AWS Route53',        note: 'multi-account' },
+  { icon: 'fa6-brands:microsoft',     name: 'Azure DNS',          note: 'multi-subscription' },
+  { icon: 'fa6-brands:google',        name: 'Google Cloud DNS',   note: 'multi-account' },
+  { icon: 'fa6-brands:digital-ocean', name: 'DigitalOcean',       note: 'multi-account' },
+  { icon: 'fa6-solid:server',         name: 'PowerDNS',           note: 'self-hosted' },
+  { icon: 'fa6-solid:cube',           name: 'Linode',             note: 'multi-account' },
+  { icon: 'fa6-solid:leaf',           name: 'Gandi',              note: 'EU registrar' },
+  { icon: 'fa6-solid:globe',          name: 'OVH',                note: 'EU cloud' },
+  { icon: 'fa6-solid:tag',            name: 'Namecheap',          note: 'registrar' },
+  { icon: 'fa6-solid:cloud',          name: 'ArvanCloud',         note: 'multi-account' },
+  { icon: 'fa6-solid:mountain',       name: 'Infomaniak',         note: 'EU cloud' },
+  { icon: 'fa6-solid:shield-halved',  name: 'ACME-DNS',           note: 'CNAME delegation' },
+  { icon: 'fa6-solid:feather',        name: 'DuckDNS',            note: 'free dynamic DNS' },
+  { icon: 'fa6-solid:server',         name: 'Vultr',              note: 'multi-account' },
+  { icon: 'fa6-solid:bolt',           name: 'DNS Made Easy',      note: 'multi-account' },
+  { icon: 'fa6-solid:circle',         name: 'NS1',                note: 'managed DNS' },
+  { icon: 'fa6-solid:h',              name: 'Hetzner DNS',        note: 'EU hosting' },
+  { icon: 'fa6-solid:server',         name: 'Hetzner Cloud',      note: 'EU hosting' },
+  { icon: 'fa6-solid:piggy-bank',     name: 'Porkbun',            note: 'registrar' },
+  { icon: 'fa6-solid:golf-ball-tee',  name: 'GoDaddy',            note: 'registrar' },
+  { icon: 'fa6-solid:network-wired',  name: 'Hurricane Electric', note: 'free DDNS' },
+  { icon: 'fa6-solid:d',              name: 'Dynu DNS',           note: 'dynamic DNS' },
+  { icon: 'fa6-solid:network-wired',  name: 'Akamai EdgeDNS',     note: 'enterprise CDN' },
 ];
 ---
 
@@ -59,7 +60,7 @@ const providers = [
             role="listitem"
             class="flex items-center gap-2.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 dark:border-gray-800 dark:bg-gray-900"
           >
-            <i class={`${p.icon} text-base text-primary flex-shrink-0 w-4 text-center`} aria-hidden="true" />
+            <Icon name={p.icon} class="text-base text-primary flex-shrink-0 w-4 text-center" aria-hidden="true" />
             <div class="min-w-0">
               <div class="truncate text-xs font-semibold text-gray-900 dark:text-white sm:text-sm">
                 {p.name}

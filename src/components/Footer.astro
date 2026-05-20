@@ -1,4 +1,5 @@
 ---
+import { Icon } from 'astro-icon/components';
 // Footer copy preserved verbatim from the static site. The "Made with"
 // line previously rendered with a heart emoji glyph; we use a Font
 // Awesome icon instead so the rendering is identical on every OS and
@@ -33,7 +34,7 @@ const year = new Date().getFullYear();
             aria-label="CertMate on GitHub"
             class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
           >
-            <i class="fab fa-github text-xl" aria-hidden="true"></i>
+            <Icon name="fa6-brands:github" class="text-xl" aria-hidden="true" />
           </a>
           <a
             href="https://hub.docker.com/r/fabriziosalmi/certmate"
@@ -42,7 +43,7 @@ const year = new Date().getFullYear();
             aria-label="CertMate on Docker Hub"
             class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
           >
-            <i class="fab fa-docker text-xl" aria-hidden="true"></i>
+            <Icon name="fa6-brands:docker" class="text-xl" aria-hidden="true" />
           </a>
         </div>
       </div>

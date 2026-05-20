@@ -1,4 +1,5 @@
 ---
+import { Icon } from 'astro-icon/components';
 // Static counts (HN points, "1000+ stars") were rotting on this page —
 // pinned-in-time numbers age into a "looks abandoned" signal. Each card
 // now carries the ACTIVE social proof (a verb / a property) instead of a
@@ -7,7 +8,7 @@
 const items = [
   {
     href: 'https://github.com/fabriziosalmi/certmate',
-    icon: 'fab fa-github',
+    icon: 'fa6-brands:github',
     iconBg: 'bg-gray-900 dark:bg-gray-700',
     title: 'GitHub',
     meta: 'Active development · MIT licensed',
@@ -15,7 +16,7 @@ const items = [
   },
   {
     href: 'https://hub.docker.com/r/fabriziosalmi/certmate',
-    icon: 'fab fa-docker',
+    icon: 'fa6-brands:docker',
     iconBg: 'bg-sky-600',
     title: 'Docker Hub',
     meta: 'Multi-platform · Auto-published',
@@ -23,7 +24,7 @@ const items = [
   },
   {
     href: 'https://github.com/fabriziosalmi/certmate/discussions',
-    icon: 'fas fa-comments',
+    icon: 'fa6-solid:comments',
     iconBg: 'bg-emerald-600',
     title: 'Discussions',
     meta: 'Q&A · feature ideas · show & tell',
@@ -31,7 +32,7 @@ const items = [
   },
   {
     href: 'https://news.ycombinator.com/item?id=44427452',
-    icon: 'fab fa-hacker-news',
+    icon: 'fa6-brands:hacker-news',
     iconBg: 'bg-orange-500',
     title: 'Hacker News',
     meta: 'Past discussion',
@@ -44,7 +45,7 @@ const items = [
   <div class="container-x">
     <div class="mx-auto max-w-2xl text-center">
       <h2 id="community-title" class="section-title">
-        <i class="fas fa-heart mr-2 text-rose-500" aria-hidden="true"></i>
+        <Icon name="fa6-solid:heart" class="mr-2 text-rose-500" aria-hidden="true" />
         Community & Featured
       </h2>
       <p class="section-description">
@@ -62,7 +63,7 @@ const items = [
             rel="noopener noreferrer"
           >
             <div class={`flex h-10 w-10 items-center justify-center rounded-lg text-white ${i.iconBg}`} aria-hidden="true">
-              <i class={i.icon} />
+              <Icon name={i.icon} />
             </div>
             <h3 class="text-base font-semibold text-gray-900 dark:text-white">{i.title}</h3>
             <p class="text-sm text-gray-600 dark:text-gray-300">{i.meta}</p>

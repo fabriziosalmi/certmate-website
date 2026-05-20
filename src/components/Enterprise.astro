@@ -1,9 +1,10 @@
 ---
+import { Icon } from 'astro-icon/components';
 // Copy preserved from the static site — every card title + body identical
 // so anchor signal and accumulated SEO weight stay intact.
 const cards = [
   {
-    icon: 'fa-building',
+    icon: 'fa6-solid:building',
     title: 'Environment Separation',
     body: 'Separate production, staging, and development accounts with isolated credentials and configurations.',
     rows: [
@@ -13,7 +14,7 @@ const cards = [
     ],
   },
   {
-    icon: 'fa-globe',
+    icon: 'fa6-solid:globe',
     title: 'Multi-Region Setup',
     body: 'Deploy certificates across multiple regions with region-specific DNS accounts and configurations.',
     rows: [
@@ -23,7 +24,7 @@ const cards = [
     ],
   },
   {
-    icon: 'fa-shield-alt',
+    icon: 'fa6-solid:shield-halved',
     title: 'Permission Separation',
     body: 'Use different accounts with varying permission levels for security and compliance requirements.',
     rows: [
@@ -33,7 +34,7 @@ const cards = [
     ],
   },
   {
-    icon: 'fa-exchange-alt',
+    icon: 'fa6-solid:right-left',
     title: 'Disaster Recovery',
     body: 'Configure backup accounts for failover scenarios and disaster recovery procedures.',
     rows: [
@@ -69,7 +70,7 @@ curl -X POST "https://certmate.company.com/api/certificates/create" \\
         cards.map((c) => (
           <div class="card flex flex-col gap-3">
             <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-primary dark:bg-blue-900/30 dark:text-blue-300" aria-hidden="true">
-              <i class={`fas ${c.icon}`} />
+              <Icon name={c.icon} />
             </div>
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{c.title}</h3>
             <p class="text-sm text-gray-600 dark:text-gray-300">{c.body}</p>
@@ -90,7 +91,7 @@ curl -X POST "https://certmate.company.com/api/certificates/create" \\
             data-copy-target="enterprise-example"
             aria-label="Copy code to clipboard"
           >
-            <i class="fas fa-copy" aria-hidden="true"></i>
+            <Icon name="fa6-solid:copy" aria-hidden="true" />
           </button>
         </div>
         <pre id="enterprise-example"><code>{example}</code></pre>

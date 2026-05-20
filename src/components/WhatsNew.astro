@@ -1,5 +1,6 @@
 ---
 import { updates } from '~/data/whats-new';
+import { Icon } from 'astro-icon/components';
 
 // Badge → Tailwind class mapping. Kept in one place so a future restyle
 // edits one map instead of N callsites.
@@ -15,7 +16,7 @@ const badgeClasses: Record<string, string> = {
   <div class="container-x">
     <div class="mx-auto max-w-2xl text-center">
       <h2 id="whats-new-title" class="section-title">
-        <i class="fas fa-sparkles mr-2 text-amber-500" aria-hidden="true"></i>
+        <Icon name="fa6-solid:wand-sparkles" class="mr-2 text-amber-500" aria-hidden="true" />
         What's New in CertMate
       </h2>
       <p class="section-description">Latest updates, improvements, and new features</p>
@@ -42,7 +43,7 @@ const badgeClasses: Record<string, string> = {
               >
                 {/* Badge column — fixed width so titles align across rows. */}
                 <span class={`badge ring-1 ring-inset shrink-0 ${badgeClasses[u.badge]}`}>
-                  <i class={`fas ${u.icon}`} aria-hidden="true" />
+                  <Icon name={u.icon} aria-hidden="true" />
                   {u.badgeLabel}
                 </span>
 
@@ -66,8 +67,9 @@ const badgeClasses: Record<string, string> = {
                   {u.href && (
                     <span class="text-xs font-medium text-primary inline-flex items-center gap-1">
                       Release notes
-                      <i
-                        class="fas fa-arrow-right transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:transform-none"
+                      <Icon
+                        name="fa6-solid:arrow-right"
+                        class="transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:transform-none"
                         aria-hidden="true"
                       />
                     </span>
