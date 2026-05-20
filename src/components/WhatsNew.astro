@@ -21,7 +21,13 @@ const badgeClasses: Record<string, string> = {
       <p class="section-description">Latest updates, improvements, and new features</p>
     </div>
 
-    <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    {/* Linear changelog layout: one full-width row per entry, badge + title
+       on the left, short description in the middle, date + "Release notes →"
+       on the right. Same data as before — the grid-of-cards layout was
+       crowding the page out of proportion to the relative weight of each
+       update. SEO content (titles + descriptions + dates) is unchanged so
+       indexed snippets do not move. */}
+    <ul class="mt-12 mx-auto max-w-5xl divide-y divide-gray-200 dark:divide-gray-800 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden bg-white dark:bg-gray-900" role="list">
       {
         updates.map((u) => {
           const CardTag = u.href ? 'a' : 'div';
@@ -29,32 +35,49 @@ const badgeClasses: Record<string, string> = {
             ? { href: u.href, target: '_blank', rel: 'noopener noreferrer' }
             : {};
           return (
-            <CardTag
-              {...wrap}
-              class={`card group flex flex-col gap-3 ${u.highlight ? 'ring-2 ring-primary ring-offset-2 dark:ring-offset-gray-950' : ''}`}
-            >
-              <div class="flex items-center justify-between gap-2">
-                <span class={`badge ring-1 ring-inset ${badgeClasses[u.badge]}`}>
+            <li role="listitem">
+              <CardTag
+                {...wrap}
+                class={`group flex items-start gap-4 px-5 py-4 transition-colors ${u.href ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50' : ''} ${u.highlight ? 'border-l-4 border-primary bg-blue-50/40 dark:bg-blue-900/10' : ''}`}
+              >
+                {/* Badge column — fixed width so titles align across rows. */}
+                <span class={`badge ring-1 ring-inset shrink-0 ${badgeClasses[u.badge]}`}>
                   <i class={`fas ${u.icon}`} aria-hidden="true" />
                   {u.badgeLabel}
                 </span>
-                <span class="text-xs text-gray-500 dark:text-gray-400">{u.date}</span>
-              </div>
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{u.title}</h3>
-              <p class="text-sm text-gray-600 dark:text-gray-300">{u.description}</p>
-              {u.href && (
-                <span class="mt-1 text-xs font-medium text-primary inline-flex items-center gap-1">
-                  Release notes
-                  <i
-                    class="fas fa-arrow-right transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:transform-none"
-                    aria-hidden="true"
-                  />
-                </span>
-              )}
-            </CardTag>
+
+                {/* Title + description. min-w-0 lets the flex child truncate
+                   long lines instead of pushing the date column off-screen
+                   on narrow viewports. */}
+                <div class="min-w-0 flex-1">
+                  <h3 class="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
+                    {u.title}
+                  </h3>
+                  <p class="mt-1 text-xs text-gray-600 dark:text-gray-300 sm:text-sm">
+                    {u.description}
+                  </p>
+                </div>
+
+                {/* Right rail: date and (optional) release-notes affordance.
+                   Hidden on the smallest viewports — `<sm` collapses to the
+                   left column to keep the row compact. */}
+                <div class="hidden shrink-0 flex-col items-end gap-1 text-right sm:flex">
+                  <span class="text-xs text-gray-500 dark:text-gray-400">{u.date}</span>
+                  {u.href && (
+                    <span class="text-xs font-medium text-primary inline-flex items-center gap-1">
+                      Release notes
+                      <i
+                        class="fas fa-arrow-right transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:transform-none"
+                        aria-hidden="true"
+                      />
+                    </span>
+                  )}
+                </div>
+              </CardTag>
+            </li>
           );
         })
       }
-    </div>
+    </ul>
   </div>
 </section>

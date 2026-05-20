@@ -84,12 +84,23 @@
         </section>
 
         <section class="doc-content">
-            <h2>Authentication & Authorization</h2>
+            <h2>Authentication &amp; Authorization</h2>
         <ul>
             <li><strong>Role-Based Access Control (RBAC):</strong> Built-in roles (admin, operator, viewer) with granular permission levels</li>
-            <li><strong>Scoped API Keys:</strong> Create API keys with specific scopes and expiration dates for fine-grained access control</li>
+            <li><strong>Scoped API Keys:</strong> Create API keys with <code>allowed_domains</code> patterns and expiration dates for fine-grained access control; scope is enforced on every per-domain endpoint (create, renew, download, deployment status, DNS alias check, settings GET&rsquo;s <code>domains[]</code> array)</li>
             <li><strong>Local Authentication:</strong> Setup wizard for first-run user creation with secure session management</li>
+            <li><strong>OIDC / SSO (v2.7.0+):</strong> Authorization Code + PKCE via Authlib; IdP-claim-based role mapping (case-insensitive, first-match-wins); JIT or link-by-email provisioning with mandatory <code>email_verified</code> gate (default <code>require_verified_email=true</code>) to defend against self-service-signup IdPs leaking <code>admin@target.com</code> claims; dedicated audit-logged settings endpoint kept separate from the bulk settings POST. Tested against Keycloak, Authentik, Okta.</li>
             <li><strong>HTTPS Only:</strong> Always use HTTPS in production</li>
+        </ul>
+
+        <h2>OIDC / SSO configuration</h2>
+        <p>OIDC is disabled by default. Local users, API keys and the legacy bearer token keep working when it&rsquo;s off &mdash; OIDC is purely additive.</p>
+        <ul>
+            <li><strong>Issuer URL</strong> must be HTTPS in production. <code>http://localhost*</code> is permitted for development.</li>
+            <li><strong>Role mapping</strong> uses an admin-configurable claim (default <code>groups</code>) plus a <code>{claim_value &rarr; role}</code> table; first match wins. Configurable default role for callers that match no rule (default <code>viewer</code>).</li>
+            <li><strong>Provisioning paths:</strong> <em>JIT</em> writes a new <code>users</code> row with <code>password_hash=&#39;&#39;</code>, so a JIT identity cannot fall back to local password login. <em>link_by_email</em> attaches an OIDC subject to an existing local user, preserving their existing <code>password_hash</code> (admin can flip <code>link_by_email</code> off for a hard cutover).</li>
+            <li><strong>End-session URL</strong> carries <code>id_token_hint</code> + <code>client_id</code> + <code>post_logout_redirect_uri</code> so Keycloak / Okta / Authentik terminate the IdP-side session on logout.</li>
+            <li><strong>Audit:</strong> client_secret rotations are detected from the raw request payload (the masked sentinel from GET does not trigger a false-positive); refused <code>link_by_email</code> attempts (missing <code>email_verified</code>) emit <code>oidc_user_link_refused</code>.</li>
         </ul>
         <h2>Rate Limiting & Protection</h2>
         <ul>
@@ -102,7 +113,26 @@
         <ul>
             <li>Private keys: <code>600</code> permissions</li>
             <li>Certificate directories: <code>700</code> permissions</li>
-            <li>Backup encryption recommended for sensitive data</li>
+            <li>Unified backup ZIPs are written as <code>0600</code> and mask secrets by default (see &ldquo;Backup safety&rdquo; below)</li>
+        </ul>
+
+        <h2>Backup safety (v2.6.10+)</h2>
+        <ul>
+            <li><strong>Default mode: <code>secrets_masked</code>.</strong> <code>POST /api/web/backups/create</code> produces a share-safe archive where every credential field (DNS provider tokens, storage-backend secrets, <code>api_bearer_token</code>, <code>smtp_password</code>, OIDC <code>client_secret</code>) is replaced with the canonical mask sentinel before serialisation. Restoring this backup onto an existing install preserves the on-disk credentials via the same deep-merge pipeline the settings POST uses; restoring onto a fresh install keeps the sentinels and logs a warning so the operator knows to re-enter secrets.</li>
+            <li><strong>Opt-in plaintext: <code>include_secrets=true</code>.</strong> Admin-only and audit-logged. Produces a full disaster-recovery archive that does carry every credential in plaintext &mdash; the audit-log entry records the opt-in so a SIEM can flag the resulting file-on-disk credential dump.</li>
+            <li><strong>Restore re-validates deploy hooks</strong> against the current <code>DeployManager</code> validator. A backup containing a hook command that today&rsquo;s validator rejects (e.g. saved under an older permissive version, or a tampered archive) is refused before <code>settings.json</code> is written; the caller&rsquo;s <code>pre_restore_backup</code> remains as the rollback target.</li>
+        </ul>
+
+        <h2>Defense in depth (2026 audit hardening)</h2>
+        <p>Internal four-angle audit on <code>main</code> closed 11 findings (3 CRITICAL, 6 HIGH, 5 MEDIUM) in a single day. The hardening is now baked into the runtime and pinned by ~115 regression tests; the contracts callers should rely on:</p>
+        <ul>
+            <li><strong>Domain validation at the write boundary.</strong> <code>POST /api/certificates/create</code> validates the primary <code>domain</code> field structurally (RFC label rules, length, no traversal characters) <em>before</em> any side effect &mdash; directory creation, settings persistence, certbot invocation. Same gate on the web blueprint and on the batch endpoint, so a poisoned domain cannot survive into background renewals via <code>check_renewals</code>.</li>
+            <li><strong>Path-style download routes</strong> (<code>/api/certificates/&lt;domain&gt;/download/&lt;cert|chain|fullchain|privkey|combined&gt;</code>) carry the same role gating as the legacy <code>?file=</code> form: viewers pull public material; <code>privkey</code> and <code>combined</code> require operator+, with the denial audit-logged.</li>
+            <li><strong>Client-cert API</strong> stratified: viewer reads list / detail / stats / public-material download; operator mints, renews, batches; admin revokes; <code>key</code> file download is operator-floor regardless of route.</li>
+            <li><strong>Settings-mutating routes preserve masked secrets.</strong> <code>POST /api/storage/config</code>, <code>POST /api/notifications/config</code> and the central settings POST all run <code>_strip_masked_values</code> + deep-merge against the on-disk subtree, so a UI round-trip that re-POSTs masked sentinels does not destroy the on-disk credential. Toggling a non-secret field (e.g. <code>storage_mode</code> or notifications <code>enabled</code>) is safe.</li>
+            <li><strong>Certbot error responses are sanitised.</strong> When the DNS plugin echoes the offending credentials INI line on parse error, the API response strips credential-bearing <code>name = value</code> lines and replaces credential file paths with a generic marker; the unredacted output remains in the application log for operator debugging.</li>
+            <li><strong>Mask coverage extended.</strong> ACME-DNS <code>username</code> + <code>subdomain</code> (UUID + delegation FQDN &mdash; together they are the shared secret) and the notifications GET subtree are now masked through the same central helper the settings GET path uses.</li>
+            <li><strong>Cross-tenant filtering on settings GET.</strong> Scoped API keys (<code>allowed_domains</code> set) see only their in-scope <code>domains[]</code> on <code>GET /api/web/settings</code>. <code>POST /api/certificates/check-dns-alias</code> scope-gates the body-style domain + every SAN, matching the path-param sibling.</li>
         </ul>
         <h2>Network Security</h2>
         <ul>
@@ -112,7 +142,7 @@
             <li>Prometheus metrics endpoint for monitoring (<code>/metrics</code>)</li>
         </ul>
 
-        <h2>🔗 Next Steps</h2>
+        <h2>Next Steps</h2>
         <ul>
             <li><a href="getting-started.html">Getting Started</a> - Initial setup</li>
             <li><a href="backup-recovery.html">Backup & Recovery</a> - Data protection</li>

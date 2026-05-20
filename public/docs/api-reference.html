@@ -204,7 +204,7 @@
                     <tr>
                         <td>domain</td>
                         <td>string</td>
-                        <td>✅</td>
+                        <td>Yes</td>
                         <td>Domain name (e.g., example.com)</td>
                     </tr>
                     <tr>
@@ -272,7 +272,7 @@ curl -X POST "http://localhost:8000/api/certificates/create" \
 
             <div class="api-endpoint">
                 <div><span class="api-method method-get">GET</span><span class="api-path">/{domain}/tls</span></div>
-                <p>🎯 Automation-friendly endpoint - Simple URL for certificate download</p>
+                <p>Automation-friendly endpoint - Simple URL for certificate download</p>
                 <p>Returns ZIP file with: cert.pem, chain.pem, fullchain.pem, privkey.pem</p>
                 <pre><code>curl -H "Authorization: Bearer your_token" \
   -o example.com-tls.zip \
@@ -491,11 +491,34 @@ chmod 600 "$CERT_DIR"/*.pem
 systemctl reload nginx
 echo "Certificate updated for ${DOMAIN}"</code></pre>
 
-            <h2>🔗 Next Steps</h2>
+            <h2>OIDC / SSO endpoints (v2.7.0+)</h2>
+            <p>Five dedicated routes carry the OIDC flow. They sit outside the bulk <code>/api/web/settings</code> POST so a scoped or operator-level caller cannot mutate identity-provider configuration through the general settings surface.</p>
+            <ul>
+                <li><code>GET /api/auth/oidc/config</code> &mdash; current masked configuration (operator+).</li>
+                <li><code>GET /api/auth/oidc/login</code> &mdash; start the Authorization Code + PKCE flow; redirects to the IdP.</li>
+                <li><code>GET /api/auth/oidc/callback</code> &mdash; IdP redirect target. Handles JIT vs. link-by-email provisioning, enforces <code>require_verified_email</code> on the email-match seam, and emits <code>oidc_user_link_refused</code> when refusing.</li>
+                <li><code>GET /api/auth/oidc/settings</code> &mdash; admin-only read of the unmasked configuration.</li>
+                <li><code>POST /api/auth/oidc/settings</code> &mdash; admin-only update. Audit log records the changed key names; <code>client_secret</code> rotation is detected from the raw payload (not the masked sentinel) so a SIEM keying on <code>sensitive_changed</code> sees real rotations and nothing else.</li>
+            </ul>
+
+            <h2>Audit-era contract changes (v2.6.x onward)</h2>
+            <p>Several endpoints tightened their behaviour during the May 2026 internal audit response. Callers operating before this point should be aware of:</p>
+            <ul>
+                <li><code>POST /api/web/backups/create</code> accepts <code>include_secrets</code> (boolean, default <code>false</code>). The default is a share-safe masked archive; the opt-in plaintext mode is admin-only and audit-logged. Response carries <code>secrets_masked: true|false</code>.</li>
+                <li><code>GET /api/certificates/&lt;domain&gt;/download/&lt;file_type&gt;</code> is the documented path-style download URL. <code>file_type</code> is <code>cert</code>, <code>chain</code>, <code>fullchain</code>, <code>privkey</code> or <code>combined</code>; the <code>?file=</code> query-string form continues to work in parallel.</li>
+                <li><code>POST /api/certificates/create</code> validates the primary <code>domain</code> field at the write boundary (RFC label rules, no traversal characters) before any directory creation or settings persistence.</li>
+                <li><code>POST /api/storage/config</code> and <code>POST /api/notifications/config</code> accept the round-tripped masked GET payload safely: masked sentinels are stripped and the per-backend / per-channel subtree is deep-merged against the on-disk value, so toggling a non-secret field does not destroy adjacent credentials.</li>
+                <li>Client-cert endpoints under <code>/api/client-certs/...</code> are role-stratified: viewer reads list / detail / stats / cert / chain / csr; operator mints, renews, batches; <code>POST /api/client-certs/&lt;id&gt;/revoke</code> requires admin; <code>GET .../download/key</code> requires operator.</li>
+                <li><code>GET /api/web/settings</code> filters the <code>domains[]</code> array by the caller&rsquo;s <code>allowed_domains</code> scope. <code>POST /api/certificates/check-dns-alias</code> applies the same scope gate on the body-style <code>domain</code> and on every SAN entry.</li>
+                <li>Error responses on certificate creation / renewal failures now sanitise certbot stderr before returning to the client &mdash; credential-bearing lines (<code>dns_*_secret = ...</code>, etc.) are replaced with <code>[REDACTED]</code> and credential file paths with <code>&lt;credential file&gt;</code>. The raw stderr stays in the application log.</li>
+            </ul>
+
+            <h2>Next Steps</h2>
             <ul>
                 <li><a href="getting-started.html">Getting Started</a> - Initial setup</li>
                 <li><a href="dns-providers.html">DNS Providers</a> - Configure DNS</li>
                 <li><a href="storage-backends.html">Storage Backends</a> - Enterprise storage</li>
+                <li><a href="security.html">Security</a> - OIDC configuration + audit-era hardening</li>
             </ul>
         </section>
     </main>

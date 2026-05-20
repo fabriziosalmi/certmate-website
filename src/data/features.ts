@@ -46,7 +46,13 @@ export const features: Feature[] = [
     icon: 'fa-shield-alt',
     title: 'Security-First',
     body:
-      'Role-based access control (RBAC), scoped API keys, rate limiting, and audit logging.',
+      'Role-based access control (RBAC), scoped API keys with allowed_domains enforcement, per-IP rate limiting, audit logging, secrets masked at rest in backups, and an internal security audit pipeline that closed 11 findings (3 CRITICAL) in May 2026.',
+  },
+  {
+    icon: 'fa-id-badge',
+    title: 'OIDC / SSO',
+    body:
+      'Authorization Code + PKCE via Authlib, IdP-claim-based role mapping, JIT or link-by-email provisioning with mandatory `email_verified` gate, and a dedicated audit-logged settings endpoint. Tested against Keycloak, Authentik and Okta.',
   },
   {
     icon: 'fa-certificate',

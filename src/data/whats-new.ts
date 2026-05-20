@@ -1,6 +1,6 @@
 /**
  * "What's New" cards. Listed newest-first. The previous static index.html
- * kept v2.0 / v2.0.1 as the headline cards; we now lead with v2.5.3 (the
+ * kept v2.0 / v2.0.1 as the headline cards; we now lead with v2.7.0 (the
  * current release) and keep enough history for context without padding
  * the page.
  *
@@ -27,43 +27,55 @@ export interface UpdateCard {
 export const updates: UpdateCard[] = [
   {
     badge: 'milestone',
-    badgeLabel: 'v2.5.3',
-    icon: 'fa-star',
-    title: 'v2.5.3 — Multi-audit response + draconian coverage push',
+    badgeLabel: 'v2.7.0',
+    icon: 'fa-id-badge',
+    title: 'v2.7.0 — OIDC / SSO authentication',
     description:
-      'Twenty-one atomic commits across security, performance, UI hardening, docs and tests. Real fixes: deploy-hook parameter-expansion bypass, metadata RMW race, scheduler /health surfacing, corrupt-metadata quarantine. +160 unit tests on previously-uncovered crypto-critical modules (Private CA, CSR handler, OCSP/CRL, storage backends).',
+      'Authorization Code + PKCE via Authlib, IdP-claim-based role mapping (case-insensitive, first-match-wins), JIT or link-by-email provisioning with mandatory `email_verified` gate against account-takeover via self-service-signup IdPs. Dedicated audit-logged settings endpoint kept separate from the bulk settings POST so a scoped key cannot mutate OIDC config. Concurrency-safe JIT path routed through the settings RLock.',
     date: 'May 2026',
     highlight: true,
-    href: 'https://github.com/fabriziosalmi/certmate/releases/tag/v2.5.3',
+    href: 'https://github.com/fabriziosalmi/certmate/releases/tag/v2.7.0',
+  },
+  {
+    badge: 'security',
+    badgeLabel: 'Audit',
+    icon: 'fa-shield-alt',
+    title: 'Internal security audit — 11 findings closed in one day',
+    description:
+      'Four-angle audit on authz/scope coverage, secrets handling, path traversal completeness and shell injection. Closed: backup ZIP plaintext credentials (mask-by-default + admin opt-in for full DR, chmod 0600), settings-mutating routes that destroyed credentials on round-trip POST, path traversal at the WRITE boundary on `/api/certificates/create`, client-cert API role + private-key gating, certbot stderr leak on credential-file parse errors, acme-dns shared-secret masking, settings GET cross-tenant domain disclosure. ~115 regression tests added.',
+    date: 'May 2026',
+    highlight: true,
+    href: 'https://github.com/fabriziosalmi/certmate/pulls?q=is%3Apr+is%3Amerged+label%3Aaudit',
+  },
+  {
+    badge: 'feature',
+    badgeLabel: 'v2.6.x',
+    icon: 'fa-network-wired',
+    title: 'v2.6.x — Azure Key Vault + nested-subdomain wildcards + storage hot-reload',
+    description:
+      'Native Azure Key Vault Certificate-object storage mode (AKS / App Service / Front Door consume it directly). Wildcard cert issuance for nested subdomains against the parent hosted zone, with per-provider zone discovery (Azure today, registry-keyed for future providers). Storage backend hot-reloads when `certificate_storage` changes — no restart required. Configurable cert key shape (RSA 2048/3072/4096 or ECDSA P-256/P-384).',
+    date: 'May 2026',
+    href: 'https://github.com/fabriziosalmi/certmate/releases',
   },
   {
     badge: 'fix',
-    badgeLabel: 'v2.5.2',
+    badgeLabel: 'v2.6.9',
     icon: 'fa-wrench',
-    title: 'v2.5.2 — Renewal stall + table column width + web-auth response',
+    title: 'v2.6.9 — Azure DNS sp_* keys + zoneN mapping',
     description:
-      'Drop the certbot random-sleep stall on the renewal endpoint, give the dashboard Domain column a width floor, redirect browsers to /login instead of returning JSON 401.',
+      '`certbot-dns-azure` 2.x expects `dns_azure_sp_client_id` / `dns_azure_sp_client_secret` and parses subscription + resource group out of `dns_azure_zoneN` lines. The previous bare-key format was silently ignored by the plugin and aborted with "No authentication methods have been configured for Azure DNS" before any DNS challenge could run.',
     date: 'May 2026',
-    href: 'https://github.com/fabriziosalmi/certmate/releases/tag/v2.5.2',
+    href: 'https://github.com/fabriziosalmi/certmate/releases/tag/v2.6.9',
   },
   {
-    badge: 'feature',
-    badgeLabel: 'v2.5.0',
-    icon: 'fa-paint-brush',
-    title: 'v2.5.0 — UI rewrite (51 fixes across templates)',
+    badge: 'milestone',
+    badgeLabel: 'v2.5.x',
+    icon: 'fa-star',
+    title: 'v2.5.x — UI rewrite + multi-audit response',
     description:
-      'Focused sweep of every template: Alpine root repair, standardized modal macro (Esc/backdrop/focus-trap), component-class scaffold in input.css, dashboard mobile card meta, debug surface gating, accessibility passes (skip-to-content, aria-current, aria-expanded), and a help-page rewrite focused on self-service diagnosis.',
+      'Full template sweep (51 fixes across all templates), standardized modal macro with Esc/backdrop/focus-trap, accessibility passes, deploy-hook parameter-expansion bypass closed, metadata RMW race fixed, corrupt-metadata quarantine, scheduler /health surfacing. +160 unit tests on previously-uncovered crypto-critical modules (Private CA, CSR handler, OCSP/CRL, storage backends).',
     date: 'May 2026',
-    href: 'https://github.com/fabriziosalmi/certmate/releases/tag/v2.5.0',
-  },
-  {
-    badge: 'feature',
-    badgeLabel: 'Feature',
-    icon: 'fa-network-wired',
-    title: 'Multi-Account DNS & Domain Alias',
-    description:
-      'Multi-account support per DNS provider and domain alias capabilities for advanced DNS challenges (CNAME delegation across zones).',
-    date: 'January 2026',
+    href: 'https://github.com/fabriziosalmi/certmate/releases',
   },
   {
     badge: 'feature',
@@ -71,16 +83,16 @@ export const updates: UpdateCard[] = [
     icon: 'fa-certificate',
     title: 'Client Certificates Management',
     description:
-      'Complete client certificate lifecycle with OCSP responder, CRL distribution, batch CSV import, and audit logging.',
+      'Complete client certificate lifecycle with OCSP responder, CRL distribution, batch CSV import (up to 100 identities per call), audit logging, and per-file role gating — viewers pull cert/chain/csr, operators pull privkey, admins revoke.',
     date: 'January 2026',
   },
   {
     badge: 'security',
     badgeLabel: 'Security',
-    icon: 'fa-shield-alt',
+    icon: 'fa-key',
     title: 'Scoped API Keys + RBAC',
     description:
-      'Three-tier role model (admin / operator / viewer) plus scoped API keys with allowed_domains enforcement. Bearer-token rotation, audit log for sensitive setting changes.',
+      'Three-tier role model (admin / operator / viewer) plus scoped API keys with allowed_domains enforcement. Bearer-token rotation, audit log for sensitive setting changes, per-IP rate limiting on auth endpoints.',
     date: 'December 2025',
   },
 ];
