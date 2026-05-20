@@ -9,6 +9,15 @@ const links = [
   { href: '#api', label: 'API' },
   { href: '#docs', label: 'Documentation' },
 ];
+
+// Sister projects in the CertMate ecosystem. External links open in a new
+// tab; flagged with `external: true` so the menu renderer can attach the
+// noopener/noreferrer rels and a small "↗" affordance for screen readers
+// AND sighted users.
+const ecosystem = [
+  { href: 'https://agent.certmate.org', label: 'Agent', external: true },
+  { href: 'https://tools.certmate.org', label: 'Tools', external: true },
+];
 ---
 
 <nav
@@ -44,6 +53,26 @@ const links = [
               class="rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
             >
               {link.label}
+            </a>
+          </li>
+        ))
+      }
+      {/* Sister-project links: separated from the in-page anchors above
+         with a thin vertical rule so a sighted user can tell which links
+         leave the current site without having to read the ↗ marker. */}
+      <li aria-hidden="true" class="h-5 w-px bg-gray-200 dark:bg-gray-700 mx-1" />
+      {
+        ecosystem.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              class="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {link.label}
+              <i class="fas fa-arrow-up-right-from-square text-[0.65rem] opacity-60" aria-hidden="true" />
+              <span class="sr-only">(opens in new tab)</span>
             </a>
           </li>
         ))
@@ -101,6 +130,23 @@ const links = [
               class="block rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               {link.label}
+            </a>
+          </li>
+        ))
+      }
+      <li aria-hidden="true" class="my-1 h-px bg-gray-200 dark:bg-gray-700 mx-3" />
+      {
+        ecosystem.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              class="block rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {link.label}
+              <i class="fas fa-arrow-up-right-from-square ml-1 text-[0.65rem] opacity-60" aria-hidden="true" />
+              <span class="sr-only">(opens in new tab)</span>
             </a>
           </li>
         ))

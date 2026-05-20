@@ -1,0 +1,98 @@
+---
+/**
+ * "Ecosystem" cards — sister projects that live alongside the main CertMate
+ * repository. Two cards today (Agent + Tools). Copy is deliberately short:
+ * each card is the headline plus one operator-facing sentence; the real
+ * detail lives on the linked site. This is a placeholder layout — the
+ * descriptions will be tightened as the sister projects evolve.
+ *
+ * Cards are <div>s (not outer <a>s) so the two CTAs at the bottom —
+ * "Open <host>" and "Source" — can be separate links without violating
+ * HTML's no-nested-anchors rule. Each link carries target=_blank +
+ * noopener+noreferrer and shows the ↗ marker matching the navbar.
+ */
+
+const projects = [
+  {
+    href: 'https://agent.certmate.org',
+    icon: 'fa-comments',
+    title: 'CertMate Agent',
+    tagline: 'Conversational control plane',
+    body:
+      'Embedded local LLM (LM Studio by default) plus a 1:1 mapping of the CertMate REST API as LLM-callable tools. Read tools auto-execute; write tools queue a pending action with a human-readable summary and require an explicit confirmation from the UI. Two modes: full (sidecar to a live instance, RAG over docs, admin tools) and docs_only (public docs assistant with no live-state surface).',
+    repo: 'https://github.com/fabriziosalmi/certmate-agent',
+  },
+  {
+    href: 'https://tools.certmate.org',
+    icon: 'fa-toolbox',
+    title: 'CertMate Tools',
+    tagline: 'Privacy-first online utilities',
+    body:
+      'Free, client-side tools for TLS, SSL certificates, ACME, domain and DNS. Zero upload — every operation runs in the browser. Curated list of trusted external tools for cases the in-browser surface cannot cover. Companion to the main CertMate certificate-management application.',
+    repo: 'https://github.com/fabriziosalmi/certmate-tools',
+  },
+];
+---
+
+<section id="ecosystem" class="border-b border-gray-200 py-20 dark:border-gray-800" aria-labelledby="ecosystem-title">
+  <div class="container-x">
+    <div class="mx-auto max-w-2xl text-center">
+      <h2 id="ecosystem-title" class="section-title">
+        <i class="fas fa-cubes mr-2 text-primary" aria-hidden="true"></i>
+        Ecosystem
+      </h2>
+      <p class="section-description">
+        Sister projects under the CertMate umbrella. Each lives in its own
+        repository and ships independently; this section links the live
+        deployment and the source.
+      </p>
+    </div>
+
+    <ul class="mt-12 mx-auto grid max-w-4xl gap-6 sm:grid-cols-2" role="list">
+      {
+        projects.map((p) => (
+          <li role="listitem" class="card flex flex-col gap-3">
+            <div
+              class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-primary dark:bg-blue-900/30 dark:text-blue-300"
+              aria-hidden="true"
+            >
+              <i class={`fas ${p.icon}`} />
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                {p.title}
+              </h3>
+              <p class="text-xs font-medium uppercase tracking-wide text-primary">
+                {p.tagline}
+              </p>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-300">{p.body}</p>
+            <div class="mt-auto flex flex-wrap items-center gap-3 pt-2 text-sm">
+              <a
+                href={p.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
+              >
+                Open {p.href.replace('https://', '')}
+                <i class="fas fa-arrow-up-right-from-square text-[0.65rem]" aria-hidden="true" />
+                <span class="sr-only">(opens in new tab)</span>
+              </a>
+              <span aria-hidden="true" class="text-gray-300 dark:text-gray-700">·</span>
+              <a
+                href={p.repo}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1.5 text-gray-500 hover:text-primary dark:text-gray-400"
+              >
+                <i class="fab fa-github" aria-hidden="true" />
+                Source
+                <span class="sr-only">(opens in new tab)</span>
+              </a>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
