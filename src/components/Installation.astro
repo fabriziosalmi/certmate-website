@@ -1,5 +1,23 @@
 ---
-const docker = `# Clone the repository
+// Three installation paths, ordered from "30 seconds to a running cert
+// manager" to "full source build". The first tab is the single
+// `docker run` command — the previous flow led with a `git clone` +
+// edit-env dance, which is unnecessary friction for anyone who knows
+// Docker. The compose-based flow remains under "Docker Compose"; the
+// from-source flow under "Python".
+const dockerOneShot = `# One command. Open http://localhost:8000 and follow the setup wizard.
+docker run -d --name certmate \\
+  -p 8000:8000 \\
+  -v certmate-data:/app/data \\
+  -v certmate-certs:/app/certificates \\
+  --restart unless-stopped \\
+  ghcr.io/fabriziosalmi/certmate:latest
+
+# Show the auto-generated admin password (one-time output)
+docker logs certmate 2>&1 | grep "admin password"`;
+
+const docker = `# Compose-based flow: useful when you want a single source of truth
+# for env vars, volumes, and an optional nginx reverse proxy.
 git clone https://github.com/fabriziosalmi/certmate.git
 cd certmate
 
@@ -46,9 +64,10 @@ kubectl apply -f k8s/deployment.yaml -n certmate
 kubectl get pods -n certmate`;
 
 const tabs = [
-  { id: 'docker',     label: 'Docker',     icon: 'fab fa-docker',         code: docker },
-  { id: 'python',     label: 'Python',     icon: 'fab fa-python',         code: python },
-  { id: 'kubernetes', label: 'Kubernetes', icon: 'fas fa-dharmachakra',   code: k8s },
+  { id: 'docker-oneshot', label: 'docker run',     icon: 'fab fa-docker',         code: dockerOneShot },
+  { id: 'docker',         label: 'Docker Compose', icon: 'fab fa-docker',         code: docker },
+  { id: 'python',         label: 'Python',         icon: 'fab fa-python',         code: python },
+  { id: 'kubernetes',     label: 'Kubernetes',     icon: 'fas fa-dharmachakra',   code: k8s },
 ];
 ---
 
@@ -57,7 +76,7 @@ const tabs = [
     <div class="mx-auto max-w-2xl text-center">
       <h2 id="installation-title" class="section-title">Quick Installation</h2>
       <p class="section-description">
-        Get CertMate running in under 5 minutes with Docker Compose
+        Single <code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm dark:bg-gray-800">docker run</code> &mdash; the running container exposes the setup wizard on <code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm dark:bg-gray-800">localhost:8000</code> and writes its initial admin password to the container log. Compose, Python and Kubernetes paths below.
       </p>
     </div>
 

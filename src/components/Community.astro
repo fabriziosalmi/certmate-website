@@ -1,36 +1,41 @@
 ---
+// Static counts (HN points, "1000+ stars") were rotting on this page —
+// pinned-in-time numbers age into a "looks abandoned" signal. Each card
+// now carries the ACTIVE social proof (a verb / a property) instead of a
+// snapshot. The actual star count lives in one place (Hero) and is
+// rotated on each release prep.
 const items = [
-  {
-    href: 'https://news.ycombinator.com/item?id=44427452',
-    icon: 'fab fa-hacker-news',
-    iconBg: 'bg-orange-500',
-    title: 'Hacker News',
-    meta: '39 points · 23 comments',
-    sub: 'Featured on Hacker News',
-  },
-  {
-    href: 'https://www.reddit.com/r/homelab/comments/1lv1s69/certmate_ssl_certificate_management_system_api_ui/',
-    icon: 'fab fa-reddit',
-    iconBg: 'bg-orange-600',
-    title: 'Reddit r/homelab',
-    meta: 'Community discussion',
-    sub: 'Featured on Reddit',
-  },
   {
     href: 'https://github.com/fabriziosalmi/certmate',
     icon: 'fab fa-github',
     iconBg: 'bg-gray-900 dark:bg-gray-700',
     title: 'GitHub',
-    meta: '1000+ stars · Active development',
-    sub: 'Open Source Project',
+    meta: 'Active development · MIT licensed',
+    sub: 'Source · issues · discussions',
   },
   {
     href: 'https://hub.docker.com/r/fabriziosalmi/certmate',
     icon: 'fab fa-docker',
     iconBg: 'bg-sky-600',
     title: 'Docker Hub',
-    meta: 'Multi-platform builds · Auto-published',
-    sub: 'Latest version available',
+    meta: 'Multi-platform · Auto-published',
+    sub: 'linux/amd64 + linux/arm64',
+  },
+  {
+    href: 'https://github.com/fabriziosalmi/certmate/discussions',
+    icon: 'fas fa-comments',
+    iconBg: 'bg-emerald-600',
+    title: 'Discussions',
+    meta: 'Q&A · feature ideas · show & tell',
+    sub: 'GitHub Discussions',
+  },
+  {
+    href: 'https://news.ycombinator.com/item?id=44427452',
+    icon: 'fab fa-hacker-news',
+    iconBg: 'bg-orange-500',
+    title: 'Hacker News',
+    meta: 'Past discussion',
+    sub: 'Featured on Hacker News',
   },
 ];
 ---

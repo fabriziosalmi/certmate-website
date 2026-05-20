@@ -1,15 +1,41 @@
 ---
-// The card grid is illustrative — the canonical list lives in the main repo
-// at docs/dns-providers.md and grows over time. Neutral wording on the
-// section description (kept identical to the verb-tense pattern of the
-// previous static site) avoids drifting with every provider added.
+// Canonical provider list pulled from modules/core/utils.py
+// (_DNS_PROVIDER_CREDENTIALS) — every name on this grid corresponds to
+// a provider CertMate can issue against today. Listed in roughly the
+// order they ship in the codebase so a contributor reading the source
+// recognises the layout.
+//
+// Provider names with a known brand glyph in Font Awesome use it;
+// long-tail providers use a neutral globe so the grid stays uniform.
+// The cell is intentionally compact (icon + name + short note) — a
+// visitor scanning for "do you support X?" needs to find their
+// provider in 2 seconds, not read a paragraph about each one.
+
 const providers = [
-  { icon: 'fas fa-cloud',          name: 'Cloudflare',        sub: 'Global CDN with multi-account support',     accent: 'text-orange-500' },
-  { icon: 'fab fa-aws',             name: 'AWS Route53',       sub: 'Multi-region, multi-account support',        accent: 'text-amber-500' },
-  { icon: 'fab fa-microsoft',       name: 'Azure DNS',         sub: 'Enterprise multi-subscription support',      accent: 'text-blue-500' },
-  { icon: 'fab fa-google',          name: 'Google Cloud DNS',  sub: "Google's high-performance DNS",              accent: 'text-red-500' },
-  { icon: 'fab fa-digital-ocean',   name: 'DigitalOcean',      sub: 'Cloud infrastructure DNS',                   accent: 'text-sky-500' },
-  { icon: 'fas fa-ellipsis-h',      name: 'And more',          sub: 'Hetzner, Porkbun, GoDaddy, Linode, OVH, ...', accent: 'text-gray-500' },
+  { icon: 'fab fa-cloudflare',      name: 'Cloudflare',     note: 'multi-account' },
+  { icon: 'fab fa-aws',             name: 'AWS Route53',    note: 'multi-account' },
+  { icon: 'fab fa-microsoft',       name: 'Azure DNS',      note: 'multi-subscription' },
+  { icon: 'fab fa-google',          name: 'Google Cloud DNS', note: 'multi-account' },
+  { icon: 'fab fa-digital-ocean',   name: 'DigitalOcean',   note: 'multi-account' },
+  { icon: 'fas fa-server',          name: 'PowerDNS',       note: 'self-hosted' },
+  { icon: 'fas fa-cube',            name: 'Linode',         note: 'multi-account' },
+  { icon: 'fas fa-leaf',            name: 'Gandi',          note: 'EU registrar' },
+  { icon: 'fas fa-globe',           name: 'OVH',            note: 'EU cloud' },
+  { icon: 'fas fa-tag',             name: 'Namecheap',      note: 'registrar' },
+  { icon: 'fas fa-cloud',           name: 'ArvanCloud',     note: 'multi-account' },
+  { icon: 'fas fa-mountain',        name: 'Infomaniak',     note: 'EU cloud' },
+  { icon: 'fas fa-shield-halved',   name: 'ACME-DNS',       note: 'CNAME delegation' },
+  { icon: 'fas fa-feather',         name: 'DuckDNS',        note: 'free dynamic DNS' },
+  { icon: 'fas fa-server',          name: 'Vultr',          note: 'multi-account' },
+  { icon: 'fas fa-bolt',            name: 'DNS Made Easy',  note: 'multi-account' },
+  { icon: 'fas fa-circle',          name: 'NS1',            note: 'managed DNS' },
+  { icon: 'fas fa-h-square',        name: 'Hetzner DNS',    note: 'EU hosting' },
+  { icon: 'fas fa-server',          name: 'Hetzner Cloud',  note: 'EU hosting' },
+  { icon: 'fas fa-piggy-bank',      name: 'Porkbun',        note: 'registrar' },
+  { icon: 'fas fa-golf-ball-tee',   name: 'GoDaddy',        note: 'registrar' },
+  { icon: 'fas fa-network-wired',   name: 'Hurricane Electric', note: 'free DDNS' },
+  { icon: 'fas fa-d',               name: 'Dynu DNS',       note: 'dynamic DNS' },
+  { icon: 'fas fa-network-wired',   name: 'Akamai EdgeDNS', note: 'enterprise CDN' },
 ];
 ---
 
@@ -18,36 +44,52 @@ const providers = [
     <div class="mx-auto max-w-2xl text-center">
       <h2 class="section-title">Supported DNS Providers</h2>
       <p class="section-description">
-        CertMate supports a wide range of DNS providers with multi-account capabilities for enterprise environments.
+        24 DNS providers in the box today, plus multi-account support per provider for staging / production / multi-region isolation.
       </p>
     </div>
 
-    <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <ul
+      class="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6"
+      role="list"
+      aria-label="DNS providers supported by CertMate"
+    >
       {
         providers.map((p) => (
-          <div class="card flex items-start gap-4">
-            <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800" aria-hidden="true">
-              <i class={`${p.icon} ${p.accent}`} />
+          <li
+            role="listitem"
+            class="flex items-center gap-2.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 dark:border-gray-800 dark:bg-gray-900"
+          >
+            <i class={`${p.icon} text-base text-primary flex-shrink-0 w-4 text-center`} aria-hidden="true" />
+            <div class="min-w-0">
+              <div class="truncate text-xs font-semibold text-gray-900 dark:text-white sm:text-sm">
+                {p.name}
+              </div>
+              <div class="truncate text-[0.65rem] text-gray-500 dark:text-gray-400 sm:text-xs">
+                {p.note}
+              </div>
             </div>
-            <div>
-              <h3 class="text-base font-semibold text-gray-900 dark:text-white">{p.name}</h3>
-              <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">{p.sub}</p>
-            </div>
-          </div>
+          </li>
         ))
       }
-    </div>
+    </ul>
 
     <p class="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
-      Full list with credential formats:
+      Missing yours? <a
+        class="font-medium text-primary hover:underline"
+        href="https://github.com/fabriziosalmi/certmate/issues/new?labels=enhancement&amp;title=DNS+provider%3A+"
+        target="_blank"
+        rel="noopener noreferrer"
+      >Open a request</a>
+      &mdash; the strategy registry in
+      <code>modules/core/dns_strategies.py</code>
+      makes adding a provider a ~50-line patch.
       <a
         class="font-medium text-primary hover:underline"
         href="https://github.com/fabriziosalmi/certmate/wiki/DNS-Providers"
         target="_blank"
         rel="noopener noreferrer"
-      >
-        DNS Providers wiki page
-      </a>
+      >Full credential reference</a>
+      on the wiki.
     </p>
   </div>
 </section>
