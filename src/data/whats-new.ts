@@ -1,6 +1,6 @@
 /**
  * "What's New" cards. Listed newest-first. The previous static index.html
- * kept v2.0 / v2.0.1 as the headline cards; we now lead with v2.7.0 (the
+ * kept v2.0 / v2.0.1 as the headline cards; we now lead with v2.8.0 (the
  * current release) and keep enough history for context without padding
  * the page.
  *
@@ -25,6 +25,17 @@ export interface UpdateCard {
 }
 
 export const updates: UpdateCard[] = [
+  {
+    badge: 'milestone',
+    badgeLabel: 'v2.8.0',
+    icon: 'fa6-solid:file-shield',
+    title: 'v2.8.0 — certificate formats, SSO user management & faster listing',
+    description:
+      'Encrypted Windows .pfx (PKCS#12) export written on every issuance/renewal with a stable fingerprint for polling; PKCS#1/SEC1 private-key download for legacy stacks (`?key_format=pkcs1`); `CERTMATE_CHAIN_PATH` (intermediates only) exposed to deploy hooks. SSO user-management hardening: IdP-linked accounts are badged, can\'t take a local password, and the sole remaining admin can no longer be deleted or disabled. Certificate listing replaces the per-row openssl subprocess with in-process parsing plus a cached info read, and routine backups now skip certbot scratch while keeping renewal lineage.',
+    date: 'May 2026',
+    highlight: true,
+    href: 'https://github.com/fabriziosalmi/certmate/releases/tag/v2.8.0',
+  },
   {
     badge: 'milestone',
     badgeLabel: 'v2.7.0',
