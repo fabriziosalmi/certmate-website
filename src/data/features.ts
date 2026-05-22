@@ -80,4 +80,22 @@ export const features: Feature[] = [
     body:
       'DNS-01 challenge support with domain aliases and multi-master DNS configurations.',
   },
+  {
+    icon: 'fa6-solid:robot',
+    title: 'Model Context Protocol (MCP)',
+    body:
+      'Built-in Node.js MCP server providing tools for agentic AI assistants (like Claude, Gemini, etc.) to manage certificates and run diagnostics.',
+  },
+  {
+    icon: 'fa6-solid:receipt',
+    title: 'Enhanced Auditing & Sanitization',
+    body:
+      'Automatically redacts sensitive API tokens and private keys from logs. Features audit logs on storage changes, Key Vault backfills, and path-traversal hardened backup downloads.',
+  },
+  {
+    icon: 'fa6-solid:ghost',
+    title: 'Zombie Certificate Scanner',
+    body:
+      'Identifies and cleans up orphan ("zombie") certificates no longer tracked in the active Certbot configuration.',
+  },
 ];

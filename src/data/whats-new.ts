@@ -27,6 +27,28 @@ export interface UpdateCard {
 export const updates: UpdateCard[] = [
   {
     badge: 'milestone',
+    badgeLabel: 'v2.8.2',
+    icon: 'fa6-solid:shield-halved',
+    title: 'v2.8.2 — Security Audit Hardening & UI/UX Audit Response',
+    description:
+      'A comprehensive security and UI audit response bringing logical hardening to the backend. Features audit logging for storage updates, migrations, Azure Key Vault backfills, and DNS provider changes. Hardens backups with path traversal validation, aligns backup pruning/timing to UTC. Incorporates 60+ UI/UX fixes including dark mode visibility improvements, ARIA accessibility, focus trapping/restores, and spinner loading safeguards.',
+    date: 'May 2026',
+    highlight: true,
+    href: 'https://github.com/fabriziosalmi/certmate/releases/tag/v2.8.2',
+  },
+  {
+    badge: 'feature',
+    badgeLabel: 'v2.8.1',
+    icon: 'fa6-solid:robot',
+    title: 'v2.8.1 — Log Sanitizer, Zombie Certificate Scanner & MCP Server',
+    description:
+      'Features a Log Sanitizer to automatically redact API tokens, private keys, and PEM blocks. Adds a multi-threaded Zombie Certificate Scanner to identify and clean up orphan certificates. Introduces the CertMate MCP (Model Context Protocol) Server for integrating agentic AI assistants. Adds a Diagnostics Snapshot with a UI copy/clipboard helper.',
+    date: 'May 2026',
+    highlight: true,
+    href: 'https://github.com/fabriziosalmi/certmate/releases/tag/v2.8.1',
+  },
+  {
+    badge: 'milestone',
     badgeLabel: 'v2.8.0',
     icon: 'fa6-solid:file-shield',
     title: 'v2.8.0 — certificate formats, SSO user management & faster listing',
