@@ -26,6 +26,17 @@ export interface UpdateCard {
 
 export const updates: UpdateCard[] = [
   {
+    badge: 'fix',
+    badgeLabel: 'v2.8.3',
+    icon: 'fa6-solid:wrench',
+    title: 'v2.8.3 — Azure sub-delegated DNS alias fix',
+    description:
+      'Hotfix for Azure DNS-01 alias mode against a sub-delegated validation zone (e.g. acme-validation.example.com delegated under example.com): issuance failed because Lexicon resolves the hosted zone with tldextract, which collapses any name back to the registered domain. CertMate now sets resolve_zone_name so Lexicon resolves the real zone via a dnspython SOA lookup from the full alias FQDN. Upgrade recommended if you use Azure DNS alias mode with a delegated validation zone.',
+    date: 'May 2026',
+    highlight: true,
+    href: 'https://github.com/fabriziosalmi/certmate/releases/tag/v2.8.3',
+  },
+  {
     badge: 'milestone',
     badgeLabel: 'v2.8.2',
     icon: 'fa6-solid:shield-halved',
