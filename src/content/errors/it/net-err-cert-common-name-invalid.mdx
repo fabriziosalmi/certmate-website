@@ -1,0 +1,61 @@
+---
+title: "NET::ERR_CERT_COMMON_NAME_INVALID"
+errorCode: "NET::ERR_CERT_COMMON_NAME_INVALID"
+description: "Risolvi NET::ERR_CERT_COMMON_NAME_INVALID — il certificato SSL non copre l'hostname visitato. Cause, controllo dei SAN e soluzioni."
+summary: "Il certificato è attendibile e in corso di validità, ma non elenca l'hostname richiesto dal browser tra i suoi Subject Alternative Name."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 3
+updated: "2026-05-22"
+---
+
+## Cosa significa
+
+I browser moderni ignorano il vecchio campo Common Name (CN) e validano
+l'hostname solo rispetto alla lista **Subject Alternative Name (SAN)** del
+certificato. Se visiti `www.example.com` ma il certificato copre solo
+`example.com`, ottieni questo errore — per il resto il certificato è valido.
+
+## Cause comuni
+
+- **Variante `www` (o apex) mancante** — il certificato copre `example.com` ma
+  non `www.example.com`, o viceversa.
+- **Lacuna del wildcard** — un wildcard `*.example.com` **non** copre l'apex
+  `example.com`, né un sottodominio annidato `a.b.example.com`.
+- **Vhost / certificato di default errato** — il server è ricaduto su un
+  certificato di default di un altro sito (spesso una configurazione SNI/vhost
+  sbagliata).
+- **Accesso tramite IP** — il certificato non ha un SAN di tipo IP.
+
+## Come risolverlo
+
+**1. Elenca cosa copre davvero il certificato:**
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername www.example.com 2>/dev/null \
+  | openssl x509 -noout -ext subjectAltName
+```
+
+Confronta le voci `DNS:` stampate con l'hostname che hai digitato.
+
+**2. Ri-emetti il certificato con tutti gli hostname che servi** come SAN — ad
+esempio sia `example.com` sia `www.example.com`. Con certbot:
+
+```bash
+certbot certonly -d example.com -d www.example.com
+```
+
+**3. Wildcard:** aggiungi esplicitamente l'apex se ti serve, es.
+`-d "*.example.com" -d example.com`. I wildcard richiedono la validazione DNS-01.
+
+## Evitare che si ripresenti
+
+La causa tipica è la deriva degli hostname — un nuovo sottodominio che nessuno
+ha aggiunto alla lista dei SAN. CertMate gestisce l'intero insieme di SAN per
+certificato (wildcard inclusi via DNS-01) e ri-emette automaticamente quando
+l'insieme dei domini cambia, così il certificato servito corrisponde sempre a
+ciò che pubblichi.
+
+## Errori correlati
+
+- `SSL_ERROR_BAD_CERT_DOMAIN` — l'equivalente in Firefox di questo errore.
+- `NET::ERR_CERT_AUTHORITY_INVALID` — problema di fiducia/catena.

@@ -1,14 +1,24 @@
 ---
 import '~/styles/global.css';
 
+interface Alternate {
+  hreflang: string; // 'en' | 'it' | 'x-default'
+  href: string;
+}
+
 interface Props {
   title?: string;
   description?: string;
   canonical?: string;
   ogImage?: string;
+  lang?: string;
+  /** hreflang alternates for this URL across locales. */
+  alternates?: Alternate[];
 }
 
 const {
+  lang = 'en',
+  alternates = [],
   // Title preserved verbatim from the previous static index.html so
   // search signal carries over. Description rewritten to 124 chars
   // (under Google's ~155 truncation cap) and carrying the actual
@@ -56,11 +66,17 @@ const ldJson = {
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
+
+    <!-- hreflang alternates: tell search engines about the localized
+         variants of this URL so the right language ranks per market. -->
+    {alternates.map((a) => (
+      <link rel="alternate" hreflang={a.hreflang} href={a.href} />
+    ))}
 
     <!-- Enhanced SEO Meta Tags — preserved from the static site. -->
     <meta name="author" content="Fabrizio Salmi" />
@@ -77,6 +93,9 @@ const ldJson = {
       type="application/ld+json"
       set:html={JSON.stringify(ldJson)}
     />
+
+    <!-- Per-page <head> extras (extra structured data, etc.) -->
+    <slot name="head" />
 
     <meta name="description" content={description} />
     <meta

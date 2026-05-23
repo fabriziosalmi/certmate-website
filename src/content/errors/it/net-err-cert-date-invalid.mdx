@@ -1,0 +1,65 @@
+---
+title: "NET::ERR_CERT_DATE_INVALID"
+errorCode: "NET::ERR_CERT_DATE_INVALID"
+description: "Risolvi NET::ERR_CERT_DATE_INVALID — il certificato SSL è scaduto, non ancora valido, oppure l'orologio del dispositivo è sbagliato. Cause e soluzioni passo-passo."
+summary: "Il certificato è fuori dalla sua finestra di validità: è scaduto, non è ancora valido, oppure l'orologio del client è errato e fa sembrare scaduto un certificato valido."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 2
+updated: "2026-05-22"
+---
+
+## Cosa significa
+
+Ogni certificato porta una data `notBefore` e una `notAfter`. Il browser rifiuta
+la connessione se l'ora attuale è fuori da quella finestra. Il certificato
+potrebbe essere perfettamente valido — la discrepanza può dipendere anche solo
+da un orologio sbagliato sulla macchina del visitatore.
+
+## Cause comuni
+
+- **Certificato scaduto** — il caso più comune. Un rinnovo non è stato eseguito,
+  oppure è stato eseguito ma il nuovo certificato non è mai stato distribuito o
+  ricaricato.
+- **Orologio di sistema errato** — il dispositivo del visitatore ha la data
+  sbagliata, quindi un certificato valido sembra scaduto o non ancora valido.
+- **Certificato appena emesso** — `notBefore` è nel futuro rispetto a un client
+  con l'orologio indietro.
+
+## Come risolverlo
+
+**1. Controlla la vera data di scadenza:**
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/null \
+  | openssl x509 -noout -dates
+```
+
+`notAfter` nel passato conferma un certificato scaduto.
+
+**2. Rinnova e *ricarica*.** Con certbot:
+
+```bash
+certbot renew
+systemctl reload nginx   # il certificato è attivo solo dopo il reload del server
+```
+
+Rinnovare senza ricaricare il servizio è una trappola classica — il nuovo
+certificato è su disco ma il processo in esecuzione serve ancora quello vecchio.
+
+**3. Se il certificato è valido, controlla l'orologio del client.** Sul
+dispositivo interessato, attiva data e ora automatiche. Un orologio sfasato fa
+fallire ogni sito HTTPS, non solo il tuo.
+
+## Evitare che si ripresenti
+
+Gli incidenti di scadenza sono quasi sempre un rinnovo mancato o non
+distribuito. Con il CA/Browser Forum che spinge la durata dei certificati verso
+i 47 giorni, il rinnovo manuale smette di essere sostenibile. CertMate rinnova
+automaticamente prima della scadenza **e** esegue un deploy hook per ricaricare
+il servizio, così un certificato rinnovato viene davvero servito — non solo
+scritto su disco.
+
+## Errori correlati
+
+- `NET::ERR_CERT_AUTHORITY_INVALID` — problema di catena/fiducia, non di date.
+- `SEC_ERROR_EXPIRED_CERTIFICATE` — l'equivalente in Firefox di questo errore.

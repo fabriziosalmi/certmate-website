@@ -1,0 +1,71 @@
+---
+title: "ERR_SSL_PROTOCOL_ERROR"
+errorCode: "ERR_SSL_PROTOCOL_ERROR"
+description: "Risolvi ERR_SSL_PROTOCOL_ERROR — l'handshake TLS è fallito prima ancora della validazione del certificato. Cause: versione/cipher, SNI, proxy."
+summary: "L'handshake TLS si è interrotto prima della validazione del certificato. Browser e server non si sono accordati su come comunicare — spesso un problema di versione del protocollo, cipher o SNI/vhost."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 5
+updated: "2026-05-22"
+---
+
+## Cosa significa
+
+A differenza degli errori `CERT_*`, `ERR_SSL_PROTOCOL_ERROR` avviene **prima**
+della validazione del certificato. Client e server non sono riusciti a stabilire
+la sessione TLS — quindi è un problema di configurazione o compatibilità, non di
+fiducia.
+
+## Cause comuni
+
+- **Mismatch di versione del protocollo** — il server offre solo TLS 1.0/1.1
+  (ormai disabilitati nei browser moderni) o, al contrario, il client è troppo
+  vecchio.
+- **Nessun cipher suite in comune** — server e client non condividono alcun
+  cipher accettabile da entrambi.
+- **Configurazione SNI / vhost errata** — il server non ha un certificato per
+  l'hostname richiesto e interrompe l'handshake.
+- **HTTP servito sulla porta HTTPS**, oppure un proxy/CDN che termina il TLS mal
+  configurato davanti all'origin.
+- **Orologio molto sfasato / stato TLS locale corrotto** sul client.
+
+## Come risolverlo
+
+**1. Vedi cosa negozia davvero il server:**
+
+```bash
+# Un handshake moderno funziona?
+openssl s_client -connect example.com:443 -servername example.com </dev/null
+# Forza una versione per isolare il problema:
+openssl s_client -connect example.com:443 -tls1_2 </dev/null
+```
+
+**2. Abilita TLS moderno** (1.2 e 1.3) e una lista cipher sensata. Esempio per
+Nginx:
+
+```nginx
+ssl_protocols       TLSv1.2 TLSv1.3;
+ssl_ciphers         HIGH:!aNULL:!MD5;
+ssl_prefer_server_ciphers off;
+```
+
+Ricarica il server.
+
+**3. Dietro un CDN/proxy?** Assicurati che il certificato dell'origin e le
+impostazioni TLS edge↔origin siano valide; un origin rotto si manifesta come
+errore di protocollo nel browser.
+
+**4. Controlli lato client:** correggi l'orologio del dispositivo, svuota lo
+stato SSL del browser e prova in finestra anonima per escludere un'estensione.
+
+## Evitare che si ripresenti
+
+Gli errori di protocollo nascono di solito dalla deriva tra ciò che il server
+presenta e ciò che i client accettano. Tenere certificati e configurazione TLS
+gestiti centralmente — invece di modificarli a mano host per host — mantiene
+ogni endpoint sulla stessa baseline moderna e funzionante. CertMate
+standardizza emissione e deploy così gli endpoint non divergono in silenzio.
+
+## Errori correlati
+
+- `ERR_SSL_VERSION_OR_CIPHER_MISMATCH` — un fallimento di versione/cipher più specifico.
+- `NET::ERR_CERT_AUTHORITY_INVALID` — l'handshake riesce, la fiducia fallisce.

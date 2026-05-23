@@ -1,0 +1,59 @@
+---
+title: "NET::ERR_CERT_COMMON_NAME_INVALID"
+errorCode: "NET::ERR_CERT_COMMON_NAME_INVALID"
+description: "Fix NET::ERR_CERT_COMMON_NAME_INVALID — the SSL certificate does not cover the hostname you visited. Causes, SAN checks and fixes."
+summary: "The certificate is trusted and in date, but it doesn't list the hostname the browser asked for in its Subject Alternative Names."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 3
+updated: "2026-05-22"
+---
+
+## What it means
+
+Modern browsers ignore the legacy Common Name (CN) field and validate the
+hostname only against the certificate's **Subject Alternative Name (SAN)** list.
+If you visit `www.example.com` but the certificate only covers `example.com`,
+you get this error — the cert is otherwise fine.
+
+## Common causes
+
+- **Missing `www` (or apex) variant** — the cert covers `example.com` but not
+  `www.example.com`, or vice versa.
+- **Wildcard gap** — a `*.example.com` wildcard does **not** match the apex
+  `example.com`, nor a nested `a.b.example.com`.
+- **Wrong vhost / default certificate** — the server fell back to a default
+  certificate for a different site (often an SNI or vhost misconfiguration).
+- **Accessing by IP** — the certificate has no IP SAN.
+
+## How to fix it
+
+**1. List what the certificate actually covers:**
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername www.example.com 2>/dev/null \
+  | openssl x509 -noout -ext subjectAltName
+```
+
+Compare the printed `DNS:` entries with the hostname you typed.
+
+**2. Re-issue the certificate with every hostname you serve** as SANs — e.g.
+both `example.com` and `www.example.com`. With certbot:
+
+```bash
+certbot certonly -d example.com -d www.example.com
+```
+
+**3. Wildcards:** add the apex explicitly if you need it, e.g.
+`-d "*.example.com" -d example.com`. Wildcards require DNS-01 validation.
+
+## Prevent it from recurring
+
+Hostname drift — a new subdomain that nobody added to the SAN list — is the
+usual cause. CertMate manages the full SAN set per certificate (including
+wildcards via DNS-01) and reissues automatically when the domain set changes,
+so the served certificate always matches what you publish.
+
+## Related errors
+
+- `SSL_ERROR_BAD_CERT_DOMAIN` — the Firefox equivalent of this error.
+- `NET::ERR_CERT_AUTHORITY_INVALID` — trust/chain problem instead.

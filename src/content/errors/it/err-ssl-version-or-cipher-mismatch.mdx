@@ -1,0 +1,65 @@
+---
+title: "ERR_SSL_VERSION_OR_CIPHER_MISMATCH"
+errorCode: "ERR_SSL_VERSION_OR_CIPHER_MISMATCH"
+description: "Risolvi ERR_SSL_VERSION_OR_CIPHER_MISMATCH — browser e server non condividono alcuna versione TLS o cipher suite. Cause e configurazione TLS moderna."
+summary: "Browser e server non hanno alcuna versione TLS o cipher suite in comune, quindi l'handshake non può procedere — tipicamente una configurazione server obsoleta o un protocollo deprecato."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 6
+updated: "2026-05-22"
+---
+
+## Cosa significa
+
+Il client offre un insieme di versioni TLS e cipher suite; il server ne sceglie
+una che supporta a sua volta. Se i due insiemi non si sovrappongono, l'handshake
+fallisce con `ERR_SSL_VERSION_OR_CIPHER_MISMATCH`. Chrome moderno richiede TLS
+1.2+ e rifiuta i cipher legacy, quindi una configurazione server vecchia lo
+provoca subito.
+
+## Cause comuni
+
+- **Il server offre solo TLS 1.0/1.1** — entrambi disabilitati nei browser attuali.
+- **Solo cipher deprecati/deboli** (es. RC4, 3DES, cipher export).
+- **Algoritmo della chiave/certificato rifiutato dal client** (es. certificati
+  firmati SHA-1).
+- **Load balancer / CDN con terminazione TLS mal configurato** che offre una
+  policy obsoleta.
+
+## Come risolverlo
+
+**1. Ispeziona protocollo e cipher negoziati:**
+
+```bash
+openssl s_client -connect example.com:443 -servername example.com </dev/null \
+  | grep -E "Protocol|Cipher"
+```
+
+Se negozia TLS 1.0/1.1 o un cipher debole, ecco il problema.
+
+**2. Abilita TLS e cipher moderni.** Esempio Nginx in linea con le linee guida
+attuali:
+
+```nginx
+ssl_protocols       TLSv1.2 TLSv1.3;
+ssl_ciphers         ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+ssl_prefer_server_ciphers off;
+```
+
+Ricarica, poi verifica con [certmate-tools](https://github.com/fabriziosalmi/certmate-tools)
+o con il comando qui sopra.
+
+**3. Su un LB/CDN gestito** (ALB, CloudFront, Cloudflare), seleziona una policy
+di sicurezza TLS attuale invece di una legacy.
+
+## Evitare che si ripresenti
+
+Questo errore è un problema di deriva della configurazione: un endpoint lasciato
+su una policy vecchia. Emettere certificati moderni (CertMate usa per default
+ECDSA P-256 o RSA-2048+) e distribuire una configurazione coerente ovunque
+evita che gli endpoint ricadano in silenzio su un profilo che i browser non
+accettano più.
+
+## Errori correlati
+
+- `ERR_SSL_PROTOCOL_ERROR` — l'errore più generale di fallimento handshake.
+- `SSL_ERROR_NO_CYPHER_OVERLAP` — l'equivalente in Firefox.

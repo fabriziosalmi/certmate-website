@@ -1,0 +1,100 @@
+---
+import DocLayout from '~/layouts/DocLayout.astro';
+
+const path = '/cert-manager-alternative';
+const title = 'CertMate vs cert-manager, Caddy, Traefik e certbot';
+const description =
+  'Un confronto onesto tra CertMate e cert-manager, Caddy, Traefik e certbot — cosa fa meglio ciascuno e quando un gestore di certificati standalone con UI e API REST è la scelta giusta.';
+
+const rows = [
+  ['Forma principale', 'App standalone (UI + API REST)', 'Controller Kubernetes', 'Web server', 'Reverse proxy', 'Client CLI'],
+  ['Funziona fuori da Kubernetes', 'Sì', 'No (solo K8s)', 'Sì', 'Sì', 'Sì'],
+  ['Interfaccia web', 'Sì', 'No', 'No', 'Dashboard (limitata)', 'No'],
+  ['API REST', 'Sì', 'CRD K8s', 'API admin', 'API', 'No'],
+  ['Gestisce certificati per altri host', 'Sì (deploy hook)', 'Nel cluster', 'Solo sé stesso', 'App in proxy', 'Solo sé stesso'],
+  ['Provider DNS-01', '24', 'Molti (via webhook)', 'Diversi', 'Diversi', 'Molti (plugin)'],
+  ['Multi-CA (LE / ZeroSSL / Google / privata)', 'Sì', 'Sì (issuer)', "Let's Encrypt / ZeroSSL", "Let's Encrypt", 'Qualsiasi ACME'],
+  ['RBAC / API key con scope', 'Sì', 'RBAC K8s', 'No', 'No', 'No'],
+  ['Licenza', 'MIT', 'Apache-2.0', 'Apache-2.0', 'MIT', 'Apache-2.0'],
+];
+const cols = ['CertMate', 'cert-manager', 'Caddy', 'Traefik', 'certbot'];
+---
+
+<DocLayout lang="it" path={path} title={title} description={description}>
+  <h1>CertMate vs cert-manager, Caddy, Traefik e certbot</h1>
+  <p class="lead">
+    Questi strumenti "fanno tutti TLS", ma risolvono problemi diversi. Ecco una
+    valutazione onesta di dove si colloca ciascuno — e dove CertMate è (e non è)
+    la scelta giusta.
+  </p>
+
+  <div class="not-prose my-8 overflow-x-auto">
+    <table class="w-full border-collapse text-sm">
+      <thead>
+        <tr>
+          <th class="border-b border-gray-300 px-3 py-2 text-left dark:border-gray-600"></th>
+          {cols.map((c, i) => (
+            <th class={`border-b border-gray-300 px-3 py-2 text-left font-semibold dark:border-gray-600 ${i === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-200'}`}>{c}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r) => (
+          <tr class="align-top">
+            <td class="border-b border-gray-100 px-3 py-2 font-medium text-gray-700 dark:border-gray-800 dark:text-gray-300">{r[0]}</td>
+            {r.slice(1).map((cell, i) => (
+              <td class={`border-b border-gray-100 px-3 py-2 dark:border-gray-800 ${i === 0 ? 'font-medium text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}>{cell}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Quando usare ciascuno strumento</h2>
+
+  <h3>Usa cert-manager se vivi in Kubernetes</h3>
+  <p>
+    cert-manager è lo standard de-facto per l'automazione dei certificati dentro
+    il cluster. Se ogni workload che ha bisogno di un certificato è un
+    <code>Ingress</code> o un <code>Gateway</code> Kubernetes, cert-manager è
+    difficile da battere. Per scelta è solo-Kubernetes — non aiuta con la VM del
+    load balancer, il mail server bare-metal o l'appliance a cui serve solo un
+    file PEM su disco.
+  </p>
+
+  <h3>Usa Caddy o Traefik se <em>sono</em> il tuo edge</h3>
+  <p>
+    Caddy e Traefik ottengono l'HTTPS automatico praticamente gratis per il
+    traffico che terminano. Ottimo — se Caddy o Traefik è il server davanti alla
+    tua app. Non sono pensati per essere il punto centrale da cui emettere,
+    tracciare e distribuire certificati ad <em>altri</em> sistemi che non passano
+    per il loro proxy.
+  </p>
+
+  <h3>Usa certbot per un singolo host</h3>
+  <p>
+    certbot è il client ACME di riferimento, perfetto per uno o pochi host
+    pilotati da cron. Quando il numero di host cresce, finisci per scrivere tu
+    l'orchestrazione, l'inventario, il controllo accessi e la logica di deploy —
+    che è esattamente il livello fornito dagli strumenti sopra (e da CertMate).
+  </p>
+
+  <h2>Dove si colloca CertMate</h2>
+  <p>
+    CertMate è un <strong>gestore di certificati standalone con interfaccia web e
+    API REST</strong>. È la scelta giusta quando devi emettere, rinnovare e
+    <em>distribuire</em> certificati su molti host, provider e CA — dentro o
+    accanto a Kubernetes, su VM, bare metal o appliance — con accesso basato sui
+    ruoli e un'API richiamabile dalla tua automazione. Parla 24 provider DNS, più
+    CA (Let's Encrypt, ZeroSSL, Google, privata) e include deploy hook, così un
+    certificato rinnovato viene davvero distribuito ai sistemi che lo servono.
+  </p>
+  <p>
+    <strong>Non</strong> è un controller Kubernetes-native (per il cluster usa
+    cert-manager) e non sostituisce l'HTTPS integrato del tuo web server se Caddy
+    o Traefik copre già tutto ciò che esegui. Molti team usano CertMate
+    <em>insieme</em> a questi — come control plane centrale e audit-ato per i
+    certificati che vivono fuori dal cluster.
+  </p>
+</DocLayout>

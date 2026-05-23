@@ -1,0 +1,72 @@
+---
+title: "NET::ERR_CERT_AUTHORITY_INVALID"
+errorCode: "NET::ERR_CERT_AUTHORITY_INVALID"
+description: "Perché i browser mostrano NET::ERR_CERT_AUTHORITY_INVALID e come risolvere un'autorità di certificazione non attendibile — certificati self-signed, intermedi mancanti e CA interne."
+summary: "Il browser non riesce a costruire una catena attendibile dal tuo certificato fino a una CA che già conosce. Il certificato è valido, ma nessuno di fidato lo ha garantito."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 1
+updated: "2026-05-22"
+---
+
+## Cosa significa
+
+`NET::ERR_CERT_AUTHORITY_INVALID` è il modo di Chromium di dire *"ho ricevuto un
+certificato, ma non riesco a ricondurlo a un'Autorità di Certificazione (CA) di
+cui mi fido"*. L'handshake TLS è andato a buon fine — il problema è la
+**fiducia**, non la connettività. Il browser risale la catena dal certificato
+foglia del server fino a una root nel suo trust store; se un anello manca, è
+self-signed o emesso da una CA sconosciuta, si ferma e mostra questo errore.
+
+## Cause comuni
+
+- **Certificato self-signed** — l'hai generato tu (o uno strumento). Nessuna CA
+  pubblica lo ha firmato, quindi nessun browser lo considera attendibile.
+- **Certificato intermedio mancante** — il certificato foglia è corretto, ma il
+  server non invia l'intermedio che lo collega alla root attendibile. È la causa
+  più frequente in produzione, e spesso "funziona sul mio PC" perché il sistema
+  operativo ha messo in cache l'intermedio da un altro sito.
+- **CA privata / interna** — il certificato è emesso da una CA aziendale o di
+  homelab la cui root non è installata sul dispositivo del visitatore.
+- **File sbagliato servito** — il server invia `cert.pem` (solo foglia) invece
+  di `fullchain.pem` (foglia + intermedi).
+
+## Come risolverlo
+
+**1. Verifica se la catena è incompleta.** Prova da una macchina che *non* ha
+mai visitato il sito:
+
+```bash
+openssl s_client -connect example.com:443 -servername example.com -showcerts </dev/null
+```
+
+Se vedi un solo certificato, o `Verify return code: 21 (unable to verify the
+first certificate)`, manca l'intermedio.
+
+**2. Servi la catena completa, non solo la foglia.** Con Let's Encrypt /
+certbot, punta il server a `fullchain.pem`:
+
+```nginx
+ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;  # foglia + intermedi
+ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+```
+
+Ricarica (`nginx -s reload`) e riprova.
+
+**3. Self-signed o CA interna?** Per i siti pubblici, usa un certificato
+gratuito e pubblicamente attendibile di Let's Encrypt invece di uno self-signed.
+Se ti serve davvero una CA interna (intranet, mTLS), distribuisci la root della
+CA ai trust store dei client via MDM/group policy — non chiedere agli utenti di
+ignorare l'avviso.
+
+## Evitare che si ripresenti
+
+La maggior parte degli incidenti "authority invalid" è in realtà *operativa*: un
+rinnovo che ha pubblicato la foglia senza la catena, o un certificato manuale
+che nessuno ha ri-emesso. Automatizzare emissione e deploy elimina il passaggio
+umano che perde l'intermedio — CertMate scrive sempre un `fullchain.pem` e può
+distribuirlo ai server a ogni rinnovo, così la catena non resta mai a metà.
+
+## Errori correlati
+
+- `NET::ERR_CERT_DATE_INVALID` — il certificato è scaduto o non ancora valido.
+- `NET::ERR_CERT_COMMON_NAME_INVALID` — il certificato non copre questo hostname.

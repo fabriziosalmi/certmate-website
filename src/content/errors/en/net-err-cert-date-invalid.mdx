@@ -1,0 +1,63 @@
+---
+title: "NET::ERR_CERT_DATE_INVALID"
+errorCode: "NET::ERR_CERT_DATE_INVALID"
+description: "Fix NET::ERR_CERT_DATE_INVALID — the SSL certificate is expired, not yet valid, or the device clock is wrong. Causes and step-by-step fixes."
+summary: "The certificate is outside its validity window: either it has expired, it isn't valid yet, or the client's clock is wrong so a valid cert looks out of date."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 2
+updated: "2026-05-22"
+---
+
+## What it means
+
+Every certificate carries a `notBefore` and `notAfter` date. The browser
+rejects the connection if the current time falls outside that window. The cert
+may be perfectly valid — the mismatch can just as easily be a wrong clock on
+the visitor's machine.
+
+## Common causes
+
+- **Expired certificate** — the most common case. A renewal didn't run, or ran
+  but the new cert was never deployed/reloaded.
+- **Wrong system clock** — the visitor's device is set to the wrong date, so a
+  current certificate appears expired or not-yet-valid.
+- **Just-issued certificate** — `notBefore` is in the future relative to a
+  client whose clock is behind.
+
+## How to fix it
+
+**1. Check the real expiry date:**
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/null \
+  | openssl x509 -noout -dates
+```
+
+`notAfter` in the past confirms an expired certificate.
+
+**2. Renew and *reload*.** With certbot:
+
+```bash
+certbot renew
+systemctl reload nginx   # the cert is only live after the server reloads
+```
+
+Renewing without reloading the service is a classic trap — the new cert is on
+disk but the running process still serves the old one.
+
+**3. If the cert is current, check the client clock.** On the affected device,
+enable automatic date & time. A skewed clock makes every HTTPS site fail, not
+just yours.
+
+## Prevent it from recurring
+
+Expiry incidents are almost always a missed or un-deployed renewal. With CA/B
+Forum moving certificate lifetimes toward 47 days, manual renewal stops being
+viable. CertMate renews automatically ahead of expiry **and** runs a deploy
+hook to reload the service, so a renewed cert is actually served — not just
+written to disk.
+
+## Related errors
+
+- `NET::ERR_CERT_AUTHORITY_INVALID` — chain/trust problem rather than dates.
+- `SEC_ERROR_EXPIRED_CERTIFICATE` — the Firefox equivalent of this error.
