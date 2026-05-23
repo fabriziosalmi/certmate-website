@@ -1,0 +1,32 @@
+---
+import { getCollection, render } from 'astro:content';
+import DocLayout from '~/layouts/DocLayout.astro';
+import { ui } from '~/i18n';
+
+export async function getStaticPaths() {
+  const all = await getCollection('deploy');
+  return all
+    .filter((e) => e.id.startsWith('it/'))
+    .map((e) => ({ params: { slug: e.id.replace(/^it\//, '') }, props: { entry: e } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const t = ui.it;
+const slug = entry.id.replace(/^it\//, '');
+const path = `/deploy/${slug}`;
+const d = entry.data;
+---
+
+<DocLayout
+  lang="it"
+  path={path}
+  title={d.title}
+  description={d.description}
+  breadcrumbs={[{ label: t.deploy, path: '/deploy' }]}
+>
+  <p class="not-prose mb-4 inline-block rounded bg-primary-50 px-3 py-1 text-sm font-medium text-primary dark:bg-primary-900/20 dark:text-primary-100">{d.platform}</p>
+  <p class="lead">{d.summary}</p>
+  {d.updated && <p class="not-prose mb-6 text-xs text-gray-500 dark:text-gray-400">{t.updated} {d.updated}</p>}
+  <Content />
+</DocLayout>
