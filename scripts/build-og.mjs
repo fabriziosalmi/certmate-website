@@ -57,7 +57,7 @@ const svg = `<?xml version="1.0" encoding="UTF-8"?>
   <!-- Footer chips -->
   <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="22" font-weight="600">
     <rect x="80"  y="460" width="120" height="44" rx="10" fill="#dbeafe"/>
-    <text x="140" y="490" fill="#1d4ed8" text-anchor="middle">v2.8.0</text>
+    <text x="140" y="490" fill="#1d4ed8" text-anchor="middle">v2.8.3</text>
 
     <rect x="216" y="460" width="100" height="44" rx="10" fill="#dbeafe"/>
     <text x="266" y="490" fill="#1d4ed8" text-anchor="middle">MIT</text>
