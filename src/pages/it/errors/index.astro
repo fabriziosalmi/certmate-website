@@ -1,0 +1,29 @@
+---
+import { getCollection } from 'astro:content';
+import DocLayout from '~/layouts/DocLayout.astro';
+import { ui, localizedPath } from '~/i18n';
+
+const t = ui.it;
+const entries = (await getCollection('errors'))
+  .filter((e) => e.id.startsWith('it/'))
+  .sort((a, b) => a.data.order - b.data.order);
+---
+
+<DocLayout lang="it" path="/errors" title={t.errorsTitle} description={t.errorsIntro}>
+  <h1>{t.errorsTitle}</h1>
+  <p class="lead">{t.errorsIntro}</p>
+
+  <ul class="not-prose mt-8 grid gap-3">
+    {entries.map((e) => (
+      <li>
+        <a
+          href={localizedPath('it', `/errors/${e.id.replace(/^it\//, '')}`)}
+          class="block rounded-lg border border-gray-200 p-4 transition-colors hover:border-primary dark:border-gray-700"
+        >
+          <span class="font-mono text-sm text-red-700 dark:text-red-300">{e.data.errorCode}</span>
+          <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">{e.data.summary}</p>
+        </a>
+      </li>
+    ))}
+  </ul>
+</DocLayout>

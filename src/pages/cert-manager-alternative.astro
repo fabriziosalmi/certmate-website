@@ -1,0 +1,99 @@
+---
+import DocLayout from '~/layouts/DocLayout.astro';
+
+const path = '/cert-manager-alternative';
+const title = 'CertMate vs cert-manager, Caddy, Traefik & certbot';
+const description =
+  'An honest comparison of CertMate with cert-manager, Caddy, Traefik and certbot — what each does best, and when a standalone certificate manager with a UI and REST API is the right fit.';
+
+const rows = [
+  ['Primary form factor', 'Standalone app (UI + REST API)', 'Kubernetes controller', 'Web server', 'Reverse proxy', 'CLI client'],
+  ['Runs outside Kubernetes', 'Yes', 'No (K8s-only)', 'Yes', 'Yes', 'Yes'],
+  ['Web UI', 'Yes', 'No', 'No', 'Dashboard (limited)', 'No'],
+  ['REST API', 'Yes', 'K8s CRDs', 'Admin API', 'API', 'No'],
+  ['Manages certs for other/3rd-party hosts', 'Yes (deploy hooks)', 'In-cluster', 'Self only', 'Proxied apps', 'Self only'],
+  ['DNS-01 providers', '24', 'Many (via webhooks)', 'Several', 'Several', 'Many (plugins)'],
+  ['Multi-CA (LE / ZeroSSL / Google / private)', 'Yes', 'Yes (issuers)', "Let's Encrypt / ZeroSSL", "Let's Encrypt", 'Any ACME'],
+  ['RBAC / scoped API keys', 'Yes', 'K8s RBAC', 'No', 'No', 'No'],
+  ['License', 'MIT', 'Apache-2.0', 'Apache-2.0', 'MIT', 'Apache-2.0'],
+];
+const cols = ['CertMate', 'cert-manager', 'Caddy', 'Traefik', 'certbot'];
+---
+
+<DocLayout lang="en" path={path} title={title} description={description}>
+  <h1>CertMate vs cert-manager, Caddy, Traefik &amp; certbot</h1>
+  <p class="lead">
+    These tools all "do TLS", but they solve different problems. Here's an
+    honest take on where each one fits — and where CertMate is (and isn't) the
+    right choice.
+  </p>
+
+  <div class="not-prose my-8 overflow-x-auto">
+    <table class="w-full border-collapse text-sm">
+      <thead>
+        <tr>
+          <th class="border-b border-gray-300 px-3 py-2 text-left dark:border-gray-600"></th>
+          {cols.map((c, i) => (
+            <th class={`border-b border-gray-300 px-3 py-2 text-left font-semibold dark:border-gray-600 ${i === 0 ? 'text-primary' : 'text-gray-700 dark:text-gray-200'}`}>{c}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r) => (
+          <tr class="align-top">
+            <td class="border-b border-gray-100 px-3 py-2 font-medium text-gray-700 dark:border-gray-800 dark:text-gray-300">{r[0]}</td>
+            {r.slice(1).map((cell, i) => (
+              <td class={`border-b border-gray-100 px-3 py-2 dark:border-gray-800 ${i === 0 ? 'font-medium text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}>{cell}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>When each tool is the right call</h2>
+
+  <h3>Use cert-manager if you live in Kubernetes</h3>
+  <p>
+    cert-manager is the de-facto standard for in-cluster certificate automation.
+    If every workload that needs a certificate is a Kubernetes <code>Ingress</code>
+    or <code>Gateway</code>, cert-manager is hard to beat. It is, by design,
+    Kubernetes-only — it doesn't help with the VM running your load balancer, the
+    bare-metal mail server, or the appliance that just needs a PEM file dropped on
+    disk.
+  </p>
+
+  <h3>Use Caddy or Traefik if they <em>are</em> your edge</h3>
+  <p>
+    Caddy and Traefik get automatic HTTPS effectively for free for the traffic
+    they terminate. That's excellent — if Caddy or Traefik is the server in front
+    of your app. They're not built to be a central place to issue, track and push
+    certificates to <em>other</em> systems you don't proxy.
+  </p>
+
+  <h3>Use certbot for a single host</h3>
+  <p>
+    certbot is the reference ACME client and perfect for one or a few hosts driven
+    from cron. As the host count grows, you end up writing the orchestration,
+    inventory, access control and deployment glue yourself — which is exactly the
+    layer the tools above (and CertMate) provide.
+  </p>
+
+  <h2>Where CertMate fits</h2>
+  <p>
+    CertMate is a <strong>standalone certificate manager with a web UI and a REST
+    API</strong>. It's the right fit when you need to issue, renew and
+    <em>deploy</em> certificates across many hosts, providers and CAs — inside or
+    alongside Kubernetes, on VMs, bare metal or appliances — with role-based access
+    and an API your automation can call. It speaks 24 DNS providers, multiple CAs
+    (Let's Encrypt, ZeroSSL, Google, private), and ships deploy hooks so a renewed
+    certificate is actually pushed to the systems that serve it.
+  </p>
+  <p>
+    It is <strong>not</strong> a Kubernetes-native controller (use cert-manager
+    in-cluster), and it doesn't replace your web server's built-in HTTPS if Caddy
+    or Traefik already covers everything you run. Many teams use CertMate
+    <em>alongside</em> those — as the central, audited control plane for the certs
+    that live outside the cluster.
+  </p>
+</DocLayout>

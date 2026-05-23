@@ -1,0 +1,62 @@
+---
+title: "ERR_SSL_VERSION_OR_CIPHER_MISMATCH"
+errorCode: "ERR_SSL_VERSION_OR_CIPHER_MISMATCH"
+description: "Fix ERR_SSL_VERSION_OR_CIPHER_MISMATCH — browser and server share no common TLS version or cipher suite. Causes and modern TLS config."
+summary: "The browser and server have no TLS version or cipher suite in common, so the handshake can't proceed — typically an outdated server config or a deprecated protocol."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 6
+updated: "2026-05-22"
+---
+
+## What it means
+
+The client offers a set of TLS versions and cipher suites; the server picks
+one it also supports. If the two sets don't overlap, the handshake fails with
+`ERR_SSL_VERSION_OR_CIPHER_MISMATCH`. Modern Chrome requires TLS 1.2+ and
+refuses legacy ciphers, so an old server config triggers this immediately.
+
+## Common causes
+
+- **Server only offers TLS 1.0/1.1** — both are disabled in current browsers.
+- **Deprecated/weak ciphers only** (e.g. RC4, 3DES, export ciphers).
+- **RSA-key/cert algorithm the client rejects** (e.g. SHA-1 signed certs).
+- **Misconfigured TLS-terminating load balancer / CDN** offering an outdated
+  policy.
+
+## How to fix it
+
+**1. Inspect the negotiated protocol & cipher:**
+
+```bash
+openssl s_client -connect example.com:443 -servername example.com </dev/null \
+  | grep -E "Protocol|Cipher"
+```
+
+If it negotiates TLS 1.0/1.1 or a weak cipher, that's your problem.
+
+**2. Enable modern TLS and ciphers.** Nginx example aligned with current
+guidance:
+
+```nginx
+ssl_protocols       TLSv1.2 TLSv1.3;
+ssl_ciphers         ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+ssl_prefer_server_ciphers off;
+```
+
+Reload, then verify with [certmate-tools](https://github.com/fabriziosalmi/certmate-tools)
+or the command above.
+
+**3. On a managed LB/CDN** (ALB, CloudFront, Cloudflare), select a current TLS
+security policy rather than a legacy one.
+
+## Prevent it from recurring
+
+This error is a config-drift problem: one endpoint left on an old policy.
+Issuing modern certificates (CertMate defaults to ECDSA P-256 or RSA-2048+) and
+deploying a consistent config everywhere keeps endpoints from silently falling
+back to a profile browsers no longer accept.
+
+## Related errors
+
+- `ERR_SSL_PROTOCOL_ERROR` — the broader handshake-failure error.
+- `SSL_ERROR_NO_CYPHER_OVERLAP` — the Firefox equivalent.

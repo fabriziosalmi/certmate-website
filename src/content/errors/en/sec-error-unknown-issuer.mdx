@@ -1,0 +1,64 @@
+---
+title: "SEC_ERROR_UNKNOWN_ISSUER"
+errorCode: "SEC_ERROR_UNKNOWN_ISSUER"
+description: "Fix Firefox's SEC_ERROR_UNKNOWN_ISSUER — the certificate issuer is not trusted, usually a missing intermediate or a self-signed / internal CA."
+summary: "Firefox can't connect the certificate to a trusted root. Almost always a missing intermediate certificate or an internal/self-signed CA Firefox doesn't know."
+browsers: ["Firefox"]
+order: 4
+updated: "2026-05-22"
+---
+
+## What it means
+
+`SEC_ERROR_UNKNOWN_ISSUER` is Firefox's counterpart to Chromium's
+`NET::ERR_CERT_AUTHORITY_INVALID`. Firefox ships its **own** trust store
+(independent of the OS), which is why a site can work in Chrome/Edge — they use
+the OS store, which may have cached the intermediate — but fail in Firefox.
+
+## Common causes
+
+- **Missing intermediate certificate** — the server sends only the leaf. Other
+  browsers may have cached the intermediate; Firefox hasn't, so it fails. This
+  is the #1 cause.
+- **Self-signed certificate** — no public CA signed it.
+- **Internal/corporate CA** — the issuing root isn't in Firefox's store
+  (remember: Firefox does **not** read the Windows/macOS system store by
+  default).
+- **AV / proxy TLS interception** — security software re-signs traffic with a
+  local root Firefox doesn't trust.
+
+## How to fix it
+
+**1. Confirm the chain is incomplete** from a clean machine:
+
+```bash
+openssl s_client -connect example.com:443 -servername example.com -showcerts </dev/null
+```
+
+A single certificate (no intermediate) plus `unable to verify the first
+certificate` confirms it.
+
+**2. Serve the full chain.** Point the server at `fullchain.pem`, not the
+bare leaf:
+
+```nginx
+ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+```
+
+Reload and re-test in Firefox.
+
+**3. Internal CA?** Import the CA root into Firefox (Settings → Privacy &
+Security → Certificates → View Certificates → Authorities → Import), or push it
+to the Firefox enterprise policy / trust store via your MDM.
+
+## Prevent it from recurring
+
+Because Firefox won't paper over a missing intermediate the way an OS-cached
+store sometimes does, an incomplete chain *will* surface here first. CertMate
+always deploys `fullchain.pem` on issuance and renewal, so the intermediate is
+never dropped.
+
+## Related errors
+
+- `NET::ERR_CERT_AUTHORITY_INVALID` — the Chromium equivalent.
+- `SEC_ERROR_EXPIRED_CERTIFICATE` — Firefox, expiry instead of trust.

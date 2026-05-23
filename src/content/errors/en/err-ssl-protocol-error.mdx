@@ -1,0 +1,69 @@
+---
+title: "ERR_SSL_PROTOCOL_ERROR"
+errorCode: "ERR_SSL_PROTOCOL_ERROR"
+description: "Fix ERR_SSL_PROTOCOL_ERROR — the TLS handshake failed before a certificate was even validated. Causes: protocol/cipher mismatch, SNI, proxies."
+summary: "The TLS handshake broke down before certificate validation. The browser and server couldn't agree on how to talk — often a protocol version, cipher, or SNI/vhost issue."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 5
+updated: "2026-05-22"
+---
+
+## What it means
+
+Unlike the `CERT_*` errors, `ERR_SSL_PROTOCOL_ERROR` happens **before**
+certificate validation. The client and server failed to establish the TLS
+session at all — so it's a configuration or compatibility problem, not a trust
+problem.
+
+## Common causes
+
+- **Protocol version mismatch** — the server only offers TLS 1.0/1.1 (now
+  disabled in modern browsers) or, conversely, the client is ancient.
+- **No common cipher suite** — server and client share no mutually-acceptable
+  cipher.
+- **SNI / vhost misconfiguration** — the server doesn't have a certificate for
+  the requested hostname and aborts the handshake.
+- **Serving HTTP on the HTTPS port**, or a TLS-terminating proxy/CDN
+  misconfigured in front of the origin.
+- **Clock far off / corrupted local TLS state** on the client.
+
+## How to fix it
+
+**1. See what the server actually negotiates:**
+
+```bash
+# Does a modern handshake work at all?
+openssl s_client -connect example.com:443 -servername example.com </dev/null
+# Force a version to isolate the problem:
+openssl s_client -connect example.com:443 -tls1_2 </dev/null
+```
+
+**2. Enable modern TLS** (1.2 and 1.3) and a sane cipher list. Example for Nginx:
+
+```nginx
+ssl_protocols       TLSv1.2 TLSv1.3;
+ssl_ciphers         HIGH:!aNULL:!MD5;
+ssl_prefer_server_ciphers off;
+```
+
+Reload the server.
+
+**3. Behind a CDN/proxy?** Make sure the origin certificate and the
+edge↔origin TLS settings are valid; a broken origin surfaces as a protocol
+error at the browser.
+
+**4. Client-side quick checks:** correct the device clock, clear the browser's
+SSL state, and test in a private window to rule out an extension.
+
+## Prevent it from recurring
+
+Protocol errors usually trace back to drift between what the server presents and
+what clients accept. Keeping certificates and TLS config managed centrally —
+rather than hand-edited per host — keeps every endpoint on the same modern,
+working baseline. CertMate standardizes issuance and deployment so endpoints
+don't quietly diverge.
+
+## Related errors
+
+- `ERR_SSL_VERSION_OR_CIPHER_MISMATCH` — a more specific version/cipher failure.
+- `NET::ERR_CERT_AUTHORITY_INVALID` — handshake succeeds, trust fails.

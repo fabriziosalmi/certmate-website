@@ -1,0 +1,72 @@
+---
+title: "NET::ERR_CERT_AUTHORITY_INVALID"
+errorCode: "NET::ERR_CERT_AUTHORITY_INVALID"
+description: "Why browsers show NET::ERR_CERT_AUTHORITY_INVALID and how to fix an untrusted SSL certificate authority — for self-signed certs, missing intermediates and internal CAs."
+summary: "The browser cannot build a trusted chain from your certificate up to a CA it already trusts. The certificate is real, but nobody the browser trusts vouched for it."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 1
+updated: "2026-05-22"
+---
+
+## What it means
+
+`NET::ERR_CERT_AUTHORITY_INVALID` is Chromium's way of saying *"I received a
+certificate, but I can't trace it back to a Certificate Authority (CA) I
+trust."* The TLS handshake itself worked — the problem is **trust**, not
+connectivity. The browser walks the chain from your server's leaf certificate
+up toward a root in its trust store; if any link is missing, self-signed, or
+issued by an unknown CA, it stops and shows this error.
+
+## Common causes
+
+- **Self-signed certificate** — you generated the cert yourself (or a tool did).
+  No public CA signed it, so no browser trusts it by default.
+- **Missing intermediate certificate** — your leaf certificate is fine, but the
+  server isn't sending the intermediate(s) that link it to the trusted root.
+  This is the single most common cause in production, and it often "works on my
+  machine" because your OS cached the intermediate from another site.
+- **Internal / private CA** — the cert was issued by a corporate or homelab CA
+  whose root isn't installed on the visiting device.
+- **Wrong file served** — the server is configured to send `cert.pem` (leaf
+  only) instead of `fullchain.pem` (leaf + intermediates).
+
+## How to fix it
+
+**1. Confirm whether the chain is incomplete.** Test from a machine that has
+*not* visited the site before:
+
+```bash
+openssl s_client -connect example.com:443 -servername example.com -showcerts </dev/null
+```
+
+If you only see one certificate, or `Verify return code: 21 (unable to verify
+the first certificate)`, you're missing the intermediate.
+
+**2. Serve the full chain, not just the leaf.** With Let's Encrypt / certbot,
+point your server at `fullchain.pem`:
+
+```nginx
+ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;  # leaf + intermediates
+ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+```
+
+Reload (`nginx -s reload`) and re-test.
+
+**3. Self-signed or internal CA?** For real public sites, get a free,
+publicly-trusted certificate from Let's Encrypt instead of a self-signed one.
+If you genuinely need an internal CA (intranet, mTLS), distribute the CA root
+to client trust stores via MDM/group policy — don't ask users to click through
+the warning.
+
+## Prevent it from recurring
+
+Most "authority invalid" incidents are really *operational*: a renewal that
+shipped the leaf without the chain, or a manual cert that nobody re-issued.
+Automating issuance and deployment removes the human step that drops the
+intermediate — CertMate always writes a `fullchain.pem` and can push it to your
+servers on every renewal, so the chain is never half-deployed.
+
+## Related errors
+
+- `NET::ERR_CERT_DATE_INVALID` — the certificate is expired or not yet valid.
+- `NET::ERR_CERT_COMMON_NAME_INVALID` — the certificate doesn't cover this hostname.
