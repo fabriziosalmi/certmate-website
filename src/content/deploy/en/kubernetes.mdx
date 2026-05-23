@@ -1,0 +1,80 @@
+---
+title: "Deploy TLS certificates on Kubernetes"
+platform: "Kubernetes"
+description: "How TLS certificates work on Kubernetes Ingress — the tls secret, when to use cert-manager in-cluster, and when an external manager like CertMate fits."
+summary: "How Ingress TLS secrets actually work, why cert-manager is the in-cluster default, and where an external certificate manager fits for certs that live outside the cluster."
+icon: "fa6-solid:dharmachakra"
+order: 3
+updated: "2026-05-22"
+---
+
+## How Ingress TLS works
+
+Kubernetes Ingress reads its certificate from a `kubernetes.io/tls` Secret that
+holds `tls.crt` (the **full chain**) and `tls.key`:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: example-tls
+  namespace: web
+type: kubernetes.io/tls
+data:
+  tls.crt: <base64 fullchain.pem>
+  tls.key: <base64 privkey.pem>
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web
+  namespace: web
+spec:
+  tls:
+    - hosts: ["example.com"]
+      secretName: example-tls
+  rules:
+    - host: example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web
+                port:
+                  number: 80
+```
+
+`tls.crt` must be the **full chain**, not the leaf — otherwise clients hit
+`NET::ERR_CERT_AUTHORITY_INVALID`.
+
+## In-cluster: use cert-manager
+
+If everything that needs a certificate is an Ingress or Gateway, **cert-manager**
+is the right tool. It watches your Ingresses, solves ACME challenges, and writes
+the `tls` Secret for you. It's the de-facto standard and we'd recommend it for
+purely in-cluster TLS.
+
+## Loading a certificate issued elsewhere
+
+When the certificate is issued *outside* the cluster — by a central manager that
+also covers your VMs, load balancers and appliances — you load it as a Secret:
+
+```bash
+kubectl create secret tls example-tls \
+  --cert=fullchain.pem --key=privkey.pem \
+  -n web --dry-run=client -o yaml | kubectl apply -f -
+```
+
+The `--dry-run | apply` form makes the command idempotent, so a renewal job can
+re-run it to rotate the Secret. Ingress controllers pick up the updated Secret
+automatically (some reload within seconds; a few need a pod restart).
+
+## Where CertMate fits
+
+CertMate isn't a Kubernetes controller — for in-cluster-only TLS, cert-manager
+is the better fit. CertMate is for teams that need **one** control plane for
+certificates that span Kubernetes *and* everything outside it (edge LBs, VMs,
+bare metal). Its deploy hooks can run the `kubectl create secret … | apply`
+above on renewal, so a single audited system keeps both worlds in sync.

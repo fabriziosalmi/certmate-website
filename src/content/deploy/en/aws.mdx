@@ -1,0 +1,59 @@
+---
+title: "Deploy TLS certificates on AWS"
+platform: "AWS"
+description: "TLS on AWS: when to use ACM with ALB/CloudFront, when you need Let's Encrypt on EC2, and how to manage certificates across AWS and other clouds."
+summary: "When AWS Certificate Manager (ACM) is the easy win, when you still need your own ACME certificate on EC2, and how to keep multi-cloud certs consistent."
+icon: "fa6-brands:aws"
+order: 4
+updated: "2026-05-22"
+---
+
+## First choice: ACM, if you stay AWS-native
+
+If your traffic terminates at an **Application Load Balancer (ALB)**, **CloudFront**
+or **API Gateway**, use **AWS Certificate Manager (ACM)**. ACM issues and
+auto-renews public certificates for free and binds them to those services — no
+private key ever touches your instances.
+
+```bash
+aws acm request-certificate \
+  --domain-name example.com \
+  --subject-alternative-names www.example.com \
+  --validation-method DNS
+```
+
+Add the returned CNAME to Route 53 (or click "Create records in Route 53"), then
+attach the certificate to your ALB/CloudFront listener. Renewal is automatic as
+long as the validation records stay in place.
+
+**ACM's limitation:** you can't export the private key. ACM certs only work on
+AWS-integrated endpoints — not on an Nginx box on EC2, not on another cloud.
+
+## When you need your own certificate on EC2
+
+For TLS terminated *on the instance* (Nginx/Apache on EC2), or a portable cert
+you control, issue from Let's Encrypt. Use **DNS-01 with the Route 53 plugin** so
+it works for wildcards and instances without inbound port 80:
+
+```bash
+sudo certbot certonly --dns-route53 \
+  -d example.com -d "*.example.com"
+```
+
+The instance role (or credentials) needs `route53:ChangeResourceRecordSets` on
+the hosted zone plus `route53:ListHostedZones`/`GetChange`.
+
+## Verify
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/null \
+  | openssl x509 -noout -issuer -dates
+```
+
+## Multi-cloud or hybrid? Keep it consistent
+
+The moment certificates live in more than one place — ACM for the ALB, an ACME
+cert on EC2, something on another cloud — you need a single source of truth.
+CertMate issues via Route 53 (and 23 other DNS providers), stores and renews
+centrally, and pushes renewed certificates to each target via deploy hooks —
+with a REST API and RBAC — so AWS and non-AWS endpoints don't drift apart.

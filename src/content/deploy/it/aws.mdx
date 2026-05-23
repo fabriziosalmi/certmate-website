@@ -1,0 +1,61 @@
+---
+title: "Deploy di certificati TLS su AWS"
+platform: "AWS"
+description: "TLS su AWS: quando usare ACM con ALB/CloudFront, quando serve Let's Encrypt su EC2 e come gestire i certificati tra AWS e altri cloud."
+summary: "Quando AWS Certificate Manager (ACM) è la scelta facile, quando serve comunque un tuo certificato ACME su EC2, e come tenere coerenti i certificati multi-cloud."
+icon: "fa6-brands:aws"
+order: 4
+updated: "2026-05-22"
+---
+
+## Prima scelta: ACM, se resti AWS-native
+
+Se il traffico termina su un **Application Load Balancer (ALB)**, **CloudFront**
+o **API Gateway**, usa **AWS Certificate Manager (ACM)**. ACM emette e rinnova
+automaticamente i certificati pubblici gratis e li collega a quei servizi —
+nessuna chiave privata tocca mai le tue istanze.
+
+```bash
+aws acm request-certificate \
+  --domain-name example.com \
+  --subject-alternative-names www.example.com \
+  --validation-method DNS
+```
+
+Aggiungi il CNAME restituito a Route 53 (o clicca "Create records in Route 53"),
+poi collega il certificato al listener dell'ALB/CloudFront. Il rinnovo è
+automatico finché i record di validazione restano al loro posto.
+
+**Limite di ACM:** non puoi esportare la chiave privata. I certificati ACM
+funzionano solo su endpoint integrati con AWS — non su un Nginx su EC2, non su
+un altro cloud.
+
+## Quando ti serve un tuo certificato su EC2
+
+Per il TLS terminato *sull'istanza* (Nginx/Apache su EC2), o per un certificato
+portabile che controlli tu, emetti da Let's Encrypt. Usa **DNS-01 con il plugin
+Route 53** così funziona per i wildcard e per istanze senza porta 80 in ingresso:
+
+```bash
+sudo certbot certonly --dns-route53 \
+  -d example.com -d "*.example.com"
+```
+
+Il ruolo dell'istanza (o le credenziali) deve avere
+`route53:ChangeResourceRecordSets` sulla hosted zone più
+`route53:ListHostedZones`/`GetChange`.
+
+## Verifica
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/null \
+  | openssl x509 -noout -issuer -dates
+```
+
+## Multi-cloud o ibrido? Mantieni la coerenza
+
+Nel momento in cui i certificati vivono in più posti — ACM per l'ALB, un
+certificato ACME su EC2, qualcos'altro su un altro cloud — serve un'unica fonte
+di verità. CertMate emette via Route 53 (e altri 23 provider DNS), conserva e
+rinnova centralmente, e distribuisce i certificati rinnovati a ogni target via
+deploy hook — con API REST e RBAC — così endpoint AWS e non-AWS non divergono.

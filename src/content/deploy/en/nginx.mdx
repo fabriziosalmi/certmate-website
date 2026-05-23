@@ -1,0 +1,89 @@
+---
+title: "Deploy a TLS certificate on Nginx"
+platform: "Nginx"
+description: "How to issue, install and auto-renew a Let's Encrypt TLS certificate on Nginx — the full-chain config, reload hook and the gotchas that cause downtime."
+summary: "Issue a certificate, point Nginx at the full chain, and automate renewal so it reloads itself — without the classic 'renewed but still serving the old cert' trap."
+icon: "fa6-solid:server"
+order: 1
+updated: "2026-05-22"
+---
+
+## Prerequisites
+
+- A domain whose DNS A/AAAA record points at the server.
+- Nginx installed, listening on port 80 (needed for HTTP-01 validation) and 443.
+- Root/sudo access.
+
+## 1. Issue the certificate
+
+For a public site, HTTP-01 via certbot is the simplest path:
+
+```bash
+sudo certbot certonly --webroot -w /var/www/html \
+  -d example.com -d www.example.com
+```
+
+For wildcards (`*.example.com`) you need DNS-01 instead — CertMate handles
+DNS-01 across 24 providers without per-host plugin juggling.
+
+Certbot writes the files to `/etc/letsencrypt/live/example.com/`.
+
+## 2. Point Nginx at the full chain
+
+The single most common Nginx TLS mistake is serving `cert.pem` (leaf only),
+which causes `NET::ERR_CERT_AUTHORITY_INVALID` for some clients. Always use
+`fullchain.pem`:
+
+```nginx
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name example.com www.example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers off;
+}
+
+server {
+    listen 80;
+    server_name example.com www.example.com;
+    return 301 https://$host$request_uri;
+}
+```
+
+Test and reload:
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+## 3. Verify
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/null \
+  | openssl x509 -noout -issuer -dates
+```
+
+You should see the CA issuer and a fresh `notAfter`.
+
+## 4. Auto-renew (and actually reload)
+
+Renewal that doesn't reload Nginx leaves the old certificate in memory. With
+certbot, add a deploy hook:
+
+```bash
+sudo certbot renew --deploy-hook "systemctl reload nginx"
+```
+
+## Do it the hands-off way
+
+CertMate issues and renews the certificate (HTTP-01 or DNS-01 across 24
+providers), then runs a deploy hook to push `fullchain.pem` + `privkey.pem` to
+this host and reload Nginx — so the served certificate is always current and the
+chain is never half-deployed. You manage it from a UI or REST API instead of
+per-host cron.
