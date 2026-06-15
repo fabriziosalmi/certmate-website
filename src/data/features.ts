@@ -88,9 +88,9 @@ export const features: Feature[] = [
   },
   {
     icon: 'fa6-solid:receipt',
-    title: 'Enhanced Auditing & Sanitization',
+    title: 'Agentic Audit Trail',
     body:
-      'Automatically redacts sensitive API tokens and private keys from logs. Features audit logs on storage changes, Key Vault backfills, and path-traversal hardened backup downloads.',
+      'Every certificate action — including unattended scheduled renewals — is attributed to who or what acted (human, API token, or AI agent) and what triggered it, then written into a tamper-evident SHA-256 hash chain you can verify with a standalone tool. Sensitive tokens and keys are still redacted from logs.',
   },
   {
     icon: 'fa6-solid:ghost',
