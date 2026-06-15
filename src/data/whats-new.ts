@@ -1,8 +1,7 @@
 /**
- * "What's New" cards. Listed newest-first. The previous static index.html
- * kept v2.0 / v2.0.1 as the headline cards; we now lead with v2.8.0 (the
- * current release) and keep enough history for context without padding
- * the page.
+ * "What's New" cards. Listed newest-first. We lead with the latest releases
+ * (currently the v2.16.0 agentic audit trail) and keep enough history for
+ * context without padding the page.
  *
  * Each item maps to one card. Badge variants:
  *   - 'milestone' (highlighted v2.x release)
@@ -25,6 +24,38 @@ export interface UpdateCard {
 }
 
 export const updates: UpdateCard[] = [
+  {
+    badge: 'security',
+    badgeLabel: 'v2.16.0',
+    icon: 'fa6-solid:fingerprint',
+    title: 'v2.16.0 — Agentic cert-lifecycle audit trail',
+    description:
+      'When an AI/MCP agent renews or replaces certificates on a schedule, "it ran" is not an audit trail. Every certificate action — create, renew, reissue, deploy, auto-renew, and unattended scheduled renewals — is now attributed to who or what acted (human, API token, or AI agent, down to the API key) and what triggered it. Entries are written into a tamper-evident SHA-256 hash chain; a standalone, dependency-free verifier (and a GET /api/audit/verify endpoint) detects any modification, deletion, or reorder. A new compliance note maps the trail honestly to NIS2, the EU AI Act Art. 50 transparency spirit, and ISO 42001. v2.16.1 also retires the discontinued BuyPass Go CA.',
+    date: 'June 2026',
+    highlight: true,
+    href: 'https://github.com/fabriziosalmi/certmate/releases/tag/v2.16.0',
+  },
+  {
+    badge: 'feature',
+    badgeLabel: 'v2.15.0',
+    icon: 'fa6-solid:bell',
+    title: 'v2.15.0 — notifications, Grafana monitoring & MCP agent tooling',
+    description:
+      'Three first-class notification channels — Telegram, ntfy, Gotify — alongside Slack/Discord/webhook, with per-event filtering and a test button. An importable observability bundle: an 11-panel Grafana dashboard (inventory, days-to-expiry, status and provider breakdowns, cache, uptime) plus Prometheus alert rules, with /metrics populated. The built-in MCP server grows to 13 tools (per-domain detail, async job polling, certificate download, auto-renew toggle, DNS account listing, activity log) with an "operating CertMate with an AI agent" scheduling guide.',
+    date: 'June 2026',
+    highlight: true,
+    href: 'https://github.com/fabriziosalmi/certmate/releases/tag/v2.15.0',
+  },
+  {
+    badge: 'feature',
+    badgeLabel: 'v2.13.0',
+    icon: 'fa6-solid:pen-to-square',
+    title: 'v2.13.0 — edit & reissue certificates in place',
+    description:
+      'Extend or drop a certificate\'s SAN entries — and change its DNS, alias, or CA configuration — without delete + recreate. POST /api/certificates/<domain>/reissue reissues over the existing certbot lineage; omitted fields keep the values the certificate was issued with, so expanding or shrinking a SAN set never requires re-entering DNS/alias/CA config. The old certificate keeps serving until certbot succeeds. Available in the dashboard via an Edit & Reissue action prefilled from the certificate\'s metadata.',
+    date: 'June 2026',
+    href: 'https://github.com/fabriziosalmi/certmate/releases/tag/v2.13.0',
+  },
   {
     badge: 'fix',
     badgeLabel: 'v2.8.3',
