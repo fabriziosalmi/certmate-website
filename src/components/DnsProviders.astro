@@ -37,6 +37,9 @@ const providers = [
   { icon: 'fa6-solid:network-wired',  name: 'Hurricane Electric', note: 'free DDNS' },
   { icon: 'fa6-solid:d',              name: 'Dynu DNS',           note: 'dynamic DNS' },
   { icon: 'fa6-solid:network-wired',  name: 'Akamai EdgeDNS',     note: 'enterprise CDN' },
+  { icon: 'fa6-solid:lock',           name: 'deSEC',              note: 'EU, DNSSEC' },
+  { icon: 'fa6-solid:cloud',          name: 'Scaleway',           note: 'EU cloud' },
+  { icon: 'fa6-solid:terminal',       name: 'RFC2136',            note: 'TSIG dynamic update' },
 ];
 ---
 
@@ -45,7 +48,7 @@ const providers = [
     <div class="mx-auto max-w-2xl text-center">
       <h2 class="section-title">Supported DNS Providers</h2>
       <p class="section-description">
-        24 DNS providers in the box today, plus multi-account support per provider for staging / production / multi-region isolation.
+        27 DNS providers in the box today, plus multi-account support per provider for staging / production / multi-region isolation.
       </p>
     </div>
 
