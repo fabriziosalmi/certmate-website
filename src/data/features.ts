@@ -49,7 +49,7 @@ export const features: Feature[] = [
     icon: 'fa6-solid:shield-halved',
     title: 'Security-First',
     body:
-      'Role-based access control (RBAC), scoped API keys with allowed_domains enforcement, per-IP rate limiting, audit logging, secrets masked at rest in backups, and an internal security audit pipeline that closed 11 findings (3 CRITICAL) in May 2026.',
+      'Role-based access control (RBAC), scoped API keys with allowed_domains enforcement, operator-configurable per-endpoint API rate limits, audit logging, secrets masked at rest in backups, and an internal security audit pipeline that closed 11 findings (3 CRITICAL) in May 2026, followed by a five-finding hardening pass in v2.17.1.',
   },
   {
     icon: 'fa6-solid:id-badge',
@@ -90,7 +90,13 @@ export const features: Feature[] = [
     icon: 'fa6-solid:receipt',
     title: 'Agentic Audit Trail',
     body:
-      'Every certificate action — including unattended scheduled renewals — is attributed to who or what acted (human, API token, or AI agent) and what triggered it, then written into a tamper-evident SHA-256 hash chain you can verify with a standalone tool. Sensitive tokens and keys are still redacted from logs.',
+      'Every certificate action — including unattended scheduled renewals — is attributed to who or what acted (human, API token, or AI agent) and what triggered it, then written into a tamper-evident SHA-256 hash chain. An Ed25519-signed export (GET /api/audit/export) lets a third party verify the record off the box, without running or trusting CertMate, using a dependency-free verifier. Sensitive tokens and keys are still redacted from logs.',
+  },
+  {
+    icon: 'fa6-solid:tower-broadcast',
+    title: 'Deployment Verification',
+    body:
+      'Confirm a certificate is actually live, not just issued: per-certificate probes over https-tls, plain tls, or smtp-starttls on a configurable port, comparing the real peer certificate. Works through an outbound HTTP proxy (CONNECT) on locked-down hosts.',
   },
   {
     icon: 'fa6-solid:ghost',

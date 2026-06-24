@@ -1,7 +1,7 @@
 /**
  * "What's New" cards. Listed newest-first. We lead with the latest releases
- * (currently the v2.16.0 agentic audit trail) and keep enough history for
- * context without padding the page.
+ * (currently the v2.19.x line) and keep enough history for context without
+ * padding the page. Patch releases are folded into the nearest feature card.
  *
  * Each item maps to one card. Badge variants:
  *   - 'milestone' (highlighted v2.x release)
@@ -24,6 +24,39 @@ export interface UpdateCard {
 }
 
 export const updates: UpdateCard[] = [
+  {
+    badge: 'feature',
+    badgeLabel: 'v2.19.0',
+    icon: 'fa6-solid:gauge-high',
+    title: 'v2.19.0 — configurable API rate limits + rfc2136 CNAME delegation',
+    description:
+      'Per-endpoint API rate limits are now operator-tunable from Settings → API Keys (and GET/PUT /api/settings/rate-limits, admin) with an on/off toggle — a trusted automation fleet behind one egress IP no longer trips a hardcoded bucket, and changes apply live with no restart, sanitised on every request so a malformed entry can never disable a limit. DNS-alias (CNAME delegation) mode adds rfc2136: it writes the _acme-challenge TXT into the alias zone with a TSIG-signed dynamic update, discovering the owning zone from the server SOA, so one TSIG key can serve several zones including externally-managed domains. The v2.19.1 patch follows with a UI defect + accessibility sweep (WAI-ARIA dialogs and tabs, keyboard-operable rows, focus management) and design-token consistency.',
+    date: 'June 2026',
+    highlight: true,
+    href: 'https://github.com/fabriziosalmi/certmate/releases/tag/v2.19.0',
+  },
+  {
+    badge: 'feature',
+    badgeLabel: 'v2.18.0',
+    icon: 'fa6-solid:tower-broadcast',
+    title: 'v2.18.0 — multi-protocol deployment probes + deploy-hook reliability',
+    description:
+      'The "is this certificate actually deployed?" probe grows beyond HTTPS-on-443: https-tls, plain tls, and smtp-starttls, with the port and protocol configurable per certificate from a new Probe tab. On a host that only reaches the internet through an HTTP proxy it tunnels the probe via CONNECT (HTTPS_PROXY/NO_PROXY) so the real peer certificate is still compared. The deploy-hook pipeline closes two gaps: scheduled auto-renewals now fire deploy hooks — a background renewal no longer updates the cert on disk while the live endpoint keeps serving the old one — and a failing hook surfaces its stderr from the Activity page instead of a bare exit code. v2.18.1 adds dashboard polish and translated docs (FR/IT/DE/ES).',
+    date: 'June 2026',
+    highlight: true,
+    href: 'https://github.com/fabriziosalmi/certmate/releases/tag/v2.18.0',
+  },
+  {
+    badge: 'security',
+    badgeLabel: 'v2.17.0',
+    icon: 'fa6-solid:file-signature',
+    title: 'v2.17.0 — third-party-verifiable audit trail',
+    description:
+      'Completes the agentic audit trail: the tamper-evident record can now be verified by a third party, off the box, without running or trusting CertMate. GET /api/audit/export returns an Ed25519-signed, self-verifying bundle — manifest, entries, signature — pinning the instance fingerprint, public key, seq range and head hash; GET /api/audit/public-key exposes the signing identity to pin out of band. A dependency-free verifier (python -m modules.core.audit_verify) checks the chain structure, manifest consistency, the Ed25519 signature and the key fingerprint. The v2.17.1 patch lands five must-fix hardenings: client-cert Common Name path traversal, a backup restore that downgraded private keys to world-readable, an unauthenticated /api/metrics, sessions that survived a user being disabled or demoted, and webhook secrets clobbered on a generic settings save.',
+    date: 'June 2026',
+    highlight: true,
+    href: 'https://github.com/fabriziosalmi/certmate/releases/tag/v2.17.0',
+  },
   {
     badge: 'security',
     badgeLabel: 'v2.16.0',
