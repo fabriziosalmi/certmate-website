@@ -1,5 +1,6 @@
 ---
 import { Icon } from 'astro-icon/components';
+import { PROVIDER_COUNT } from '~/data/site';
 /**
  * Honest comparison vs the tools a CertMate evaluator most often comes
  * from: cert-manager (Kubernetes-native, the de-facto k8s certificate
@@ -49,7 +50,7 @@ const rows: Row[] = [
   },
   {
     label: 'Storage backends',
-    certmate: 'Filesystem + Azure KV + AWS SM + Vault + Infisical',
+    certmate: 'Filesystem + Azure KV + AWS SM + Vault + Infisical + S3-compatible',
     certManager: 'Kubernetes Secrets',
     caddy: 'Filesystem',
     acmeShLego: 'Filesystem',
@@ -62,8 +63,15 @@ const rows: Row[] = [
     acmeShLego: 'No',
   },
   {
+    label: 'Tamper-evident, independently verifiable audit trail',
+    certmate: 'Yes (Ed25519-signed export + standalone verifier)',
+    certManager: 'No',
+    caddy: 'No',
+    acmeShLego: 'No',
+  },
+  {
     label: 'DNS providers supported',
-    certmate: '24',
+    certmate: `${PROVIDER_COUNT}`,
     certManager: '15+ (via webhooks)',
     caddy: '20+ (via modules)',
     acmeShLego: '150+ (acme.sh) / 100+ (lego)',
@@ -146,7 +154,7 @@ function cellTint(v: string): string {
     </div>
 
     <p class="mx-auto mt-6 max-w-3xl text-center text-xs text-gray-500 dark:text-gray-400">
-      Counts and feature notes verified May 2026 against each project's
+      Counts and feature notes verified July 2026 against each project's
       current main branch. Open an issue if a cell is wrong &mdash; we
       will fix it.
     </p>
