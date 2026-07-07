@@ -1,14 +1,16 @@
 ---
 import { Icon } from 'astro-icon/components';
-// Section anchors are preserved (#features, #providers, #installation, #api,
-// #docs) so external links that point to certmate.org/#features keep landing
-// where they did pre-migration.
+// Section anchors are absolute (/#features …) so they resolve to the
+// homepage section from any page (e.g. /security), not just a same-page
+// hash. External links that point to certmate.org/#features keep landing
+// where they did pre-migration. /security is a standalone page.
 const links = [
-  { href: '#features', label: 'Features' },
-  { href: '#providers', label: 'DNS Providers' },
-  { href: '#installation', label: 'Installation' },
-  { href: '#api', label: 'API' },
-  { href: '#docs', label: 'Documentation' },
+  { href: '/#features', label: 'Features' },
+  { href: '/#providers', label: 'DNS Providers' },
+  { href: '/#installation', label: 'Installation' },
+  { href: '/#api', label: 'API' },
+  { href: '/security', label: 'Security' },
+  { href: '/#docs', label: 'Documentation' },
 ];
 
 // Sister projects in the CertMate ecosystem. External links open in a new

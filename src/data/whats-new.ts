@@ -1,7 +1,13 @@
 /**
  * "What's New" cards. Listed newest-first. We lead with the latest releases
- * (currently the v2.19.x line) and keep enough history for context without
+ * (currently the v2.21.x line) and keep enough history for context without
  * padding the page. Patch releases are folded into the nearest feature card.
+ *
+ * The recent narrative deliberately leads with the security story: the
+ * v2.21.1 hardening pass fixed a pre-existing critical OIDC/SSO auth bypass
+ * and made every "reported success" path tell the truth. Descriptions are
+ * drawn from RELEASE_NOTES.md in the app repo; every claim is verifiable
+ * against the code.
  *
  * Each item maps to one card. Badge variants:
  *   - 'milestone' (highlighted v2.x release)
@@ -9,6 +15,8 @@
  *   - 'fix'       (bug fix release)
  *   - 'feature'   (feature delivery)
  */
+
+import { releaseTag } from '~/data/site';
 
 export type UpdateBadge = 'milestone' | 'security' | 'fix' | 'feature';
 
@@ -24,6 +32,58 @@ export interface UpdateCard {
 }
 
 export const updates: UpdateCard[] = [
+  {
+    badge: 'fix',
+    badgeLabel: 'v2.21.3',
+    icon: 'fa6-solid:wrench',
+    title: 'v2.21.3 — wildcard deployment status + rootless-podman / arbitrary-UID support',
+    description:
+      'Two fixes from real-world reports. Wildcard certificates no longer show a permanent false "wrong certificate" error: a wildcard does not cover its own apex (RFC 6125), so probing *.example.com at example.com mismatched on every wildcard. A wildcard without an explicit deployment host now reports a neutral "Not Verifiable"; an optional per-certificate deployment_host points the probe at a covered name; and every result carries a diagnostic mismatch_reason with the host that was probed and what did not match. Separately, rootless podman and arbitrary-UID runtimes (OpenShift) are now supported — the image\'s writable trees are group-0 owned and group-writable, so CertMate runs as any UID in group 0 with no host-side chown, while every secret stays owner-only 0600.',
+    date: 'July 2026',
+    highlight: true,
+    href: releaseTag('v2.21.3'),
+  },
+  {
+    badge: 'security',
+    badgeLabel: 'v2.21.2',
+    icon: 'fa6-solid:shield-halved',
+    title: 'v2.21.2 — client-certificate lifecycle, private CA and CRL correctness',
+    description:
+      'The next-layer audit after v2.21.1 swept client certificates, the private CA, CRL distribution and the deployment-status cache; every defect was reproduced before it was fixed. Scheduled renewal no longer re-renews a superseded certificate forever; the TLS and client-certificate renewal jobs no longer share one lock (mTLS certificates could quietly expire unrenewed); the CA private key is written atomically at mode 0600; CRL regeneration preserves each certificate\'s real revocation date and reason and a stale CRL is regenerated on read; the CA signer no longer trusts CSR extensions, so a CSR asking for BasicConstraints(ca=True) can no longer mint a CA-capable certificate; and the deployment-status cache is evicted on issuance/renewal so the dashboard can no longer show a stale "deployed and matching" verdict.',
+    date: 'July 2026',
+    href: releaseTag('v2.21.2'),
+  },
+  {
+    badge: 'security',
+    badgeLabel: 'v2.21.1',
+    icon: 'fa6-solid:lock',
+    title: 'v2.21.1 — critical OIDC/SSO auth-bypass fix, and truth in reporting',
+    description:
+      'One theme: every path that could report success while silently not doing the thing now tells the truth — found by a full-project adversarial review. The headline fix is a pre-existing critical vulnerability: OIDC/SSO-only deployments were world-open. On an SSO-only box, setup mode never turned off, so every gated endpoint — read settings, download private keys, issue and delete certificates — was served to anonymous callers as admin; setup mode now also closes once OIDC is fully configured. Alongside it: renewal no-op detection was dead code in production (a --quiet flag routed the sentinel text to /dev/null) and is now artifact-based; audit-verify now fails closed on unreadable integrity evidence instead of answering "absent"; and four DNS providers (Porkbun, Vultr, ArvanCloud, Dynu) were silently broken and are now guarded by a credential-key contract test so a dead provider can no longer pass CI.',
+    date: 'July 2026',
+    highlight: true,
+    href: releaseTag('v2.21.1'),
+  },
+  {
+    badge: 'feature',
+    badgeLabel: 'v2.21.0',
+    icon: 'fa6-solid:terminal',
+    title: 'v2.21.0 — terminal SDK + CLI',
+    description:
+      'First-class terminal clients for the CertMate API, both on PyPI. certmate-sdk (from certmate import Client) wraps the same /api surface the MCP server drives and stays light — httpx only, no server or certbot. certmate-cli builds on it: certmate cert create/ls/info/renew/reissue/rm, dns, backup, deploy run, audit verify and health, rendering tables, with --wait to poll an async issuance and a client-side --dry-run that validates the domain and preflights the DNS provider without issuing anything. A Swagger contract test keeps the SDK in lockstep with the API. The release also fixes an audit-verify false alarm — a brand-new instance that has audited nothing (no chain file yet) now returns state=absent instead of the 409 that looked identical to a tamper.',
+    date: 'July 2026',
+    href: releaseTag('v2.21.0'),
+  },
+  {
+    badge: 'security',
+    badgeLabel: 'v2.20.0',
+    icon: 'fa6-solid:shield-halved',
+    title: 'v2.20.0 — security and reliability hardening sweep',
+    description:
+      'A focused hardening pass from an adversarial audit of the certificate engine, deploy hooks, storage/backup, auth/RBAC and the audit trail; every change ships with regression tests. A configured API bearer token is now enforced on every gated endpoint (an API-only operator was previously left unauthenticated); off-site S3 backups refuse to run without an encryption passphrase; renewal certbot calls are bounded by a 30-minute timeout and a host-local cross-process lock stops duplicate ACME orders under multiple workers; renewed private keys keep mode 0600; an API key can no longer be minted with a higher role or broader domain scope than its creator; and signed audit checkpoints are now actually verified on GET /api/audit/verify, so a truncation, rewind or rewrite at or below a checkpoint fails verification.',
+    date: 'July 2026',
+    href: releaseTag('v2.20.0'),
+  },
   {
     badge: 'feature',
     badgeLabel: 'v2.19.0',

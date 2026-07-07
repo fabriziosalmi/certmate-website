@@ -1,0 +1,250 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Navbar from '~/components/Navbar.astro';
+import Footer from '~/components/Footer.astro';
+import { Icon } from 'astro-icon/components';
+import { GITHUB, SECURITY_URL, NEW_ADVISORY_URL, releaseTag } from '~/data/site';
+
+// Trust page. Every claim here is grounded in the app repo: SECURITY.md
+// (disclosure policy + the candid dependency-CVE analysis), docs/compliance.md
+// (the audit-trail guarantee and its honest limits), and the CI/release
+// pipeline. The framing is deliberately conservative — "tamper-evident and
+// independently verifiable", never "tamper-proof", "immutable" or
+// "blockchain"; "evidence artifacts", never "compliant" or "certified".
+
+const title = 'Security & trust — CertMate';
+const description =
+  'How CertMate handles vulnerability reports, why its audit trail is independently verifiable off the box, how releases are gated on a real certificate, and its candid dependency-risk posture.';
+const canonical = 'https://www.certmate.org/security';
+
+const disclosureRows = [
+  ['Acknowledgement of a report', 'within 72 hours'],
+  ['Triage decision (accept / decline / need more info)', 'within 7 days'],
+  ['Fix on main for accepted high/critical reports', 'within 30 days'],
+  ['Advisory + release', 'coordinated with the reporter'],
+];
+---
+
+<BaseLayout title={title} description={description} canonical={canonical}>
+  <Navbar />
+  <main id="main-content" class="flex-1">
+    <!-- Header -->
+    <section class="relative overflow-hidden border-b border-gray-200 dark:border-gray-800">
+      <div
+        class="absolute inset-0 -z-10 bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-gray-950 dark:via-gray-950 dark:to-gray-900"
+        aria-hidden="true"
+      >
+      </div>
+      <div class="container-x py-16 sm:py-20">
+        <div class="badge bg-blue-50 text-primary ring-1 ring-inset ring-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-800">
+          <Icon name="fa6-solid:shield-halved" aria-hidden="true" />
+          <span>Security &amp; trust</span>
+        </div>
+        <h1 class="mt-5 max-w-3xl text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
+          Verifiable by design, and honest about the limits.
+        </h1>
+        <p class="mt-5 max-w-2xl text-lg text-gray-600 dark:text-gray-300">
+          CertMate handles TLS private keys, ACME account credentials and DNS
+          provider tokens. This page states exactly how we take reports, what
+          the audit trail proves (and what it does not), how a release is gated,
+          and where our dependency risk sits &mdash; with the receipts.
+        </p>
+      </div>
+    </section>
+
+    <!-- Coordinated disclosure -->
+    <section class="border-b border-gray-200 py-16 dark:border-gray-800">
+      <div class="container-x">
+        <div class="mx-auto max-w-3xl">
+          <h2 class="section-title">
+            <Icon name="fa6-solid:envelope-open-text" class="mr-2 text-primary" aria-hidden="true" />
+            Coordinated disclosure
+          </h2>
+          <p class="section-description">
+            Please <strong>do not open a public GitHub issue or pull request for a
+            security report</strong> &mdash; public disclosure before a fix puts every
+            operator at risk. The preferred channel is GitHub Private Vulnerability
+            Reporting: it keeps the report private, gives both sides a durable
+            record, and the published advisory becomes the CVE record once a fix
+            ships. Email is the documented fallback if you cannot use advisories.
+          </p>
+
+          <div class="mt-8 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
+            <table class="w-full text-left text-sm">
+              <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+                {disclosureRows.map((r) => (
+                  <tr class="bg-white dark:bg-gray-950">
+                    <th scope="row" class="px-4 py-3 font-medium text-gray-900 dark:text-white">{r[0]}</th>
+                    <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{r[1]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="mt-6 flex flex-wrap gap-3">
+            <a href={NEW_ADVISORY_URL} class="btn btn-primary" target="_blank" rel="noopener noreferrer">
+              <Icon name="fa6-solid:lock" aria-hidden="true" />
+              Report privately
+              <span class="sr-only">(opens in new tab)</span>
+            </a>
+            <a href={SECURITY_URL} class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
+              <Icon name="fa6-brands:github" aria-hidden="true" />
+              Repository Security tab
+              <span class="sr-only">(opens in new tab)</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Audit trail -->
+    <section class="border-b border-gray-200 bg-gray-50 py-16 dark:border-gray-800 dark:bg-gray-900/30">
+      <div class="container-x">
+        <div class="mx-auto max-w-3xl">
+          <h2 class="section-title">
+            <Icon name="fa6-solid:file-signature" class="mr-2 text-primary" aria-hidden="true" />
+            An audit trail you can verify off the box
+          </h2>
+          <p class="section-description">
+            Every certificate-lifecycle action &mdash; create, renew, reissue, deploy,
+            auto-renew toggle, and unattended scheduled renewals &mdash; is appended to a
+            SHA-256 hash chain, attributed to who or what acted (human, API token
+            or AI agent) and what triggered it. The instance periodically signs the
+            chain head with an Ed25519 key, and an export bundle carries the entries,
+            the manifest, the signature and the instance fingerprint.
+          </p>
+          <p class="mt-4 text-gray-600 dark:text-gray-300">
+            The point is that you do not have to trust CertMate to trust the record.
+            A dependency-free verifier (Python standard library only) recomputes the
+            chain and checks the signature &mdash; run it against the live chain, or hand
+            an auditor the signed bundle and your public key and let them verify it on
+            their own machine, without ever running or reaching your instance.
+          </p>
+
+          <div class="mt-8 overflow-hidden rounded-xl border border-gray-200 bg-gray-900 dark:border-gray-800">
+            <div class="flex items-center justify-between border-b border-gray-800 bg-gray-950 px-4 py-2 text-xs text-gray-400">
+              <span>Verify the chain, and verify a signed export off the box</span>
+            </div>
+            <pre class="overflow-x-auto whitespace-pre-wrap break-words p-4 text-xs leading-relaxed text-gray-100 font-mono sm:text-sm"><code><span class="text-gray-500"># On the instance: recompute the append-only hash chain</span>
+<span class="text-emerald-400">$</span> python -m modules.core.audit_verify data/audit/certificate_audit.chain.jsonl
+
+<span class="text-gray-500"># Off the box: verify a signed export against a pinned public key</span>
+<span class="text-emerald-400">$</span> python -m modules.core.audit_verify --bundle bundle.json --pubkey instance.pem</code></pre>
+          </div>
+
+          <div class="mt-8 rounded-xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-900/50 dark:bg-amber-900/10">
+            <h3 class="flex items-center gap-2 text-base font-semibold text-amber-900 dark:text-amber-200">
+              <Icon name="fa6-solid:circle-info" aria-hidden="true" />
+              The honest threat model
+            </h3>
+            <p class="mt-2 text-sm text-amber-900/90 dark:text-amber-100/80">
+              This is <strong>tamper-evident and independently verifiable</strong>, not
+              &ldquo;tamper-proof&rdquo;, &ldquo;immutable&rdquo; or a &ldquo;blockchain&rdquo;.
+              A third party who holds a signed export can prove which instance
+              produced the record and that it was not edited. But the operator holds
+              the signing key and could re-sign a rewritten chain, and entries written
+              after the last signed checkpoint can still be dropped until the next
+              checkpoint seals them. Fully binding the operator requires shipping the
+              signed checkpoints to an external append-only sink &mdash; opt-in external
+              anchoring, which is planned and not yet shipped. We would rather you know
+              that than over-read the guarantee.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gated releases -->
+    <section class="border-b border-gray-200 py-16 dark:border-gray-800">
+      <div class="container-x">
+        <div class="mx-auto max-w-3xl">
+          <h2 class="section-title">
+            <Icon name="fa6-solid:vials" class="mr-2 text-primary" aria-hidden="true" />
+            Releases are gated on a real certificate
+          </h2>
+          <p class="section-description">
+            No release publishes until it has issued a real certificate end-to-end
+            against Let&rsquo;s Encrypt <strong>staging</strong> (DNS-01 via Cloudflare) &mdash;
+            not a mock, an actual ACME order. The Docker Hub <code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm dark:bg-gray-800">:latest</code>
+            tag is published only by a version tag build, cut after that gate; a plain
+            merge to main never ships <code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm dark:bg-gray-800">:latest</code>.
+            Static analysis (flake8, Bandit) and CodeQL run in the same pipeline, and a
+            guard job fails loudly if the scheduled real-ACME end-to-end is ever
+            silently disabled.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Open posture -->
+    <section class="border-b border-gray-200 bg-gray-50 py-16 dark:border-gray-800 dark:bg-gray-900/30">
+      <div class="container-x">
+        <div class="mx-auto max-w-3xl">
+          <h2 class="section-title">
+            <Icon name="fa6-solid:magnifying-glass" class="mr-2 text-primary" aria-hidden="true" />
+            An open security posture
+          </h2>
+          <p class="section-description">
+            The project hunts its own bugs and shows its work. The v2.20.0 hardening
+            sweep and the v2.21.1 adversarial review &mdash; which found and fixed a
+            pre-existing critical OIDC/SSO auth bypass &mdash; are both in the public
+            release notes, not quietly patched. Continuous CodeQL and an OSSF Scorecard
+            run against the repository; check them yourself:
+          </p>
+
+          <div class="mt-6 flex flex-wrap items-center gap-3">
+            <a href={`${GITHUB}/security/code-scanning`} class="inline-flex" target="_blank" rel="noopener noreferrer" aria-label="CodeQL workflow status (opens in new tab)">
+              <img src={`${GITHUB}/actions/workflows/codeql.yml/badge.svg`} alt="CodeQL workflow status" loading="lazy" decoding="async" height="20" />
+            </a>
+            <a href="https://securityscorecards.dev/viewer/?uri=github.com/fabriziosalmi/certmate" class="inline-flex" target="_blank" rel="noopener noreferrer" aria-label="OSSF Scorecard report (opens in new tab)">
+              <img src="https://api.securityscorecards.dev/projects/github.com/fabriziosalmi/certmate/badge" alt="OSSF Scorecard score" loading="lazy" decoding="async" height="20" />
+            </a>
+          </div>
+
+          <div class="mt-8 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-950">
+            <h3 class="flex items-center gap-2 text-base font-semibold text-gray-900 dark:text-white">
+              <Icon name="fa6-solid:list-check" class="text-primary" aria-hidden="true" />
+              Candid about dependency risk
+            </h3>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+              We do not claim &ldquo;no known CVEs&rdquo;. The pinned ACME stack carries an
+              open advisory (GHSA-537c-gmf6-5ccf) in a <code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs dark:bg-gray-800">cryptography</code>
+              wheel, and every version that fixes it requires a pyOpenSSL that breaks the
+              pinned <code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs dark:bg-gray-800">acme</code>/<code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs dark:bg-gray-800">certbot</code>
+              at import. Rather than hide it, SECURITY.md documents the full constraint
+              chain and a reachability analysis: the vulnerable routine
+              (<code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs dark:bg-gray-800">PKCS7_verify()</code>) is present in the statically linked
+              library but unreachable from any CertMate code path. The alert stays open
+              by choice until the certbot 5.x migration lands &mdash; tracked in public.
+            </p>
+            <p class="mt-4">
+              <a href={`${GITHUB}/blob/main/SECURITY.md`} class="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+                Read the full security policy
+                <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.65rem]" aria-hidden="true" />
+                <span class="sr-only">(opens in new tab)</span>
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Related -->
+    <section class="py-16">
+      <div class="container-x">
+        <div class="mx-auto max-w-3xl text-sm text-gray-500 dark:text-gray-400">
+          <p>
+            Related reading: the
+            <a href={releaseTag('v2.21.1')} class="font-medium text-primary hover:underline" target="_blank" rel="noopener noreferrer">v2.21.1 release notes</a>
+            (the OIDC bypass fix and the truth-in-reporting sweep), the
+            <a href={`${GITHUB}/blob/main/docs/compliance.md`} class="font-medium text-primary hover:underline" target="_blank" rel="noopener noreferrer">compliance and audit-trail notes</a>
+            (what the trail maps to under NIS2 / the EU AI Act / ISO&nbsp;42001, and its limits), and the
+            <a href="/cert-manager-alternative" class="font-medium text-primary hover:underline">comparison with other tools</a>.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>

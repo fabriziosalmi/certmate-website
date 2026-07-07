@@ -11,7 +11,6 @@
  * Usage: `node scripts/build-og.mjs` (no args).
  */
 import sharp from 'sharp';
-import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
@@ -52,18 +51,20 @@ const svg = `<?xml version="1.0" encoding="UTF-8"?>
 
   <!-- Headline -->
   <text x="80" y="290" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="84" font-weight="800" fill="#0f172a">CertMate</text>
-  <text x="80" y="370" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="38" font-weight="500" fill="#334155">Open-source SSL certificate management</text>
+  <text x="80" y="370" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="38" font-weight="500" fill="#334155">Self-hosted TLS certificate management</text>
 
-  <!-- Footer chips -->
+  <!-- Footer chips. Version + provider count kept in sync with
+       src/data/site.ts (this standalone node script cannot import the TS
+       module, so update both when either changes). -->
   <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="22" font-weight="600">
     <rect x="80"  y="460" width="120" height="44" rx="10" fill="#dbeafe"/>
-    <text x="140" y="490" fill="#1d4ed8" text-anchor="middle">v2.8.3</text>
+    <text x="140" y="490" fill="#1d4ed8" text-anchor="middle">v2.21.3</text>
 
     <rect x="216" y="460" width="100" height="44" rx="10" fill="#dbeafe"/>
     <text x="266" y="490" fill="#1d4ed8" text-anchor="middle">MIT</text>
 
     <rect x="332" y="460" width="240" height="44" rx="10" fill="#dbeafe"/>
-    <text x="452" y="490" fill="#1d4ed8" text-anchor="middle">22+ DNS providers</text>
+    <text x="452" y="490" fill="#1d4ed8" text-anchor="middle">27 DNS providers</text>
 
     <rect x="588" y="460" width="140" height="44" rx="10" fill="#dbeafe"/>
     <text x="658" y="490" fill="#1d4ed8" text-anchor="middle">OIDC / SSO</text>
