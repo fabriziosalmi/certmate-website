@@ -1,12 +1,19 @@
 ---
 import { Icon } from 'astro-icon/components';
-// Hero copy is preserved VERBATIM from the static index.html so the H1, the
-// hero description and the value-prop counters do not drift from what the
-// search index has been carrying. The stat counters use neutral wording for
-// the DNS-provider count (the source-of-truth table now sits in the main
-// repo's docs/ and grows over time — fixing the number here would just
-// race those edits forever). Emoji that used to live in the GitHub Stars
-// row have been replaced with a Font Awesome glyph for a11y + consistency.
+import { VERSION, PROVIDER_COUNT, GITHUB } from '~/data/site';
+
+// Hero leads with substance, not adjectives: what CertMate is, and the one
+// thing that sets it apart — an independently verifiable audit trail. The
+// version and provider count come from ~/data/site so the badge can never
+// drift from the rest of the page again.
+//
+// The right-hand visual is a static, clearly-illustrative certmate-cli
+// transcript. It replaces the previous SIMULATED terminal that printed
+// invented output ("CertMate started successfully", a made-up certificate
+// for a made-up host) as if it were real — which flatly contradicted the
+// project's "truth in reporting" posture. The commands below are the actual
+// certmate-cli subcommands (clients/certmate-cli); the result lines are
+// schematic examples, not a captured run.
 ---
 
 <section
@@ -31,25 +38,26 @@ import { Icon } from 'astro-icon/components';
         class="badge bg-blue-50 text-primary ring-1 ring-inset ring-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-800"
       >
         <Icon name="fa6-solid:certificate" aria-hidden="true" />
-        <span>v2.19.1 · MIT licensed · 27 DNS providers · OIDC/SSO</span>
+        <span>v{VERSION} · MIT licensed · {PROVIDER_COUNT} DNS providers · OIDC/SSO</span>
       </div>
 
       <h1
         id="hero-title"
         class="mt-5 text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl"
       >
-        Secure Your Infrastructure with <span class="gradient-text">CertMate</span>
+        Self-hosted certificate management <span class="gradient-text">you can audit.</span>
       </h1>
 
       <p class="mt-5 max-w-xl text-lg text-gray-600 dark:text-gray-300">
-        A powerful SSL certificate management system designed for modern infrastructure.
-        Built with multi-DNS provider support, Docker containerization, and comprehensive
-        REST API.
+        CertMate issues and renews TLS certificates across {PROVIDER_COUNT} DNS
+        providers and records every action in a tamper-evident, independently
+        verifiable audit trail. MIT-licensed, with OIDC/SSO and a REST API + CLI.
+        It runs on your infrastructure &mdash; your keys never leave it.
       </p>
 
-      <div class="mt-8 grid grid-cols-3 gap-4 sm:gap-6" role="img" aria-label="CertMate statistics">
+      <div class="mt-8 grid grid-cols-3 gap-4 sm:gap-6">
         <div>
-          <div class="text-3xl font-bold text-primary sm:text-4xl">27+</div>
+          <div class="text-3xl font-bold text-primary sm:text-4xl">{PROVIDER_COUNT}+</div>
           <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">DNS Providers</div>
         </div>
         <div>
@@ -69,8 +77,12 @@ import { Icon } from 'astro-icon/components';
           <Icon name="fa6-solid:rocket" aria-hidden="true" />
           Get Started
         </a>
+        <a href="/security" class="btn btn-secondary">
+          <Icon name="fa6-solid:shield-halved" aria-hidden="true" />
+          Security &amp; trust
+        </a>
         <a
-          href="https://github.com/fabriziosalmi/certmate"
+          href={GITHUB}
           class="btn btn-secondary"
           target="_blank"
           rel="noopener noreferrer"
@@ -82,29 +94,28 @@ import { Icon } from 'astro-icon/components';
       </div>
     </div>
 
-    {/* Terminal demo. The previous static version put Unicode emoji glyphs
-       in the simulated output; replaced with Font Awesome icons so the
-       assistive-tech reading is predictable and styling renders
-       consistently across OS-level emoji fonts. */}
+    {/* Illustrative certmate-cli transcript. Real command names from
+       clients/certmate-cli; the output lines are schematic examples, not a
+       captured run — presented as an example, never as live product output. */}
     <div
       class="overflow-hidden rounded-xl border border-gray-200 bg-gray-950 shadow-2xl dark:border-gray-800"
       role="img"
-      aria-label="CertMate terminal demonstration"
+      aria-label="Example certmate-cli session: install the CLI, issue a certificate, verify the audit trail, and check instance health."
     >
       <div class="flex items-center gap-2 border-b border-gray-800 bg-gray-900 px-4 py-2.5">
         <span class="h-3 w-3 rounded-full bg-red-500" aria-hidden="true"></span>
         <span class="h-3 w-3 rounded-full bg-yellow-500" aria-hidden="true"></span>
         <span class="h-3 w-3 rounded-full bg-green-500" aria-hidden="true"></span>
-        <span class="ml-3 text-xs font-medium text-gray-400">CertMate Terminal</span>
+        <span class="ml-3 text-xs font-medium text-gray-400">certmate-cli &mdash; illustrative</span>
       </div>
-      <pre class="overflow-x-auto whitespace-pre-wrap break-words p-4 text-xs leading-relaxed text-gray-100 font-mono sm:text-sm"><code><span class="text-emerald-400">$</span> <span class="text-gray-100">docker-compose up -d</span>
-<span class="text-emerald-400"><Icon name="fa6-solid:check" aria-hidden="true" /></span> CertMate started successfully
-<span class="text-emerald-400">$</span> <span class="text-gray-100">curl -X POST /api/settings/dns-providers/cloudflare/accounts \</span>
-     <span class="text-gray-300">-d '&#123;"account_id": "production", "config": &#123;...&#125;&#125;'</span>
-<span class="text-emerald-400"><Icon name="fa6-solid:check" aria-hidden="true" /></span> Production account added
-<span class="text-emerald-400">$</span> <span class="text-gray-100">curl -X POST /api/certificates/create \</span>
-     <span class="text-gray-300">-d '&#123;"domain": "api.company.com", "account_id": "production"&#125;'</span>
-<span class="text-emerald-400"><Icon name="fa6-solid:lock" aria-hidden="true" /></span> Certificate created for api.company.com<span class="animate-pulse">_</span></code></pre>
+      <pre class="overflow-x-auto whitespace-pre-wrap break-words p-4 text-xs leading-relaxed text-gray-100 font-mono sm:text-sm"><code><span class="text-emerald-400">$</span> <span class="text-gray-100">pip install certmate-cli</span>
+<span class="text-emerald-400">$</span> <span class="text-gray-100">export CERTMATE_URL=https://certmate.example.com</span>
+<span class="text-emerald-400">$</span> <span class="text-gray-100">certmate cert create app.example.com --dns cloudflare --wait</span>
+<span class="text-gray-400">issued  app.example.com  Let's Encrypt  expires in 90d</span>
+<span class="text-emerald-400">$</span> <span class="text-gray-100">certmate audit verify</span>
+<span class="text-gray-400">PASS  chain intact · Ed25519 checkpoint verified</span>
+<span class="text-emerald-400">$</span> <span class="text-gray-100">certmate health</span>
+<span class="text-gray-400">ok  storage=local  scheduler=running</span><span class="animate-pulse">_</span></code></pre>
     </div>
   </div>
 </section>
