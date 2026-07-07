@@ -49,7 +49,7 @@ export const features: Feature[] = [
     icon: 'fa6-solid:shield-halved',
     title: 'Security-First',
     body:
-      'Role-based access control (RBAC), scoped API keys with allowed_domains enforcement, operator-configurable per-endpoint API rate limits, audit logging, secrets masked at rest in backups, and an internal security audit pipeline that closed 11 findings (3 CRITICAL) in May 2026, followed by a five-finding hardening pass in v2.17.1.',
+      'Role-based access control (RBAC), scoped API keys with allowed_domains enforcement, operator-configurable per-endpoint API rate limits, audit logging, and secrets masked at rest in backups. The project runs recurring adversarial audits of its own code — the v2.20.0 hardening sweep and the v2.21.1 review that found and fixed a pre-existing critical OIDC/SSO auth bypass are both in the public release notes.',
   },
   {
     icon: 'fa6-solid:id-badge',
@@ -61,12 +61,12 @@ export const features: Feature[] = [
     icon: 'fa6-solid:certificate',
     title: 'Multiple CA Support',
     body:
-      "Let's Encrypt (free), DigiCert ACME with EAB, and Private CA for internal certificates.",
+      "Let's Encrypt and ZeroSSL (free), Google Trust Services, DigiCert and SSL.com (ACME with EAB), Actalis (EU CA), plus a built-in Private CA for internal certificates.",
   },
   {
     icon: 'fa6-solid:gears',
-    title: 'REST API',
-    body: 'Complete programmatic control with Swagger/OpenAPI documentation.',
+    title: 'REST API + CLI',
+    body: 'Complete programmatic control with Swagger/OpenAPI docs, plus a first-party Python SDK and terminal CLI (pip install certmate-cli).',
   },
   {
     icon: 'fa6-solid:terminal',

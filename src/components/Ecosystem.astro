@@ -32,6 +32,15 @@ const projects = [
       'Free, client-side tools for TLS, SSL certificates, ACME, domain and DNS. Zero upload — every operation runs in the browser. Curated list of trusted external tools for cases the in-browser surface cannot cover. Companion to the main CertMate certificate-management application.',
     repo: 'https://github.com/fabriziosalmi/certmate-tools',
   },
+  {
+    href: 'https://pypi.org/project/certmate-cli/',
+    icon: 'fa6-solid:terminal',
+    title: 'CertMate SDK + CLI',
+    tagline: 'Python & terminal clients',
+    body:
+      'certmate-sdk (from certmate import Client) wraps the REST API in a light, httpx-only Python package; certmate-cli builds on it for the terminal — certmate cert, dns, audit verify, backup, deploy and health, with --wait on issuance and a client-side --dry-run. Both ship on PyPI from the clients/ directory of the main repository.',
+    repo: 'https://github.com/fabriziosalmi/certmate/tree/main/clients',
+  },
 ];
 ---
 
@@ -43,9 +52,8 @@ const projects = [
         Ecosystem
       </h2>
       <p class="section-description">
-        Sister projects under the CertMate umbrella. Each lives in its own
-        repository and ships independently; this section links the live
-        deployment and the source.
+        Sister projects and first-party clients under the CertMate umbrella.
+        This section links where each one lives and its source.
       </p>
     </div>
 

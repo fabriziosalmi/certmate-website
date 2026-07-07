@@ -24,6 +24,22 @@ curl -H "Authorization: Bearer your_api_token_here" \\
      -o api.company.com-tls.zip \\
      "https://certmate.example.com/api.company.com/tls"`;
 
+// The same surface from the terminal, via the first-party certmate-cli
+// (built on certmate-sdk; both on PyPI). Real subcommands from
+// clients/certmate-cli.
+const cliExample = `# Install once
+pip install certmate-cli
+export CERTMATE_URL=https://certmate.example.com
+export CERTMATE_TOKEN=your_api_token
+
+# Issue, list, and verify the tamper-evident audit trail
+certmate cert create api.company.com --dns cloudflare --wait
+certmate cert ls
+certmate audit verify
+
+# Or, from Python
+python -c "from certmate import Client; print(Client().list_certificates())"`;
+
 const methodColors: Record<string, string> = {
   GET:  'bg-emerald-100 text-emerald-800 ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:ring-emerald-800',
   POST: 'bg-blue-100 text-blue-800 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-800',
@@ -33,9 +49,9 @@ const methodColors: Record<string, string> = {
 <section id="api" class="border-b border-gray-200 py-20 dark:border-gray-800">
   <div class="container-x">
     <div class="mx-auto max-w-2xl text-center">
-      <h2 class="section-title">Powerful REST API</h2>
+      <h2 class="section-title">REST API + CLI</h2>
       <p class="section-description">
-        Complete programmatic control with comprehensive API endpoints
+        Drive every certificate operation over HTTP, or from the terminal with the first-party CLI and Python SDK.
       </p>
     </div>
 
@@ -67,8 +83,25 @@ const methodColors: Record<string, string> = {
       </div>
     </div>
 
+    <div class="mx-auto mt-6 max-w-3xl">
+      <div class="code-block">
+        <div class="code-block-header">
+          <span>Same surface from the terminal (certmate-cli)</span>
+          <button
+            class="copy-btn rounded p-1 text-gray-400 hover:bg-gray-800 hover:text-gray-200"
+            data-copy-target="cli-example"
+            aria-label="Copy CLI example code to clipboard"
+          >
+            <Icon name="fa6-solid:copy" aria-hidden="true" />
+          </button>
+        </div>
+        <pre id="cli-example"><code>{cliExample}</code></pre>
+      </div>
+    </div>
+
     <p class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
-      Full Swagger/OpenAPI docs ship at <code>/docs/</code> on any running instance.
+      Full Swagger/OpenAPI docs ship at <code>/docs/</code> on any running instance;
+      <code>certmate-cli</code> and <code>certmate-sdk</code> are on PyPI.
     </p>
   </div>
 </section>

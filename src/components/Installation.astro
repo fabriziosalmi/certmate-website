@@ -64,11 +64,29 @@ kubectl apply -f k8s/deployment.yaml -n certmate
 # Check status
 kubectl get pods -n certmate`;
 
+// The CLI installs the first-party terminal client (certmate-cli, on PyPI) —
+// it drives an already-running instance over the REST API, it does not run
+// the server itself.
+const cli = `# certmate-cli — drive an existing CertMate instance from your terminal
+pip install certmate-cli
+
+# Point it at your instance (env vars are preferred over --token, which
+# is visible to other local processes)
+export CERTMATE_URL=https://certmate.example.com
+export CERTMATE_TOKEN=your_api_token
+
+# Issue a certificate and wait for it, then verify the audit trail
+certmate cert create app.example.com --dns cloudflare --wait
+certmate cert ls
+certmate audit verify
+certmate health`;
+
 const tabs = [
   { id: 'docker-oneshot', label: 'docker run',     icon: 'fa6-brands:docker',       code: dockerOneShot },
   { id: 'docker',         label: 'Docker Compose', icon: 'fa6-brands:docker',       code: docker },
   { id: 'python',         label: 'Python',         icon: 'fa6-brands:python',       code: python },
   { id: 'kubernetes',     label: 'Kubernetes',     icon: 'fa6-solid:dharmachakra',  code: k8s },
+  { id: 'cli',            label: 'CLI',            icon: 'fa6-solid:terminal',      code: cli },
 ];
 ---
 
