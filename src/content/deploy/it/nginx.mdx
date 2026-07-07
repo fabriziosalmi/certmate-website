@@ -24,7 +24,7 @@ sudo certbot certonly --webroot -w /var/www/html \
 ```
 
 Per i wildcard (`*.example.com`) serve invece DNS-01 — CertMate gestisce DNS-01
-su 24 provider senza dover gestire un plugin diverso per ogni host.
+su 27 provider senza dover gestire un plugin diverso per ogni host.
 
 Certbot scrive i file in `/etc/letsencrypt/live/example.com/`.
 
@@ -82,7 +82,7 @@ sudo certbot renew --deploy-hook "systemctl reload nginx"
 
 ## Il modo senza pensieri
 
-CertMate emette e rinnova il certificato (HTTP-01 o DNS-01 su 24 provider), poi
+CertMate emette e rinnova il certificato (HTTP-01 o DNS-01 su 27 provider), poi
 esegue un deploy hook per distribuire `fullchain.pem` + `privkey.pem` a questo
 host e ricaricare Nginx — così il certificato servito è sempre aggiornato e la
 catena non resta mai a metà. Lo gestisci da UI o API REST invece che con cron
