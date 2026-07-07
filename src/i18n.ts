@@ -2,6 +2,8 @@
 // (no prefix); other locales live under /<locale>/. Pages emit hreflang
 // alternates so each market's variant ranks correctly.
 
+import { PROVIDER_COUNT } from '~/data/site';
+
 export const SITE = 'https://www.certmate.org';
 export const LOCALES = ['en', 'it'] as const;
 export type Locale = (typeof LOCALES)[number];
@@ -15,8 +17,8 @@ export function localizedPath(locale: Locale, path: string): string {
 
 /** Build hreflang alternates (incl. x-default) for a locale-relative path. */
 export function alternatesFor(path: string) {
-  const alts = LOCALES.map((l) => ({
-    hreflang: l,
+  const alts: { hreflang: string; href: string }[] = LOCALES.map((l) => ({
+    hreflang: l as string,
     href: SITE + localizedPath(l, path),
   }));
   alts.push({ hreflang: 'x-default', href: SITE + localizedPath(DEFAULT_LOCALE, path) });
@@ -46,7 +48,7 @@ export const ui = {
     updated: 'Updated',
     automateCta: 'Stop firefighting certificates',
     automateBody:
-      'CertMate issues, renews and deploys TLS certificates automatically across 24 DNS providers — open source, self-hosted, with a REST API.',
+      `CertMate issues, renews and deploys TLS certificates automatically across ${PROVIDER_COUNT} DNS providers — open source, self-hosted, with a REST API.`,
     automateBtn: 'Get CertMate (open source)',
     docsBtn: 'Read the docs',
   },
@@ -72,7 +74,7 @@ export const ui = {
     updated: 'Aggiornato',
     automateCta: 'Basta rincorrere i certificati',
     automateBody:
-      'CertMate emette, rinnova e fa il deploy dei certificati TLS in automatico su 24 provider DNS — open source, self-hosted, con API REST.',
+      `CertMate emette, rinnova e fa il deploy dei certificati TLS in automatico su ${PROVIDER_COUNT} provider DNS — open source, self-hosted, con API REST.`,
     automateBtn: 'Scarica CertMate (open source)',
     docsBtn: 'Leggi la documentazione',
   },

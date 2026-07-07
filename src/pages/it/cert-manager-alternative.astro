@@ -1,5 +1,6 @@
 ---
 import DocLayout from '~/layouts/DocLayout.astro';
+import { PROVIDER_COUNT } from '~/data/site';
 
 const path = '/cert-manager-alternative';
 const title = 'CertMate vs cert-manager, Caddy, Traefik e certbot';
@@ -12,8 +13,8 @@ const rows = [
   ['Interfaccia web', 'Sì', 'No', 'No', 'Dashboard (limitata)', 'No'],
   ['API REST', 'Sì', 'CRD K8s', 'API admin', 'API', 'No'],
   ['Gestisce certificati per altri host', 'Sì (deploy hook)', 'Nel cluster', 'Solo sé stesso', 'App in proxy', 'Solo sé stesso'],
-  ['Provider DNS-01', '24', 'Molti (via webhook)', 'Diversi', 'Diversi', 'Molti (plugin)'],
-  ['Multi-CA (LE / ZeroSSL / Google / privata)', 'Sì', 'Sì (issuer)', "Let's Encrypt / ZeroSSL", "Let's Encrypt", 'Qualsiasi ACME'],
+  ['Provider DNS-01', `${PROVIDER_COUNT}`, 'Molti (via webhook)', 'Diversi', 'Diversi', 'Molti (plugin)'],
+  ['Multi-CA (LE / ZeroSSL / Google / DigiCert / Actalis / privata)', 'Sì', 'Sì (issuer)', "Let's Encrypt / ZeroSSL", "Let's Encrypt", 'Qualsiasi ACME'],
   ['RBAC / API key con scope', 'Sì', 'RBAC K8s', 'No', 'No', 'No'],
   ['Licenza', 'MIT', 'Apache-2.0', 'Apache-2.0', 'MIT', 'Apache-2.0'],
 ];
@@ -86,9 +87,10 @@ const cols = ['CertMate', 'cert-manager', 'Caddy', 'Traefik', 'certbot'];
     API REST</strong>. È la scelta giusta quando devi emettere, rinnovare e
     <em>distribuire</em> certificati su molti host, provider e CA — dentro o
     accanto a Kubernetes, su VM, bare metal o appliance — con accesso basato sui
-    ruoli e un'API richiamabile dalla tua automazione. Parla 24 provider DNS, più
-    CA (Let's Encrypt, ZeroSSL, Google, privata) e include deploy hook, così un
-    certificato rinnovato viene davvero distribuito ai sistemi che lo servono.
+    ruoli e un'API richiamabile dalla tua automazione. Parla {PROVIDER_COUNT}
+    provider DNS, più CA (Let's Encrypt, ZeroSSL, Google Trust Services, DigiCert,
+    Actalis e una CA privata integrata) e include deploy hook, così un certificato
+    rinnovato viene davvero distribuito ai sistemi che lo servono.
   </p>
   <p>
     <strong>Non</strong> è un controller Kubernetes-native (per il cluster usa

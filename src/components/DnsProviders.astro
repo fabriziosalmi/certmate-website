@@ -1,5 +1,6 @@
 ---
 import { Icon } from 'astro-icon/components';
+import { PROVIDER_COUNT } from '~/data/site';
 // Canonical provider list pulled from modules/core/utils.py
 // (_DNS_PROVIDER_CREDENTIALS) — every name on this grid corresponds to
 // a provider CertMate can issue against today. Listed in roughly the
@@ -48,7 +49,7 @@ const providers = [
     <div class="mx-auto max-w-2xl text-center">
       <h2 class="section-title">Supported DNS Providers</h2>
       <p class="section-description">
-        27 DNS providers in the box today, plus multi-account support per provider for staging / production / multi-region isolation.
+        {PROVIDER_COUNT} DNS providers in the box today, plus multi-account support per provider for staging / production / multi-region isolation.
       </p>
     </div>
 
