@@ -167,7 +167,11 @@ cp .env.example .env</code></pre>
 
             <h3>2. Configure Environment</h3>
             <p>Edit <code>.env</code> file with your credentials:</p>
-            <pre><code># Required: API Security
+            <pre><code># Recommended for any network-exposed deployment: API Security.
+# Auto-generated if unset, but an un-onboarded instance is UNAUTHENTICATED
+# until you create the first admin — set this (or bind to localhost) before
+# exposing CertMate. When set, the first-run screen asks you to paste this
+# same token once to authorize creating the initial admin.
 API_BEARER_TOKEN=your_super_secure_api_token_here_change_this
 
 #  DNS Provider Configuration (choose one)
@@ -272,7 +276,7 @@ kubectl apply -f kubernetes/ingress.yaml</code></pre>
             <h2>Authentication options</h2>
             <p>CertMate ships three authentication paths; they coexist and are configured independently.</p>
             <ul>
-                <li><strong>Local users</strong> &mdash; setup wizard on first run creates the initial admin. RBAC roles (admin / operator / viewer) gate every endpoint.</li>
+                <li><strong>Local users</strong> &mdash; the first-run screen creates the initial admin. On an instance where you set <code>API_BEARER_TOKEN</code>, paste that token once on that screen to authorize creating the admin. RBAC roles (admin / operator / viewer) gate every endpoint.</li>
                 <li><strong>API keys</strong> &mdash; per-key role + <code>allowed_domains</code> scope for fine-grained programmatic access. Rotated independently from local users.</li>
                 <li><strong>OIDC / SSO (v2.7.0+)</strong> &mdash; Authorization Code + PKCE against any OIDC IdP (Keycloak, Authentik, Okta, Auth0, &hellip;). IdP-claim-based role mapping with case-insensitive matching. JIT provisioning or link-by-email with an <code>email_verified</code> gate against self-service-signup IdPs. See <a href="security.html">Security &rarr; OIDC / SSO configuration</a> for the full setup.</li>
             </ul>
