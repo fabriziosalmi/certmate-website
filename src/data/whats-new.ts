@@ -33,6 +33,17 @@ export interface UpdateCard {
 
 export const updates: UpdateCard[] = [
   {
+    badge: 'security',
+    badgeLabel: 'v2.21.4',
+    icon: 'fa6-solid:user-lock',
+    title: 'v2.21.4 — memory-hard password fallback, login open-redirect fix, and a first-run lockout fix',
+    description:
+      'Two security fixes and one onboarding fix, surfaced by a triage of the project\'s open code-scanning alerts and a reported first-run lockout; the auth changes went through two adversarial review passes. When bcrypt is unavailable the password-hashing fallback no longer stores or verifies passwords with fast, GPU-parallelizable SHA-256 — it uses hashlib.scrypt, a memory-hard KDF from the standard library, with the stored parameters bounds-checked so a corrupted settings file cannot turn every login into expensive work; passwords hashed under the old sha256:salt:hash fallback still verify after upgrade. The login page\'s safeNextUrl() now rejects the backslash open-redirect variant /\\host (which browsers normalize to //host), closing a ?next= link that bounced users off-site after they authenticated. And the Docker quick-start no longer locks new operators out: setting the documented API_BEARER_TOKEN used to push the instance past setup mode, so the create-admin form never rendered and — with local auth off — the login page refused local logins ("Local auth disabled"), even though the token itself could still create the first admin over the API. A bearer-only instance now re-surfaces that form and authenticates its two bootstrap calls with the operator\'s own token, while the world-open gate hardened in v2.21.1 is left byte-for-byte unchanged. The base image is also rebuilt on a current python:3.12-slim-trixie digest and every GitHub Action is now SHA-pinned.',
+    date: 'July 2026',
+    highlight: true,
+    href: releaseTag('v2.21.4'),
+  },
+  {
     badge: 'fix',
     badgeLabel: 'v2.21.3',
     icon: 'fa6-solid:wrench',
