@@ -13,11 +13,12 @@ const links = [
   { href: '/#docs', label: 'Documentation' },
 ];
 
-// Sister projects in the CertMate ecosystem. External links open in a new
-// tab; flagged with `external: true` so the menu renderer can attach the
-// noopener/noreferrer rels and a small "↗" affordance for screen readers
-// AND sighted users.
+// Public live demo + sister projects in the CertMate ecosystem. External
+// links open in a new tab; flagged with `external: true` so the menu renderer
+// attaches the noopener/noreferrer rels and a small "↗" affordance for screen
+// readers AND sighted users.
 const ecosystem = [
+  { href: 'https://demo.certmate.org', label: 'Live demo', external: true },
   { href: 'https://agent.certmate.org', label: 'Agent', external: true },
   { href: 'https://tools.certmate.org', label: 'Tools', external: true },
 ];
