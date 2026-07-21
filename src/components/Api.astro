@@ -2,13 +2,13 @@
 import { Icon } from 'astro-icon/components';
 const endpoints = [
   { method: 'POST', path: '/api/certificates/create',                       desc: 'Create new SSL certificate with account selection' },
-  { method: 'POST', path: '/api/settings/dns-providers/{provider}/accounts', desc: 'Add new DNS provider account' },
+  { method: 'POST', path: '/api/dns/{provider}/accounts',                   desc: 'Add new DNS provider account' },
   { method: 'GET',  path: '/api/certificates',                              desc: 'List all certificates with account info' },
-  { method: 'GET',  path: '/{domain}/tls',                                   desc: 'Download certificate ZIP' },
+  { method: 'GET',  path: '/api/certificates/{domain}/download',            desc: 'Download certificate bundle (ZIP)' },
 ];
 
 const example = `# Add multiple DNS accounts
-curl -X POST "https://certmate.example.com/api/settings/dns-providers/cloudflare/accounts" \\
+curl -X POST "https://certmate.example.com/api/dns/cloudflare/accounts" \\
   -H "Authorization: Bearer your_api_token_here" \\
   -H "Content-Type: application/json" \\
   -d '{"account_id": "production", "config": {"api_token": "prod_token"}}'
@@ -22,7 +22,7 @@ curl -X POST "https://certmate.example.com/api/certificates/create" \\
 # Download certificate
 curl -H "Authorization: Bearer your_api_token_here" \\
      -o api.company.com-tls.zip \\
-     "https://certmate.example.com/api.company.com/tls"`;
+     "https://certmate.example.com/api/certificates/api.company.com/download"`;
 
 // The same surface from the terminal, via the first-party certmate-cli
 // (built on certmate-sdk; both on PyPI). Real subcommands from

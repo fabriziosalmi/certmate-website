@@ -308,7 +308,7 @@ curl -X POST "http://localhost:8000/api/certificates/create" \
             </div>
 
             <div class="api-endpoint">
-                <div><span class="api-method method-get">GET</span><span class="api-path">/{domain}/tls</span></div>
+                <div><span class="api-method method-get">GET</span><span class="api-path">/api/certificates/{domain}/download</span></div>
                 <p>Automation-friendly endpoint - Simple URL for certificate download</p>
                 <p>Returns ZIP file with: cert.pem, chain.pem, fullchain.pem, privkey.pem</p>
                 <pre><code>curl -H "Authorization: Bearer your_token" \
@@ -348,9 +348,9 @@ curl -X POST "http://localhost:8000/api/certificates/create" \
             <h3>Multi-Account Management</h3>
 
             <div class="api-endpoint">
-                <div><span class="api-method method-post">POST</span><span class="api-path">/api/settings/dns-providers/{provider}/accounts</span></div>
+                <div><span class="api-method method-post">POST</span><span class="api-path">/api/dns/{provider}/accounts</span></div>
                 <p>Add a new DNS provider account</p>
-                <pre><code>curl -X POST "http://localhost:8000/api/settings/dns-providers/cloudflare/accounts" \
+                <pre><code>curl -X POST "http://localhost:8000/api/dns/cloudflare/accounts" \
   -H "Authorization: Bearer your_token" \
   -H "Content-Type: application/json" \
   -d '{
@@ -364,20 +364,12 @@ curl -X POST "http://localhost:8000/api/certificates/create" \
             </div>
 
             <div class="api-endpoint">
-                <div><span class="api-method method-get">GET</span><span class="api-path">/api/settings/dns-providers/{provider}/accounts</span></div>
+                <div><span class="api-method method-get">GET</span><span class="api-path">/api/dns/{provider}/accounts</span></div>
                 <p>List all accounts for a provider</p>
                 <pre><code>curl -H "Authorization: Bearer your_token" \
-  http://localhost:8000/api/settings/dns-providers/cloudflare/accounts</code></pre>
+  http://localhost:8000/api/dns/cloudflare/accounts</code></pre>
             </div>
 
-            <div class="api-endpoint">
-                <div><span class="api-method method-put">PUT</span><span class="api-path">/api/settings/dns-providers/{provider}/default-account</span></div>
-                <p>Set default account for a provider</p>
-                <pre><code>curl -X PUT "http://localhost:8000/api/settings/dns-providers/cloudflare/default-account" \
-  -H "Authorization: Bearer your_token" \
-  -H "Content-Type: application/json" \
-  -d '{"account_id": "production"}'</code></pre>
-            </div>
 
             <h3>Storage Backend Management</h3>
 
@@ -489,7 +481,7 @@ class CertMateClient:
     def download_certificate(self, domain, extract_to=None):
         """Download certificate as ZIP file"""
         response = requests.get(
-            f"{self.base_url}/{domain}/tls",
+            f"{self.base_url}/api/certificates/{domain}/download",
             headers=self.headers
         )
         

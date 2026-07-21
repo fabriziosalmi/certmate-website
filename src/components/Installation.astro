@@ -12,10 +12,10 @@ docker run -d --name certmate \\
   -v certmate-data:/app/data \\
   -v certmate-certs:/app/certificates \\
   --restart unless-stopped \\
-  ghcr.io/fabriziosalmi/certmate:latest
+  fabriziosalmi/certmate:latest
 
-# Show the auto-generated admin password (one-time output)
-docker logs certmate 2>&1 | grep "admin password"`;
+# Then open http://localhost:8000 and create the first admin
+# in the setup wizard. No password is printed to the log.`;
 
 const docker = `# Compose-based flow: useful when you want a single source of truth
 # for env vars, volumes, and an optional nginx reverse proxy.
@@ -50,19 +50,71 @@ export CLOUDFLARE_TOKEN="your_cloudflare_token"
 # Run the application
 python app.py`;
 
-const k8s = `# Create namespace
-kubectl create namespace certmate
+// No manifest ships in the repo, so the tab carries a real one inline
+// rather than pointing at a k8s/deployment.yaml that does not exist.
+// One replica on purpose: sessions, the scheduler and the rate limiter
+// are single-instance state (see docs/kubernetes.md).
+const k8s = `kubectl create namespace certmate
 
-# Create secret for API token
 kubectl create secret generic certmate-secrets \\
-  --from-literal=api-token=your_secure_token \\
-  -n certmate
+  --from-literal=api-token=your_secure_token -n certmate
 
-# Apply deployment
-kubectl apply -f k8s/deployment.yaml -n certmate
+kubectl apply -n certmate -f - <<'YAML'
+# Storage: the certificates and the settings/PKI state must survive a restart.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: { name: certmate-data }
+spec:
+  accessModes: [ReadWriteOnce]
+  resources: { requests: { storage: 1Gi } }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: { name: certmate-certs }
+spec:
+  accessModes: [ReadWriteOnce]
+  resources: { requests: { storage: 1Gi } }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: certmate
+spec:
+  replicas: 1                 # single-instance: scheduler + in-memory sessions
+  strategy: { type: Recreate }
+  selector: { matchLabels: { app: certmate } }
+  template:
+    metadata: { labels: { app: certmate } }
+    spec:
+      containers:
+        - name: certmate
+          image: fabriziosalmi/certmate:latest
+          ports: [{ containerPort: 8000 }]
+          env:
+            - name: API_BEARER_TOKEN
+              valueFrom:
+                secretKeyRef: { name: certmate-secrets, key: api-token }
+          volumeMounts:
+            - { name: data,  mountPath: /app/data }
+            - { name: certs, mountPath: /app/certificates }
+      volumes:
+        - name: data
+          persistentVolumeClaim: { claimName: certmate-data }
+        - name: certs
+          persistentVolumeClaim: { claimName: certmate-certs }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: certmate }
+spec:
+  selector: { app: certmate }
+  ports: [{ port: 8000, targetPort: 8000 }]
+YAML
 
-# Check status
-kubectl get pods -n certmate`;
+kubectl rollout status deploy/certmate -n certmate
+
+# Reach the UI at http://localhost:8000 (add an Ingress for real access)
+kubectl port-forward -n certmate svc/certmate 8000:8000`;
 
 // The CLI installs the first-party terminal client (certmate-cli, on PyPI) —
 // it drives an already-running instance over the REST API, it does not run
@@ -95,7 +147,7 @@ const tabs = [
     <div class="mx-auto max-w-2xl text-center">
       <h2 id="installation-title" class="section-title">Quick Installation</h2>
       <p class="section-description">
-        Single <code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm dark:bg-gray-800">docker run</code> &mdash; the running container exposes the setup wizard on <code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm dark:bg-gray-800">localhost:8000</code> and writes its initial admin password to the container log. Compose, Python and Kubernetes paths below.
+        Single <code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm dark:bg-gray-800">docker run</code> &mdash; the running container exposes the setup wizard on <code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm dark:bg-gray-800">localhost:8000</code>, where you create the first admin. Compose, Python and Kubernetes paths below.
       </p>
     </div>
 
