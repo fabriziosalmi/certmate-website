@@ -60,6 +60,21 @@ kubectl create secret generic certmate-secrets \\
   --from-literal=api-token=your_secure_token -n certmate
 
 kubectl apply -n certmate -f - <<'YAML'
+# Storage: the certificates and the settings/PKI state must survive a restart.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: { name: certmate-data }
+spec:
+  accessModes: [ReadWriteOnce]
+  resources: { requests: { storage: 1Gi } }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: { name: certmate-certs }
+spec:
+  accessModes: [ReadWriteOnce]
+  resources: { requests: { storage: 1Gi } }
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -87,9 +102,19 @@ spec:
           persistentVolumeClaim: { claimName: certmate-data }
         - name: certs
           persistentVolumeClaim: { claimName: certmate-certs }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: certmate }
+spec:
+  selector: { app: certmate }
+  ports: [{ port: 8000, targetPort: 8000 }]
 YAML
 
-kubectl get pods -n certmate`;
+kubectl rollout status deploy/certmate -n certmate
+
+# Reach the UI at http://localhost:8000 (add an Ingress for real access)
+kubectl port-forward -n certmate svc/certmate 8000:8000`;
 
 // The CLI installs the first-party terminal client (certmate-cli, on PyPI) —
 // it drives an already-running instance over the REST API, it does not run
