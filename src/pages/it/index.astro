@@ -1,0 +1,94 @@
+---
+/**
+ * Italian landing page.
+ *
+ * Every Italian page links to `/it` from its header logo and from the "Home"
+ * breadcrumb — thirteen pages in the sitemap — and there was no page there,
+ * so all of them pointed at a 404 (#29). This is the hub those links meant.
+ *
+ * Deliberately a directory, not a translation of the English homepage: what
+ * exists in Italian is the SSL error reference and the deploy guides, and
+ * promising more than that would be its own kind of broken link.
+ */
+import { Icon } from 'astro-icon/components';
+import { getCollection } from 'astro:content';
+import DocLayout from '~/layouts/DocLayout.astro';
+import { ui, localizedPath } from '~/i18n';
+import { GITHUB } from '~/data/site';
+
+const t = ui.it;
+
+const errors = (await getCollection('errors')).filter((e) => e.id.startsWith('it/'));
+const deploys = (await getCollection('deploy')).filter((e) => e.id.startsWith('it/'));
+
+const sections = [
+  {
+    href: localizedPath('it', '/errors'),
+    icon: 'fa6-solid:triangle-exclamation',
+    title: t.errorsTitle,
+    body: t.errorsIntro,
+    count: `${errors.length} errori`,
+  },
+  {
+    href: localizedPath('it', '/deploy'),
+    icon: 'fa6-solid:rocket',
+    title: t.deployTitle,
+    body: t.deployIntro,
+    count: `${deploys.length} guide`,
+  },
+];
+---
+
+<DocLayout
+  lang="it"
+  path="/"
+  title="CertMate — documentazione in italiano"
+  description="Riferimento errori SSL/TLS e guide al deploy dei certificati, in italiano. CertMate emette, rinnova e distribuisce certificati TLS in automatico."
+>
+  <h1>CertMate in italiano</h1>
+  <p class="lead">
+    Riferimento sugli errori SSL/TLS e guide al deploy dei certificati. Il resto
+    del sito e la documentazione del prodotto sono in inglese.
+  </p>
+
+  <ul class="not-prose mt-8 grid gap-3 sm:grid-cols-2">
+    {sections.map((s) => (
+      <li>
+        <a
+          href={s.href}
+          class="flex h-full items-start gap-3 rounded-lg border border-gray-200 p-4 transition-colors hover:border-primary dark:border-gray-700"
+        >
+          <Icon name={s.icon} class="mt-0.5 text-xl text-primary" />
+          <span>
+            <span class="font-semibold text-gray-900 dark:text-white">{s.title}</span>
+            <span class="mt-1 block text-sm text-gray-600 dark:text-gray-300">{s.body}</span>
+            <span class="mt-2 block text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{s.count}</span>
+          </span>
+        </a>
+      </li>
+    ))}
+  </ul>
+
+  <h2>Cos'è CertMate</h2>
+  <p>
+    Un gestore di certificati TLS open source e self-hosted: emette i certificati
+    con Let's Encrypt (e altre CA ACME), li rinnova 30 giorni prima della
+    scadenza e li distribuisce dove servono, con oltre 25 provider DNS
+    supportati e una API REST.
+  </p>
+  <p class="not-prose mt-6 flex flex-wrap gap-3">
+    <a
+      href="/"
+      class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700"
+    >
+      Sito in inglese
+    </a>
+    <a
+      href={GITHUB}
+      class="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:border-primary hover:text-primary dark:border-gray-700 dark:text-gray-200"
+    >
+      <Icon name="fa6-brands:github" aria-hidden="true" />
+      Codice sorgente
+    </a>
+  </p>
+</DocLayout>

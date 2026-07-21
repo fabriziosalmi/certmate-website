@@ -193,12 +193,31 @@ const disclosureRows = [
             run against the repository; check them yourself:
           </p>
 
-          <div class="mt-6 flex flex-wrap items-center gap-3">
-            <a href={`${GITHUB}/security/code-scanning`} class="inline-flex" target="_blank" rel="noopener noreferrer" aria-label="CodeQL workflow status (opens in new tab)">
-              <img src={`${GITHUB}/actions/workflows/codeql.yml/badge.svg`} alt="CodeQL workflow status" loading="lazy" decoding="async" height="20" />
+          {/*
+            Links, not badge images. The badges were <img> from github.com and
+            api.securityscorecards.dev, which this site's own CSP blocks
+            (img-src 'self' data:), so they rendered as two broken images on
+            the page whose whole argument is "check it yourself".
+
+            Vendoring them at build time would satisfy the CSP but is worse:
+            a badge is a live status, and a copy served from here would keep
+            showing whatever it said the day it was fetched. A stale green
+            "passing" is a false claim, which is exactly what this page says
+            the project does not make.
+
+            The CodeQL link also pointed at /security/code-scanning, which
+            returns 404 to anyone who is not a repository maintainer — an
+            invitation to verify that dead-ends for every visitor. It now
+            points at the public workflow-run history.
+          */}
+          <div class="mt-6 flex flex-wrap items-center gap-4 text-sm">
+            <a href={`${GITHUB}/actions/workflows/codeql.yml`} class="inline-flex items-center gap-2 font-medium text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+              <Icon name="fa6-solid:shield-halved" aria-hidden="true" />
+              CodeQL runs
             </a>
-            <a href="https://securityscorecards.dev/viewer/?uri=github.com/fabriziosalmi/certmate" class="inline-flex" target="_blank" rel="noopener noreferrer" aria-label="OSSF Scorecard report (opens in new tab)">
-              <img src="https://api.securityscorecards.dev/projects/github.com/fabriziosalmi/certmate/badge" alt="OSSF Scorecard score" loading="lazy" decoding="async" height="20" />
+            <a href="https://securityscorecards.dev/viewer/?uri=github.com/fabriziosalmi/certmate" class="inline-flex items-center gap-2 font-medium text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+              <Icon name="fa6-solid:list-check" aria-hidden="true" />
+              OSSF Scorecard report
             </a>
           </div>
 

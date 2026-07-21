@@ -11,7 +11,9 @@ import Footer from '~/components/Footer.astro';
 const title = 'Privacy & legal — CertMate';
 const description =
   'How certmate.org handles data: no cookies, no analytics, no tracking. Data controller, processors (GitHub, Cloudflare) and your GDPR rights.';
-const canonical = 'https://www.certmate.org/privacy';
+// Trailing slash: /privacy 301s to /privacy/, and a canonical that points
+// at a redirect is a canonical search engines have to resolve for you.
+const canonical = 'https://www.certmate.org/privacy/';
 
 const h2 = 'mt-10 text-xl font-semibold text-gray-900 dark:text-white';
 const p = 'mt-3 text-gray-600 dark:text-gray-300 leading-relaxed';
@@ -40,7 +42,7 @@ const kicker =
           <strong>Fabrizio Salmi</strong> — Genoa, Italy. certmate.org is the
           website of the open-source, MIT-licensed CertMate project (personal,
           non-commercial). Contact for any privacy request:
-          <a class={a} href="mailto:fabrizio.salmi@gmail.com">fabrizio.salmi@gmail.com</a>.
+          <Fragment set:html={`<!--email_off--><a class="${a}" href="mailto:fabrizio.salmi@gmail.com">fabrizio.salmi@gmail.com</a><!--/email_off-->`} />.
         </p>
 
         <h2 class={h2}>What we process, and why</h2>
@@ -87,7 +89,7 @@ const kicker =
         <p class={p}>
           Access, rectification, erasure, restriction, objection, portability
           (Arts. 15–22 GDPR) — email
-          <a class={a} href="mailto:fabrizio.salmi@gmail.com">fabrizio.salmi@gmail.com</a>.
+          <Fragment set:html={`<!--email_off--><a class="${a}" href="mailto:fabrizio.salmi@gmail.com">fabrizio.salmi@gmail.com</a><!--/email_off-->`} />.
           You may lodge a complaint with the Italian supervisory authority, the
           <a class={a} href="https://www.garanteprivacy.it" target="_blank" rel="noopener">Garante per la protezione dei dati personali</a>.
           We carry out no profiling and no automated decision-making.
@@ -100,7 +102,7 @@ const kicker =
           <strong>Fabrizio Salmi</strong> — Genova, Italia. certmate.org è il
           sito del progetto open-source CertMate (licenza MIT; personale, non
           commerciale). Contatto per richieste privacy:
-          <a class={a} href="mailto:fabrizio.salmi@gmail.com">fabrizio.salmi@gmail.com</a>.
+          <Fragment set:html={`<!--email_off--><a class="${a}" href="mailto:fabrizio.salmi@gmail.com">fabrizio.salmi@gmail.com</a><!--/email_off-->`} />.
         </p>
 
         <h2 class={h2}>Quali dati trattiamo e perché</h2>
@@ -139,7 +141,7 @@ const kicker =
         <p class={p}>
           Accesso, rettifica, cancellazione, limitazione, opposizione,
           portabilità (artt. 15–22 GDPR) — scrivi a
-          <a class={a} href="mailto:fabrizio.salmi@gmail.com">fabrizio.salmi@gmail.com</a>.
+          <Fragment set:html={`<!--email_off--><a class="${a}" href="mailto:fabrizio.salmi@gmail.com">fabrizio.salmi@gmail.com</a><!--/email_off-->`} />.
           Puoi proporre reclamo al
           <a class={a} href="https://www.garanteprivacy.it" target="_blank" rel="noopener">Garante per la protezione dei dati personali</a>.
           Non effettuiamo profilazione né decisioni automatizzate.
@@ -148,7 +150,7 @@ const kicker =
         <hr class="mt-12 border-gray-200 dark:border-gray-800" />
         <p class="mt-6 text-sm text-gray-500 dark:text-gray-400">
           Publisher / Titolare: Fabrizio Salmi — Genoa, Italy —
-          <a class={a} href="mailto:fabrizio.salmi@gmail.com">fabrizio.salmi@gmail.com</a>
+          <Fragment set:html={`<!--email_off--><a class="${a}" href="mailto:fabrizio.salmi@gmail.com">fabrizio.salmi@gmail.com</a><!--/email_off-->`} />
         </p>
       </div>
     </section>
