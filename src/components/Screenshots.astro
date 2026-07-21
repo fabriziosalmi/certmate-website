@@ -6,8 +6,11 @@
  * CertMate vs. cert-manager / Caddy needs to see the dashboard to decide
  * whether the UX matches what they want.
  *
- * The source PNG lives in the main `certmate` repo at the project root
- * (screenshot_1.png), resized to public/assets/screenshot-dashboard.png.
+ * The capture is taken from the public demo (demo.certmate.org) on the
+ * current release and resized to 1600px wide. It must show a HEALTHY
+ * instance: the previous file (May 2026) predated the UI sweep and showed
+ * VALID 0 / DEPLOYED 0 with an unreachable backend — the one product image
+ * an evaluator sees was advertising a broken certificate manager.
  *
  * Lazy-loaded so it does not block the rest of the page; explicit width
  * and height attributes preserve layout (no CLS).
@@ -27,10 +30,10 @@ interface Shot {
 const shots: Shot[] = [
   {
     src: '/assets/screenshot-dashboard.png',
-    alt: 'CertMate certificate dashboard: list of issued TLS certificates with status, expiry, DNS provider and deployment columns.',
-    caption: 'Certificate dashboard — every TLS cert under management, expiry + deployment status surfaced at a glance.',
+    alt: 'CertMate certificate dashboard: four TLS certificates with valid and expiring status, days to expiry, DNS provider and deployment columns.',
+    caption: 'Certificate dashboard — every TLS cert under management, expiry + deployment status surfaced at a glance. This is the live demo, as you will find it.',
     width: 1600,
-    height: 698,
+    height: 675,
     full: true,
   },
 ];

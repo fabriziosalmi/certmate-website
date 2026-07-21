@@ -185,7 +185,7 @@
 
         <section class="doc-content">
             <h2>Supported DNS Providers</h2>
-            <p>CertMate supports 22 DNS providers through Let's Encrypt DNS-01 challenge. Multi-account support is available for major providers, enabling enterprise-grade deployments.</p>
+            <p>CertMate supports 28 DNS providers through Let's Encrypt DNS-01 challenge. Multi-account support is available for major providers, enabling enterprise-grade deployments.</p>
 
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i>
@@ -412,7 +412,7 @@ AZURE_CLIENT_SECRET=your_client_secret</code></pre>
 
             <h3>Via API</h3>
             <pre><code># Add production account
-curl -X POST "http://localhost:8000/api/settings/dns-providers/cloudflare/accounts" \
+curl -X POST "http://localhost:8000/api/dns/cloudflare/accounts" \
   -H "Authorization: Bearer your_token" \
   -H "Content-Type: application/json" \
   -d '{
@@ -425,7 +425,7 @@ curl -X POST "http://localhost:8000/api/settings/dns-providers/cloudflare/accoun
   }'
 
 # Add staging account
-curl -X POST "http://localhost:8000/api/settings/dns-providers/cloudflare/accounts" \
+curl -X POST "http://localhost:8000/api/dns/cloudflare/accounts" \
   -H "Authorization: Bearer your_token" \
   -H "Content-Type: application/json" \
   -d '{
