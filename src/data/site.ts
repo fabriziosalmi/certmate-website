@@ -9,9 +9,10 @@
  *   - VERSION tracks the latest published CertMate release tag.
  *   - PROVIDER_COUNT is the number of provider cards actually rendered by
  *     DnsProviders.astro. It is deliberately the count we can point at on the
- *     page. The app repo supports at least this many DNS providers
- *     (modules/core/utils.py::_DNS_PROVIDER_CREDENTIALS lists more), so the
- *     number understates rather than overstates — safe and verifiable.
+ *     page. The app repo supports at least this many DNS providers — the
+ *     authoritative list is modules/core/settings.py::supported_providers (28
+ *     real providers + custom-script) — so the number understates rather than
+ *     overstates, which is safe and verifiable.
  */
 
 /** Latest published CertMate release. Bump on every release. */

@@ -1,13 +1,11 @@
 /**
- * "What's New" cards. Listed newest-first. We lead with the latest releases
- * (currently the v2.21.x line) and keep enough history for context without
- * padding the page. Patch releases are folded into the nearest feature card.
+ * "What's New" cards. Listed newest-first. Only the first card (the latest
+ * release) is shown inline; WhatsNew.astro collapses the rest behind a native
+ * <details> disclosure. Patch releases are folded into the nearest feature card.
  *
- * The recent narrative deliberately leads with the security story: the
- * v2.21.1 hardening pass fixed a pre-existing critical OIDC/SSO auth bypass
- * and made every "reported success" path tell the truth. Descriptions are
- * drawn from RELEASE_NOTES.md in the app repo; every claim is verifiable
- * against the code.
+ * The lead card is the current milestone (v2.24.0 — discovery & inventory plus
+ * the PFX/K8s/SIEM integrations). Descriptions are drawn from RELEASE_NOTES.md
+ * in the app repo; every claim is verifiable against the code.
  *
  * Each item maps to one card. Badge variants:
  *   - 'milestone' (highlighted v2.x release)
