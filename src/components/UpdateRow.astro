@@ -1,0 +1,56 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { UpdateCard } from '~/data/whats-new';
+
+interface Props {
+  u: UpdateCard;
+}
+const { u } = Astro.props;
+
+// Badge → Tailwind class mapping. Kept here so WhatsNew and the collapsed
+// "earlier releases" list render identical rows.
+const badgeClasses: Record<string, string> = {
+  milestone: 'bg-amber-100 text-amber-800 ring-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:ring-amber-800',
+  security: 'bg-red-100 text-red-800 ring-red-200 dark:bg-red-900/30 dark:text-red-300 dark:ring-red-800',
+  fix: 'bg-blue-100 text-blue-800 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-800',
+  feature: 'bg-emerald-100 text-emerald-800 ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:ring-emerald-800',
+};
+
+const CardTag = u.href ? 'a' : 'div';
+const wrap = u.href ? { href: u.href, target: '_blank', rel: 'noopener noreferrer' } : {};
+---
+
+<li role="listitem">
+  <CardTag
+    {...wrap}
+    class={`group flex items-start gap-4 px-5 py-4 transition-colors ${u.href ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50' : ''} ${u.highlight ? 'border-l-4 border-primary bg-blue-50/40 dark:bg-blue-900/10' : ''}`}
+  >
+    <span class={`badge ring-1 ring-inset shrink-0 ${badgeClasses[u.badge]}`}>
+      <Icon name={u.icon} aria-hidden="true" />
+      {u.badgeLabel}
+    </span>
+
+    <div class="min-w-0 flex-1">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
+        {u.title}
+      </h3>
+      <p class="mt-1 text-xs text-gray-600 dark:text-gray-300 sm:text-sm">
+        {u.description}
+      </p>
+    </div>
+
+    <div class="hidden shrink-0 flex-col items-end gap-1 text-right sm:flex">
+      <span class="text-xs text-gray-500 dark:text-gray-400">{u.date}</span>
+      {u.href && (
+        <span class="text-xs font-medium text-primary inline-flex items-center gap-1">
+          Release notes
+          <Icon
+            name="fa6-solid:arrow-right"
+            class="transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:transform-none"
+            aria-hidden="true"
+          />
+        </span>
+      )}
+    </div>
+  </CardTag>
+</li>

@@ -33,6 +33,37 @@ export interface UpdateCard {
 
 export const updates: UpdateCard[] = [
   {
+    badge: 'milestone',
+    badgeLabel: 'v2.24.0',
+    icon: 'fa6-solid:boxes-stacked',
+    title: 'v2.24.0 — certificate discovery and inventory, and the integrations around it',
+    description:
+      'CertMate\'s largest feature line to date turns it from a certificate issuer into an inventory of what is actually deployed. A deep TLS probe reads the full served certificate at any host:port — the complete SAN list, serial, SHA-256 fingerprint, issuer DN, key and signature algorithm, and served chain — behind an SSRF guard that resolves the target first, refuses private/loopback/CGNAT ranges, and pins the resolved IP so a DNS rebind cannot redirect the handshake inward. A fingerprint-keyed SQLite inventory records every certificate CertMate has seen, whether it issued it or merely observed it; scheduled endpoint probing and crt.sh Certificate Transparency monitoring populate it, surfacing shadow issuance and certificates that were renewed but never deployed. An /inventory dashboard groups issued against discovered with an expiry forecast across everything, one-click adoption of a discovered certificate into managed renewal, and a cryptographic-readiness report that classifies every key and signature (weak, acceptable, modern; and flags everything classically quantum-vulnerable) and exports as JSON, CSV or a print-friendly page. Around it: PKCS#12 (.pfx) export for client certificates, a typed Kubernetes-Secret deploy target that writes renewed certs into a kubernetes.io/tls Secret via Server-Side Apply, and a SIEM audit sink that streams the signed audit trail as syslog (RFC 5424), CEF or HTTP/JSON with credentials redacted and a dead collector unable to block a certificate operation. Everything new is opt-in.',
+    date: 'July 2026',
+    highlight: true,
+    href: releaseTag('v2.24.0'),
+  },
+  {
+    badge: 'feature',
+    badgeLabel: 'v2.23.0',
+    icon: 'fa6-solid:box-archive',
+    title: 'v2.23.0 — audit retention: archiving and pruning the tamper-evident chain, on the record',
+    description:
+      'The last open half of the audit design: an operator can archive and remove an old prefix of the tamper-evident audit chain. Retention on a tamper-evident record is a policy question, not a disk one — you cannot make deletion impossible on a file the operator owns, but you can make it non-deniable. `python -m modules.core.audit_prune` removes a prefix that has already been exported and independently verified; without --yes it is a dry run, and it refuses more than it accepts (the archive must verify, be signed by this instance, start exactly where the chain starts, and agree with it hash-for-hash, and it will not empty the chain). The deletion is recorded in the chain that survives it — an archive entry naming the sequence range, the entry count, the head hash and the archive\'s SHA-256 — and the remainder verifies from a signed anchor, so a chain that was merely truncated cannot be passed off as a pruned one. Deliberately CLI-only, with CertMate stopped: an authenticated endpoint that deletes audit history is exactly what someone who has just compromised an administrator account would want.',
+    date: 'July 2026',
+    href: releaseTag('v2.23.0'),
+  },
+  {
+    badge: 'security',
+    badgeLabel: 'v2.22.0',
+    icon: 'fa6-solid:clipboard-check',
+    title: 'v2.22.0–2.22.1 — the audit release: silent failures made loud, and third-party-verifiable evidence',
+    description:
+      'A 360-degree read-only audit produced 25 findings, all fixed here, plus three follow-up audit-chain defects in v2.22.1. The common thread: almost every defect failed silently or reported the opposite of what happened. The unified backup was silently omitting the private CA key, every client certificate, the CRL and the audit chain — a documented restore came back unable to issue or revoke a single client certificate; it now carries and restores all of it, written 0600. A restored backup renews again (certbot lineage symlinks are rebuilt at restore and at the top of every renewal). A failed unattended renewal now actually sends its alert. Deleting a certificate now removes it from the external storage backend too, not just locally. Secrets are fully masked in the viewer-readable settings API. API-key expiry is validated and compared as a date rather than sorted as a string. The rate limiter can no longer be reset by varying the bearer token. And the audit trail itself gained a signed, third-party-verifiable export bundle with streaming verification, an incremental export slice that verifies instead of accusing you of tampering, and a rotated human-readable log — while the tamper-evident chain is emphatically not rotated.',
+    date: 'July 2026',
+    href: releaseTag('v2.22.0'),
+  },
+  {
     badge: 'security',
     badgeLabel: 'v2.21.4',
     icon: 'fa6-solid:user-lock',
@@ -40,7 +71,6 @@ export const updates: UpdateCard[] = [
     description:
       'Two security fixes and one onboarding fix, surfaced by a triage of the project\'s open code-scanning alerts and a reported first-run lockout; the auth changes went through two adversarial review passes. When bcrypt is unavailable the password-hashing fallback no longer stores or verifies passwords with fast, GPU-parallelizable SHA-256 — it uses hashlib.scrypt, a memory-hard KDF from the standard library, with the stored parameters bounds-checked so a corrupted settings file cannot turn every login into expensive work; passwords hashed under the old sha256:salt:hash fallback still verify after upgrade. The login page\'s safeNextUrl() now rejects the backslash open-redirect variant /\\host (which browsers normalize to //host), closing a ?next= link that bounced users off-site after they authenticated. And the Docker quick-start no longer locks new operators out: setting the documented API_BEARER_TOKEN used to push the instance past setup mode, so the create-admin form never rendered and — with local auth off — the login page refused local logins ("Local auth disabled"), even though the token itself could still create the first admin over the API. A bearer-only instance now re-surfaces that form and authenticates its two bootstrap calls with the operator\'s own token, while the world-open gate hardened in v2.21.1 is left byte-for-byte unchanged. The base image is also rebuilt on a current python:3.12-slim-trixie digest and every GitHub Action is now SHA-pinned.',
     date: 'July 2026',
-    highlight: true,
     href: releaseTag('v2.21.4'),
   },
   {

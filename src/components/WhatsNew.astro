@@ -1,15 +1,13 @@
 ---
 import { updates } from '~/data/whats-new';
 import { Icon } from 'astro-icon/components';
+import UpdateRow from '~/components/UpdateRow.astro';
 
-// Badge → Tailwind class mapping. Kept in one place so a future restyle
-// edits one map instead of N callsites.
-const badgeClasses: Record<string, string> = {
-  milestone: 'bg-amber-100 text-amber-800 ring-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:ring-amber-800',
-  security: 'bg-red-100 text-red-800 ring-red-200 dark:bg-red-900/30 dark:text-red-300 dark:ring-red-800',
-  fix: 'bg-blue-100 text-blue-800 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-800',
-  feature: 'bg-emerald-100 text-emerald-800 ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:ring-emerald-800',
-};
+// Show the current release inline; collapse the back-catalogue behind a
+// disclosure so the changelog does not cost a full page of scroll right after
+// the hero. Everything stays in the DOM (native <details>), so the release
+// history is still fully indexed for SEO and reachable by anyone who wants it.
+const [latest, ...earlier] = updates;
 ---
 
 <section class="border-b border-gray-200 py-20 dark:border-gray-800" aria-labelledby="whats-new-title">
@@ -19,67 +17,32 @@ const badgeClasses: Record<string, string> = {
         <Icon name="fa6-solid:wand-sparkles" class="mr-2 text-amber-500" aria-hidden="true" />
         What's New in CertMate
       </h2>
-      <p class="section-description">Latest updates, improvements, and new features</p>
+      <p class="section-description">The latest release, with the full history a click away</p>
     </div>
 
-    {/* Linear changelog layout: one full-width row per entry, badge + title
-       on the left, short description in the middle, date + "Release notes →"
-       on the right. Same data as before — the grid-of-cards layout was
-       crowding the page out of proportion to the relative weight of each
-       update. SEO content (titles + descriptions + dates) is unchanged so
-       indexed snippets do not move. */}
+    {/* Latest release, always visible. */}
     <ul class="mt-12 mx-auto max-w-5xl divide-y divide-gray-200 dark:divide-gray-800 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden bg-white dark:bg-gray-900" role="list">
-      {
-        updates.map((u) => {
-          const CardTag = u.href ? 'a' : 'div';
-          const wrap = u.href
-            ? { href: u.href, target: '_blank', rel: 'noopener noreferrer' }
-            : {};
-          return (
-            <li role="listitem">
-              <CardTag
-                {...wrap}
-                class={`group flex items-start gap-4 px-5 py-4 transition-colors ${u.href ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50' : ''} ${u.highlight ? 'border-l-4 border-primary bg-blue-50/40 dark:bg-blue-900/10' : ''}`}
-              >
-                {/* Badge column — fixed width so titles align across rows. */}
-                <span class={`badge ring-1 ring-inset shrink-0 ${badgeClasses[u.badge]}`}>
-                  <Icon name={u.icon} aria-hidden="true" />
-                  {u.badgeLabel}
-                </span>
-
-                {/* Title + description. min-w-0 lets the flex child truncate
-                   long lines instead of pushing the date column off-screen
-                   on narrow viewports. */}
-                <div class="min-w-0 flex-1">
-                  <h3 class="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
-                    {u.title}
-                  </h3>
-                  <p class="mt-1 text-xs text-gray-600 dark:text-gray-300 sm:text-sm">
-                    {u.description}
-                  </p>
-                </div>
-
-                {/* Right rail: date and (optional) release-notes affordance.
-                   Hidden on the smallest viewports — `<sm` collapses to the
-                   left column to keep the row compact. */}
-                <div class="hidden shrink-0 flex-col items-end gap-1 text-right sm:flex">
-                  <span class="text-xs text-gray-500 dark:text-gray-400">{u.date}</span>
-                  {u.href && (
-                    <span class="text-xs font-medium text-primary inline-flex items-center gap-1">
-                      Release notes
-                      <Icon
-                        name="fa6-solid:arrow-right"
-                        class="transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:transform-none"
-                        aria-hidden="true"
-                      />
-                    </span>
-                  )}
-                </div>
-              </CardTag>
-            </li>
-          );
-        })
-      }
+      <UpdateRow u={latest} />
     </ul>
+
+    {/* Earlier releases, collapsed by default. `group` + `group-open:` rotate
+       the chevron and swap the label without any JavaScript. */}
+    {earlier.length > 0 && (
+      <details class="group mt-4 mx-auto max-w-5xl">
+        <summary class="flex cursor-pointer list-none [&::-webkit-details-marker]:hidden items-center justify-center gap-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-5 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
+          <Icon name="fa6-solid:clock-rotate-left" class="text-gray-400" aria-hidden="true" />
+          <span class="group-open:hidden">Show earlier releases ({earlier.length})</span>
+          <span class="hidden group-open:inline">Hide earlier releases</span>
+          <Icon
+            name="fa6-solid:chevron-down"
+            class="text-gray-400 transition-transform duration-200 group-open:rotate-180"
+            aria-hidden="true"
+          />
+        </summary>
+        <ul class="mt-3 divide-y divide-gray-200 dark:divide-gray-800 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden bg-white dark:bg-gray-900" role="list">
+          {earlier.map((u) => <UpdateRow u={u} />)}
+        </ul>
+      </details>
+    )}
   </div>
 </section>
