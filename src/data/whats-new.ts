@@ -3,9 +3,9 @@
  * release) is shown inline; WhatsNew.astro collapses the rest behind a native
  * <details> disclosure. Patch releases are folded into the nearest feature card.
  *
- * The lead card is the current milestone (v2.24.0 — discovery & inventory plus
- * the PFX/K8s/SIEM integrations). Descriptions are drawn from RELEASE_NOTES.md
- * in the app repo; every claim is verifiable against the code.
+ * The lead card is the current feature line (v2.25.x — pull-based delivery and
+ * the Helm chart). Descriptions are drawn from RELEASE_NOTES.md in the app
+ * repo; every claim is verifiable against the code.
  *
  * Each item maps to one card. Badge variants:
  *   - 'milestone' (highlighted v2.x release)
@@ -30,6 +30,27 @@ export interface UpdateCard {
 }
 
 export const updates: UpdateCard[] = [
+  {
+    badge: 'feature',
+    badgeLabel: 'v2.25.x',
+    icon: 'fa6-solid:download',
+    title: 'v2.25.0 - certificates a host can pull, and a Helm chart',
+    description:
+      'Deploying a certificate to another machine has usually meant the certificate manager reaching out to it, which means it holds credentials for every host it deploys to. Two users asked for the inverse from opposite directions, and it is now a supported path: `certmate cert download` fetches one file at a time, so a deploy script puts each file exactly where it belongs instead of unpacking an archive. Files are created with owner-only permissions at the moment of creation, never adjusted afterwards, so a private key is never briefly readable by other users on the machine. Paired with an API key scoped to a single domain, a target host holds one narrow credential for itself and pulls on a timer: no inbound access to the host, and no credentials for that host on the CertMate server. The certificate, chain and fullchain are readable by a viewer key; anything carrying key material requires operator. The download API also gained the legacy PKCS#1 key inline, so an automation that needs both the bundle and the traditional key makes one call instead of staging a key through a file on disk. v2.25.1 added a Helm chart, published to GHCR on every release, that encodes what CertMate is rather than emitting generic templates: it renders exactly one replica and refuses to render more, because the scheduler runs in the web process and a second replica would renew the same certificates twice against the same volume.',
+    date: 'August 2026',
+    highlight: true,
+    href: releaseTag('v2.25.0'),
+  },
+  {
+    badge: 'fix',
+    badgeLabel: 'v2.24.1 - v2.24.2',
+    icon: 'fa6-solid:wrench',
+    title: 'Two DNS providers that had never worked, and three interface faults',
+    description:
+      'ACME-DNS and Google Cloud DNS-01 issuance had never succeeded in any CertMate release. Both were advertised, documented and present in the settings UI, and both failed on every request: the bundled ACME-DNS plugin implements no credentials-file option at all, and certbot-dns-google expects the service-account JSON itself where CertMate was handing it an ini. Anyone who tried either and concluded they had misconfigured something had not. ACME-DNS is now driven by CertMate\'s own DNS hook with no plugin, and the Google fix was verified against a live Cloud DNS zone. Alongside them: settings could not be saved at all unless the selected CA had an email address, closing an edit left the certificate drawer stuck on the previous certificate, and a certificate being issued vanished from the list on page refresh while the server was still working on it - now the dashboard asks the server what is in flight and re-attaches, which also shows it in a session opened in another browser.',
+    date: 'July 2026',
+    href: releaseTag('v2.24.2'),
+  },
   {
     badge: 'milestone',
     badgeLabel: 'v2.24.0',
