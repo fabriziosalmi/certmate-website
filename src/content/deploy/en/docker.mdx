@@ -72,6 +72,6 @@ echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/
 ## Do it the hands-off way
 
 You can run CertMate itself as a container (`docker run` / compose) to issue and
-renew certificates across 27 DNS providers, and use its deploy hooks to reload
+renew certificates across every DNS provider it supports, and use its deploy hooks to reload
 the proxy container the moment a cert rotates — no keys in images, no manual
 restarts, managed from a UI or REST API.

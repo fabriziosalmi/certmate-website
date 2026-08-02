@@ -14,7 +14,7 @@ import { Icon } from 'astro-icon/components';
 import { getCollection } from 'astro:content';
 import DocLayout from '~/layouts/DocLayout.astro';
 import { ui, localizedPath } from '~/i18n';
-import { GITHUB } from '~/data/site';
+import { GITHUB, PROVIDER_COUNT } from '~/data/site';
 
 const t = ui.it;
 
@@ -73,8 +73,8 @@ const sections = [
   <p>
     Un gestore di certificati TLS open source e self-hosted: emette i certificati
     con Let's Encrypt (e altre CA ACME), li rinnova 30 giorni prima della
-    scadenza e li distribuisce dove servono, con oltre 25 provider DNS
-    supportati e una API REST.
+    scadenza e li distribuisce dove servono, con oltre {PROVIDER_COUNT} provider
+    DNS supportati e una API REST.
   </p>
   <p class="not-prose mt-6 flex flex-wrap gap-3">
     <a

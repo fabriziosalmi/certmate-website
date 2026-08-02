@@ -20,14 +20,19 @@ concurrency:
   group: pages-${{ github.ref }}
   cancel-in-progress: true
 
+# Read-only at the top; the write scopes sit on the job that actually
+# publishes. The build job runs `npm ci` and `npm run build`, which executes
+# install scripts and framework code from the dependency tree — it has no
+# business inheriting the ability to write a Pages deployment or mint an OIDC
+# token. Same split the main repo uses for its publishing workflows.
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -58,6 +63,10 @@ jobs:
     # Never from a pull request — a PR only proves the site builds.
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
