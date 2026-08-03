@@ -56,6 +56,6 @@ echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/
 
 Nel momento in cui i certificati vivono in più posti — ACM per l'ALB, un
 certificato ACME su EC2, qualcos'altro su un altro cloud — serve un'unica fonte
-di verità. CertMate emette via Route 53 (e altri 23 provider DNS), conserva e
+di verità. CertMate emette via Route 53 (e ogni altro provider DNS supportato), conserva e
 rinnova centralmente, e distribuisce i certificati rinnovati a ogni target via
 deploy hook — con API REST e RBAC — così endpoint AWS e non-AWS non divergono.

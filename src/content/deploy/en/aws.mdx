@@ -54,6 +54,6 @@ echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/
 
 The moment certificates live in more than one place — ACM for the ALB, an ACME
 cert on EC2, something on another cloud — you need a single source of truth.
-CertMate issues via Route 53 (and 23 other DNS providers), stores and renews
+CertMate issues via Route 53 (and every other DNS provider it supports), stores and renews
 centrally, and pushes renewed certificates to each target via deploy hooks —
 with a REST API and RBAC — so AWS and non-AWS endpoints don't drift apart.

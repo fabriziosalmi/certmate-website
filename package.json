@@ -3,15 +3,19 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=20.18.1"
+  },
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
     "prebuild": "npm run og || true",
-    "build": "astro build && npm run index",
+    "build": "npm run check && astro build && npm run index",
     "preview": "astro preview",
     "astro": "astro",
     "og": "node scripts/build-og.mjs",
-    "index": "pagefind --site dist"
+    "index": "pagefind --site dist",
+    "check": "node scripts/check-facts.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",
