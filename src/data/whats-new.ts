@@ -31,6 +31,26 @@ export interface UpdateCard {
 
 export const updates: UpdateCard[] = [
   {
+    badge: 'security',
+    badgeLabel: 'v2.25.3',
+    icon: 'fa6-solid:key',
+    title: 'Old password hashes stop being old',
+    description:
+      'CertMate moved its password hashing to bcrypt several releases ago, and verification kept accepting the two pre-bcrypt formats so that anyone whose stored hash was still in the old format could sign in. Nothing ever rewrote those hashes. So an account created before that change kept a salted SHA-256 for ever, however many times it signed in \u2014 a fast hash, brute-forceable at GPU speed from a leaked settings.json, where bcrypt and scrypt are deliberately slow. The only way out was to change the password by hand, and nothing told anyone to. A successful login is the one moment the plaintext is in hand, so that is where the hash is now re-derived with the current algorithm and stored: once, transparently, with nothing for an operator to do. The write is a compare-and-set, so an administrator resetting a password in the moment between the check and the write still wins and the old password does not come back. Two smaller faults in the same path went with it: a failed write used to deny an otherwise correct login, so a full disk turned a valid password into a failure; and a login racing a user deletion recreated the deleted user.',
+    date: 'August 2026',
+    href: releaseTag('v2.25.3'),
+  },
+  {
+    badge: 'fix',
+    badgeLabel: 'v2.25.2',
+    icon: 'fa6-solid:box-open',
+    title: 'Things that were never tested, and therefore never worked',
+    description:
+      'An image built with the advertised REQUIREMENTS_FILE=requirements-minimal.txt crash-looped on boot and had done for months: the minimal set omitted SQLAlchemy while the app imports APScheduler\u2019s SQLAlchemyJobStore at module scope. Nothing in the repository had ever built that file, and the CI step was `docker build` alone \u2014 which proves the layers assemble and says nothing about whether the process starts. CI now builds and boots every advertised requirements set and requires each to answer /health. Alongside it: four calls to Akamai EdgeDNS had no timeout, inside the certbot authentication hook where a hung connection held a worker thread indefinitely; a dependency pin was not pinning anything, because a certbot plugin pulled a third-party fork shipping the same top-level package and pip let one overwrite the other; and a quadratic blowup in the routine that redacts secrets from logs burned 21.6 seconds of CPU on 480 KB of hostile input, now 36 milliseconds. The documentation was corrected too \u2014 210 curl examples pointed at a port the application does not listen on.',
+    date: 'August 2026',
+    href: releaseTag('v2.25.2'),
+  },
+  {
     badge: 'feature',
     badgeLabel: 'v2.25.x',
     icon: 'fa6-solid:download',
