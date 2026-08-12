@@ -1,0 +1,29 @@
+# Compare the site's facts with the application it describes.
+#
+# check-facts.mjs enforces that pages take the provider count from site.ts
+# rather than typing a digit. It works, and it passed throughout the period
+# when the grid rendered 27 cards while CertMate supported 29 — because it asks
+# whether the site agrees with itself, and nothing asked whether it agreed with
+# the app.
+#
+# Weekly and separate from deploy on purpose: GitHub being unreachable must
+# never stop the site shipping, and an upstream release lands on its own
+# schedule rather than on ours. A finding here is news.
+name: Check against the app
+
+on:
+  schedule:
+    - cron: '17 7 * * 1'
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  facts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v4
+        with:
+          node-version: '20'
+      - run: node scripts/check-against-app.mjs

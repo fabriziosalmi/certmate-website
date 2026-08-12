@@ -7,12 +7,13 @@
  *
  * Rules:
  *   - VERSION tracks the latest published CertMate release tag.
- *   - PROVIDER_COUNT is the number of provider cards actually rendered by
- *     DnsProviders.astro. It is deliberately the count we can point at on the
- *     page. The app repo supports at least this many DNS providers — the
- *     authoritative list is modules/core/settings.py::supported_providers (28
- *     real providers + custom-script) — so the number understates rather than
- *     overstates, which is safe and verifiable.
+ *   - PROVIDER_COUNT is the number of provider cards rendered by
+ *     DnsProviders.astro AND the number the app supports. Those must be equal.
+ *     This used to say the count may understate the app "which is safe and
+ *     verifiable" — and understating is exactly how EfficientIP SOLIDserver
+ *     and Custom Script went unlisted for months on the page a visitor scans
+ *     to answer "do you support X?". check-facts.mjs pins it to the cards;
+ *     scripts/check-against-app.mjs pins it to the app, weekly.
  */
 
 /** Latest published CertMate release. Bump on every release. */
