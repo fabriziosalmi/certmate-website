@@ -16,10 +16,10 @@
  */
 
 /** Latest published CertMate release. Bump on every release. */
-export const VERSION = '2.25.3';
+export const VERSION = '2.25.4';
 
 /** Provider cards rendered in DnsProviders.astro (keep in sync with that grid). */
-export const PROVIDER_COUNT = 27;
+export const PROVIDER_COUNT = 29;
 
 /** Certificate-storage backends the app ships (see modules/api/models.py). */
 export const STORAGE_BACKEND_COUNT = 6;
