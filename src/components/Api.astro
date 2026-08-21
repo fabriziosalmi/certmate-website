@@ -4,7 +4,7 @@ const endpoints = [
   { method: 'POST', path: '/api/certificates/create',                       desc: 'Create new SSL certificate with account selection' },
   { method: 'POST', path: '/api/dns/{provider}/accounts',                   desc: 'Add new DNS provider account' },
   { method: 'GET',  path: '/api/certificates',                              desc: 'List all certificates with account info' },
-  { method: 'GET',  path: '/api/certificates/{domain}/download',            desc: 'Download certificate bundle (ZIP)' },
+  { method: 'GET',  path: '/api/certificates/{domain}/download',            desc: 'Download: ZIP by default, ?file=fullchain.pem for one PEM, ?format=json for all PEMs inline' },
 ];
 
 const example = `# Add multiple DNS accounts
@@ -19,10 +19,16 @@ curl -X POST "https://certmate.example.com/api/certificates/create" \\
   -H "Content-Type: application/json" \\
   -d '{"domain": "api.company.com", "dns_provider": "cloudflare", "account_id": "production"}'
 
-# Download certificate
+# Download certificate (ZIP of every file)
 curl -H "Authorization: Bearer your_api_token_here" \\
      -o api.company.com-tls.zip \\
-     "https://certmate.example.com/api/certificates/api.company.com/download"`;
+     "https://certmate.example.com/api/certificates/api.company.com/download"
+
+# One file, or every PEM as JSON (for Ansible/Salt and friends)
+curl -H "Authorization: Bearer your_api_token_here" \\
+     "https://certmate.example.com/api/certificates/api.company.com/download?file=fullchain.pem"
+curl -H "Authorization: Bearer your_api_token_here" \\
+     "https://certmate.example.com/api/certificates/api.company.com/download?format=json"`;
 
 // The same surface from the terminal, via the first-party certmate-cli
 // (built on certmate-sdk; both on PyPI). Real subcommands from
