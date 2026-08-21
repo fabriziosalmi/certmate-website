@@ -61,12 +61,16 @@
     .doc-toc {
       display: none;
     }
-    @media (min-width: 1100px) {
+    /* Shown only when it fits in the right margin: this page's content
+       column is 900px wide, the TOC 220px plus 24px of gap, so the viewport
+       must be at least 900 + 2 * 244 = 1388px. Below that the old rule
+       placed the TOC over the text (#588). */
+    @media (min-width: 1388px) {
       .doc-toc {
         display: block;
         position: fixed;
         top: 100px;
-        right: max(24px, calc((100vw - 900px) / 2 - 240px));
+        right: max(24px, calc((100vw - 900px) / 2 - 244px));
         width: 220px;
         max-height: calc(100vh - 120px);
         overflow-y: auto;
