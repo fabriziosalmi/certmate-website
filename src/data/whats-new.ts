@@ -31,6 +31,17 @@ export interface UpdateCard {
 
 export const updates: UpdateCard[] = [
   {
+    badge: 'security',
+    badgeLabel: 'v2.26.0',
+    icon: 'fa6-solid:key',
+    title: 'v2.26.0 — the renewal path held to the standard of the issuance path, and two features',
+    description:
+      '**Read this first if you have ever shared a backup.** Every archive CertMate made before this release with the default setting (\'include_secrets=false\', which is every automatic backup) contains the private key of every certificate, although its manifest said \'secrets_masked: true\' and the interface called it share-safe; archives made by v2.22.0 or later also contain the private CA key and every client-certificate key. Encrypted \'.zip.enc\' archives are the exception. If you shared one believing it harmless, list what it holds (\'unzip -l\') and treat every key you find as exposed. From this release a share-safe backup carries no key material, says so in its manifest, and the restore refuses to lay a key-less archive over an instance that already holds certificates; disaster recovery is a deliberate \'include_secrets=true\' archive with a passphrase. The rest of the release is a set of defects with one shape: the renewal, restore and logout paths had each been checked by analogy with the path beside them. Certificates from a private ACME CA could not renew (issuance passed the trust bundle, renewal never did); a corrupt metadata file was overwritten with an empty one; the settings lock protected a snapshot rather than the file, so concurrent writes were rolled back during a long issuance; the automatic restore installed masked archives as credentials; unchecking SSO on an SSO-only instance reopened setup mode; the four PEM files could be published half-new, half-old, and never repaired. All fixed, each with a test that failed before. Two features: generic webhooks gain a payload template with placeholders, a method, first-class authentication, a timeout and a preview; and the OIDC logout now reaches the identity provider. The 2026-08-18 audit confirmed 43 findings; this release closes 16, and the 27 that remain are listed with their verified severities in certmate#591.',
+    date: 'August 2026',
+    highlight: true,
+    href: releaseTag('v2.26.0'),
+  },
+  {
     badge: 'feature',
     badgeLabel: 'v2.25.x',
     icon: 'fa6-solid:download',
