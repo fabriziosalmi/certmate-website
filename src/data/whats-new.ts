@@ -31,6 +31,17 @@ export interface UpdateCard {
 export const updates: UpdateCard[] = [
   {
     badge: 'security',
+    badgeLabel: 'v2.26.2 - v2.26.3',
+    icon: 'fa6-solid:shield-halved',
+    title: 'v2.26.2–2.26.3 — a security-hardening batch, and renewals that no longer arrive all at once',
+    description:
+      'A patch line that changes nothing in normal operation and a great deal in the edge and failure cases it targets. The batch came out of a draconian internal audit, each defect reproduced against the shipped code and then again against the fix. **Authentication now fails closed**: an instance that cannot read its own credentials refuses to serve rather than coming up open. **Backup and restore stop both losing and leaking the secrets they exist to protect** — an interrupted restore no longer leaves a new certificate beside a truncated private key, a share-safe backup\'s masked secrets are put back by identity rather than by position, and the webhook URL (itself a credential for some destinations) is masked and cannot cross-leak between entries. **The private CA** refuses to sign with a key that does not match the certificate it presents, and will not regenerate over a half-present CA and strand everything issued under the original. **Issuance and renewal** write their four PEM files as a unit, closing a window where a new certificate could sit beside the previous private key, and a renewal that finds a certificate not yet due now reconciles a backend copy an earlier failed store had stranded, rather than returning early and booking the domain as done for ever. **Webhook delivery** re-checks the SSRF guard on every redirect hop and strips credentials when a redirect crosses to a different host, and a failed deploy hook can no longer be silenced by an event filter. **DNS account selection** resolves the account you actually configured instead of an empty placeholder left by first-run migration. Then **v2.26.3** de-synchronised the renewal schedule itself: the sweeps ran on a fixed 02:00 / 03:00 cron, so every install contacted its ACME certificate authority at the same wall-clock second — they now jitter across a window, which is what Let\'s Encrypt asks integrators to do.',
+    date: 'August 2026',
+    highlight: true,
+    href: releaseTag('v2.26.3'),
+  },
+  {
+    badge: 'security',
     badgeLabel: 'v2.26.0',
     icon: 'fa6-solid:key',
     title: 'v2.26.0 — the renewal path held to the standard of the issuance path, and two features',
