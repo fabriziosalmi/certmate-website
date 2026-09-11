@@ -102,6 +102,29 @@ for (const file of files) {
     }
   }
 
+  // Every media file a page points at must be in the build.
+  //
+  // The content schema also checks this, and on its own it is not enough:
+  // Astro caches collection validation, so deleting a video without touching
+  // the page that declares it re-uses the cached entry and the schema never
+  // runs. Measured, not assumed -- the first version of scripts/check-media.mjs
+  // removed a poster and the build passed. This check reads the output, so it
+  // cannot be skipped by a cache.
+  const referenced = new Set();
+  for (const el of $('video source, track, img, a[download]').toArray()) {
+    const value = $(el).attr('src') || $(el).attr('href') || '';
+    if (value.startsWith('/media/')) referenced.add(value);
+  }
+  for (const el of $('video[poster]').toArray()) {
+    const value = $(el).attr('poster') || '';
+    if (value.startsWith('/media/')) referenced.add(value);
+  }
+  for (const value of referenced) {
+    if (!existsSync(join(DIST, value))) {
+      problems.push(at(`references ${value}, which is not in the build`));
+    }
+  }
+
   for (const el of $('script[type="application/ld+json"]').toArray()) {
     try {
       JSON.parse($(el).text());
