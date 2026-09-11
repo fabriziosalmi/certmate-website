@@ -15,11 +15,13 @@ export function absolute(site: string, path: string): string {
   return `${site.replace(/\/$/, '')}${path}`;
 }
 
+const SECONDS_PER_MINUTE = 60;
+
 /** ISO 8601 duration, which is what schema.org asks for. */
 export function isoDuration(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `PT${m > 0 ? `${m}M` : ''}${s}S`;
+  const minutes = Math.floor(seconds / SECONDS_PER_MINUTE);
+  const remainder = seconds % SECONDS_PER_MINUTE;
+  return `PT${minutes > 0 ? `${minutes}M` : ''}${remainder}S`;
 }
 
 /**
