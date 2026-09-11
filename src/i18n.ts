@@ -10,9 +10,28 @@ export type Locale = (typeof LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = 'en';
 
 /** Map a locale-relative path (e.g. "/errors/foo") to its URL path. */
+/**
+ * The path a page is published at, in the locale given, with the trailing
+ * slash it is actually served with.
+ *
+ * The slash is not cosmetic. The site builds with Astro's `directory` format
+ * and is served by GitHub Pages, so /deploy/aws is a 301 to /deploy/aws/.
+ * This function feeds both the canonical link and every hreflang href, so
+ * without the slash 27 of 30 pages declared a canonical that redirects, and
+ * 79 of 81 hreflang annotations pointed at redirects -- while the sitemap,
+ * built by the integration, listed the served form. Google's canonicalization
+ * guidance names that combination explicitly: do not give one URL in a
+ * sitemap and a different one in rel=canonical for the same page.
+ *
+ * A path whose last segment carries an extension is left alone: /docs/x.html
+ * is a file, and a slash would make it something else.
+ */
 export function localizedPath(locale: Locale, path: string): string {
   const clean = path === '/' ? '' : path.startsWith('/') ? path : `/${path}`;
-  return locale === DEFAULT_LOCALE ? clean || '/' : `/${locale}${clean || ''}`;
+  const withLocale = locale === DEFAULT_LOCALE ? clean || '/' : `/${locale}${clean || ''}`;
+  const lastSegment = withLocale.slice(withLocale.lastIndexOf('/') + 1);
+  if (withLocale.endsWith('/') || lastSegment.includes('.')) return withLocale;
+  return `${withLocale}/`;
 }
 
 /** Build hreflang alternates (incl. x-default) for a locale-relative path. */
