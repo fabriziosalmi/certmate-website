@@ -15,10 +15,15 @@
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { load } from 'cheerio';
+// The same URL-to-source mapping the sitemap dates pages with.
+import { lastModifiedFor } from './lib/page-sources.mjs';
 
 const DIST = 'dist';
 const SKIP_DIRS = new Set(['pagefind', '_astro', 'assets', 'vendor']);
 const problems = [];
+const SITE = 'https://www.certmate.org';
+// og:image -> the page that claimed it, so a card shared by two pages is named.
+const ogImages = new Map();
 
 if (!existsSync(DIST)) {
   console.error('dist/ does not exist. Run `astro build` first.');
@@ -52,28 +57,39 @@ const sitemapLocs = new Set(
 );
 if (sitemapLocs.size === 0) problems.push('the sitemap has no <loc> entries');
 
-// Every URL must carry a date, and the dates must not all be the same one.
+// Every URL whose source git knows about carries that source's date, and the
+// dates are not all the same one.
 //
-// Both halves matter. A missing <lastmod> means a route shape the mapping in
-// scripts/lib/page-sources.mjs does not know about, which is how the
-// documentation rows silently lost their source once already. Identical dates
-// across the whole sitemap mean the dates came from the clock or from a
-// shallow checkout rather than from each page's own history, which is the
-// failure this is here to make loud: Google reads lastmod only while it stays
-// consistent with the page, so a uniform date is worse than none.
+// The expectation is the mapping in scripts/lib/page-sources.mjs rather than
+// "all of them": a page created and not yet committed has no history, and
+// failing the build on it would stop anyone building a page they are still
+// writing. What this catches is the case that matters, a route shape the
+// mapping does not know about, which is how the documentation rows silently
+// lost their source once already.
+//
+// Identical dates across the whole sitemap mean the dates came from the clock
+// or from a shallow checkout rather than from each page's own history. Google
+// reads lastmod only while it stays consistent with the page, so a uniform
+// date is worse than none.
 if (existsSync(sitemapPath)) {
   const sitemapXml = readFileSync(sitemapPath, 'utf8');
-  const urls = [...sitemapXml.matchAll(/<url>([\s\S]*?)<\/url>/g)].map((m) => m[1]);
-  const undated = urls.filter((entry) => !/<lastmod>/.test(entry));
-  if (undated.length) {
-    const names = undated.map((entry) => (entry.match(/<loc>([^<]+)<\/loc>/) || [])[1]).join(', ');
-    problems.push(`${undated.length} sitemap entries have no <lastmod>: ${names}`);
+  for (const [, entry] of sitemapXml.matchAll(/<url>([\s\S]*?)<\/url>/g)) {
+    const loc = (entry.match(/<loc>([^<]+)<\/loc>/) || [])[1];
+    if (!loc) continue;
+    const dated = /<lastmod>/.test(entry);
+    const known = lastModifiedFor(loc.startsWith(SITE) ? loc.slice(SITE.length) : loc) !== null;
+    if (known && !dated) {
+      problems.push(`${loc} has no <lastmod> although git knows when its source changed`);
+    }
+    if (!known && dated) {
+      problems.push(`${loc} has a <lastmod> but no committed source it could come from`);
+    }
   }
   const stamps = new Set([...sitemapXml.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map((m) => m[1]));
-  if (urls.length > 1 && stamps.size === 1) {
+  if (sitemapLocs.size > 1 && stamps.size === 1) {
     problems.push(
-      `every sitemap entry claims the same lastmod (${[...stamps][0]}), which means the date came ` +
-        'from the clock or from a shallow checkout, not from the pages',
+      `every dated sitemap entry claims the same lastmod (${[...stamps][0]}), which means the date ` +
+        'came from the clock or from a shallow checkout, not from the pages',
     );
   }
 }
@@ -104,8 +120,20 @@ for (const file of files) {
     }
   }
 
-  if (!$('meta[property="og:image"]').attr('content') && !$('meta[name="og:image"]').attr('content')) {
+  const ogImage = $('meta[property="og:image"]').attr('content') || $('meta[name="og:image"]').attr('content');
+  if (!ogImage) {
     problems.push(at('no og:image'));
+  } else if (ogImage.startsWith(SITE)) {
+    // The card a page asks for has to be in the build. scripts/build-og.mjs
+    // draws exactly what the pages declare, so a page whose card is missing
+    // means the generator did not run and the deploy would ship a social
+    // preview that 404s. The tag is present either way, so only the output
+    // shows it.
+    const card = join(DIST, ogImage.slice(SITE.length).replace(/^\//, ''));
+    if (!existsSync(card)) problems.push(at(`og:image ${ogImage} is not in the build`));
+    const claimed = ogImages.get(ogImage);
+    if (claimed) problems.push(at(`og:image is shared with ${claimed}; each page has its own card`));
+    else ogImages.set(ogImage, relative(DIST, file));
   }
 
   // The card tags are documented with name=; property= is the Open Graph

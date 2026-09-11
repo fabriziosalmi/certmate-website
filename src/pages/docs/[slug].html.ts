@@ -20,6 +20,7 @@
  */
 import type { APIRoute } from 'astro';
 import { DOC_PAGES, docUrl, type DocPage } from '../../data/docs';
+import { ogImageFor } from '~/lib/og';
 import { buildHead } from '../../lib/seo';
 import { PROVIDER_COUNT } from '../../data/site';
 
@@ -32,7 +33,6 @@ const SOURCES = import.meta.glob('../../docs/*.html', {
   eager: true,
 }) as Record<string, string>;
 
-const OG_IMAGE = 'https://www.certmate.org/assets/og.png';
 
 export function getStaticPaths() {
   return DOC_PAGES.map((page) => ({ params: { slug: page.slug }, props: { page } }));
@@ -71,7 +71,8 @@ export const GET: APIRoute = ({ props }) => {
     title: page.title,
     description: page.description,
     canonical: docUrl(page.slug),
-    ogImage: OG_IMAGE,
+    // Each documentation page gets its own card, drawn from its own title.
+    ogImage: ogImageFor(new URL(docUrl(page.slug)).pathname),
     // Breadcrumb is in Google's current rich-result gallery. No page-level
     // type there fits a documentation page: FAQPage and HowTo were retired,
     // and Article is documented as a news, sports or blog article. Nothing
