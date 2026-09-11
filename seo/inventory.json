@@ -7,7 +7,7 @@
     "title": "CertMate - SSL Certificate Management System",
     "description": "Self-hosted TLS certificate management with a tamper-evident, verifiable audit trail. 29 DNS providers, OIDC/SSO, REST API + CLI. MIT licensed. v2.26.3.",
     "canonical": "https://www.certmate.org/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/home.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -29,7 +29,7 @@
     "title": "CertMate vs cert-manager, Caddy, Traefik & certbot · CertMate",
     "description": "An honest comparison of CertMate with cert-manager, Caddy, Traefik and certbot — what each does best, and when a standalone certificate manager with a UI and REST API is the right fit.",
     "canonical": "https://www.certmate.org/cert-manager-alternative/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/cert-manager-alternative.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -52,7 +52,7 @@
     "title": "Deploy TLS certificates · CertMate",
     "description": "Step-by-step guides to install and auto-renew TLS certificates on the platforms you actually run — Nginx, Docker, Kubernetes and AWS.",
     "canonical": "https://www.certmate.org/deploy/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/deploy.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -65,7 +65,7 @@
       "BreadcrumbList",
       "SoftwareApplication"
     ],
-    "words": 172
+    "words": 178
   },
   {
     "url": "/deploy/aws/",
@@ -75,7 +75,7 @@
     "title": "Deploy TLS certificates on AWS · CertMate",
     "description": "TLS on AWS: when to use ACM with ALB/CloudFront, when you need Let's Encrypt on EC2, and how to manage certificates across AWS and other clouds.",
     "canonical": "https://www.certmate.org/deploy/aws/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/deploy-aws.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -98,7 +98,7 @@
     "title": "Deploy TLS certificates with Docker · CertMate",
     "description": "How to provide and auto-renew TLS certificates for containerized apps with Docker — volume mounts, reverse proxies, and avoiding stale certs on restart.",
     "canonical": "https://www.certmate.org/deploy/docker/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/deploy-docker.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -121,7 +121,7 @@
     "title": "Deploy TLS certificates on Kubernetes · CertMate",
     "description": "How TLS certificates work on Kubernetes Ingress — the tls secret, when to use cert-manager in-cluster, and when an external manager like CertMate fits.",
     "canonical": "https://www.certmate.org/deploy/kubernetes/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/deploy-kubernetes.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -144,7 +144,7 @@
     "title": "Deploy a TLS certificate on Nginx · CertMate",
     "description": "How to issue, install and auto-renew a Let's Encrypt TLS certificate on Nginx — the full-chain config, reload hook and the gotchas that cause downtime.",
     "canonical": "https://www.certmate.org/deploy/nginx/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/deploy-nginx.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -167,7 +167,7 @@
     "title": "CertMate Documentation",
     "description": "The CertMate documentation: installing and issuing a first certificate, configuring DNS providers, the REST API, Docker deployment, backups, storage backends, security and troubleshooting.",
     "canonical": "https://www.certmate.org/docs/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/docs.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [],
@@ -185,7 +185,7 @@
     "title": "API Reference - CertMate Documentation",
     "description": "The CertMate REST API: bearer-token authentication, the certificate, backup, storage and settings endpoints, and a curl example for each.",
     "canonical": "https://www.certmate.org/docs/api-reference.html",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/docs-api-reference.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [],
@@ -203,7 +203,7 @@
     "title": "Backup & Recovery - CertMate Documentation",
     "description": "CertMate takes atomic backups of settings and certificates together. The two API calls that create a backup and restore one.",
     "canonical": "https://www.certmate.org/docs/backup-recovery.html",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/docs-backup-recovery.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [],
@@ -221,7 +221,7 @@
     "title": "Contributing - CertMate Documentation",
     "description": "How to contribute to CertMate: fork and clone, set up a development environment, run the test suite, and what a pull request should carry.",
     "canonical": "https://www.certmate.org/docs/contributing.html",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/docs-contributing.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [],
@@ -239,7 +239,7 @@
     "title": "DNS Providers - CertMate Documentation",
     "description": "Configure any of the DNS providers CertMate supports for the Let's Encrypt DNS-01 challenge, including multi-account setups for the major ones.",
     "canonical": "https://www.certmate.org/docs/dns-providers.html",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/docs-dns-providers.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [],
@@ -257,7 +257,7 @@
     "title": "Docker Deployment - CertMate Documentation",
     "description": "Run CertMate as a container: docker run and docker compose, the environment file, and the amd64, arm64 and armv7 images.",
     "canonical": "https://www.certmate.org/docs/docker-deployment.html",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/docs-docker-deployment.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [],
@@ -275,7 +275,7 @@
     "title": "Getting Started - CertMate Documentation",
     "description": "Install CertMate with Docker or from source, complete the first-run setup, add a DNS provider and issue your first certificate.",
     "canonical": "https://www.certmate.org/docs/getting-started.html",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/docs-getting-started.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [],
@@ -293,7 +293,7 @@
     "title": "Security Best Practices - CertMate Documentation",
     "description": "Security guidance for a production CertMate deployment: authentication, private key handling, network exposure and the audit trail.",
     "canonical": "https://www.certmate.org/docs/security.html",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/docs-security.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [],
@@ -311,7 +311,7 @@
     "title": "Storage Backends - CertMate Documentation",
     "description": "Where CertMate keeps certificates and secrets: the local filesystem by default, or Azure Key Vault, AWS Secrets Manager, HashiCorp Vault or Infisical.",
     "canonical": "https://www.certmate.org/docs/storage-backends.html",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/docs-storage-backends.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [],
@@ -329,7 +329,7 @@
     "title": "Troubleshooting - CertMate Documentation",
     "description": "What to check when a DNS validation fails, a Let's Encrypt rate limit is hit, or the certificate directory has the wrong permissions.",
     "canonical": "https://www.certmate.org/docs/troubleshooting.html",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/docs-troubleshooting.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [],
@@ -347,7 +347,7 @@
     "title": "SSL / TLS error reference · CertMate",
     "description": "Plain-English explanations and copy-paste fixes for the SSL/TLS errors browsers and clients throw — plus how to stop them recurring with automated certificate management.",
     "canonical": "https://www.certmate.org/errors/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/errors.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -370,7 +370,7 @@
     "title": "ERR_SSL_PROTOCOL_ERROR · CertMate",
     "description": "Fix ERR_SSL_PROTOCOL_ERROR — the TLS handshake failed before a certificate was even validated. Causes: protocol/cipher mismatch, SNI, proxies.",
     "canonical": "https://www.certmate.org/errors/err-ssl-protocol-error/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/errors-err-ssl-protocol-error.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -393,7 +393,7 @@
     "title": "ERR_SSL_VERSION_OR_CIPHER_MISMATCH · CertMate",
     "description": "Fix ERR_SSL_VERSION_OR_CIPHER_MISMATCH — browser and server share no common TLS version or cipher suite. Causes and modern TLS config.",
     "canonical": "https://www.certmate.org/errors/err-ssl-version-or-cipher-mismatch/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/errors-err-ssl-version-or-cipher-mismatch.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -416,7 +416,7 @@
     "title": "NET::ERR_CERT_AUTHORITY_INVALID · CertMate",
     "description": "Why browsers show NET::ERR_CERT_AUTHORITY_INVALID and how to fix an untrusted SSL certificate authority — for self-signed certs, missing intermediates and internal CAs.",
     "canonical": "https://www.certmate.org/errors/net-err-cert-authority-invalid/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/errors-net-err-cert-authority-invalid.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -439,7 +439,7 @@
     "title": "NET::ERR_CERT_COMMON_NAME_INVALID · CertMate",
     "description": "Fix NET::ERR_CERT_COMMON_NAME_INVALID — the SSL certificate does not cover the hostname you visited. Causes, SAN checks and fixes.",
     "canonical": "https://www.certmate.org/errors/net-err-cert-common-name-invalid/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/errors-net-err-cert-common-name-invalid.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -462,7 +462,7 @@
     "title": "NET::ERR_CERT_DATE_INVALID · CertMate",
     "description": "Fix NET::ERR_CERT_DATE_INVALID — the SSL certificate is expired, not yet valid, or the device clock is wrong. Causes and step-by-step fixes.",
     "canonical": "https://www.certmate.org/errors/net-err-cert-date-invalid/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/errors-net-err-cert-date-invalid.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -485,7 +485,7 @@
     "title": "SEC_ERROR_UNKNOWN_ISSUER · CertMate",
     "description": "Fix Firefox's SEC_ERROR_UNKNOWN_ISSUER — the certificate issuer is not trusted, usually a missing intermediate or a self-signed / internal CA.",
     "canonical": "https://www.certmate.org/errors/sec-error-unknown-issuer/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/errors-sec-error-unknown-issuer.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -508,7 +508,7 @@
     "title": "CertMate — documentazione in italiano · CertMate",
     "description": "Riferimento errori SSL/TLS e guide al deploy dei certificati, in italiano. CertMate emette, rinnova e distribuisce certificati TLS in automatico.",
     "canonical": "https://www.certmate.org/it/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/it.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -531,7 +531,7 @@
     "title": "CertMate vs cert-manager, Caddy, Traefik e certbot · CertMate",
     "description": "Un confronto onesto tra CertMate e cert-manager, Caddy, Traefik e certbot — cosa fa meglio ciascuno e quando un gestore di certificati standalone con UI e API REST è la scelta giusta.",
     "canonical": "https://www.certmate.org/it/cert-manager-alternative/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/it-cert-manager-alternative.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -554,7 +554,7 @@
     "title": "Deploy dei certificati TLS · CertMate",
     "description": "Guide passo-passo per installare e rinnovare automaticamente i certificati TLS sulle piattaforme che usi davvero — Nginx, Docker, Kubernetes e AWS.",
     "canonical": "https://www.certmate.org/it/deploy/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/it-deploy.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -577,7 +577,7 @@
     "title": "Deploy di certificati TLS su AWS · CertMate",
     "description": "TLS su AWS: quando usare ACM con ALB/CloudFront, quando serve Let's Encrypt su EC2 e come gestire i certificati tra AWS e altri cloud.",
     "canonical": "https://www.certmate.org/it/deploy/aws/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/it-deploy-aws.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -600,7 +600,7 @@
     "title": "Deploy di certificati TLS con Docker · CertMate",
     "description": "Come fornire e rinnovare automaticamente i certificati TLS per app containerizzate con Docker — volume mount, reverse proxy ed evitare certificati obsoleti al restart.",
     "canonical": "https://www.certmate.org/it/deploy/docker/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/it-deploy-docker.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -623,7 +623,7 @@
     "title": "Deploy di certificati TLS su Kubernetes · CertMate",
     "description": "Come funziona il TLS sull'Ingress Kubernetes — il secret tls, quando usare cert-manager nel cluster e quando ha senso un gestore esterno come CertMate.",
     "canonical": "https://www.certmate.org/it/deploy/kubernetes/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/it-deploy-kubernetes.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -646,7 +646,7 @@
     "title": "Deploy di un certificato TLS su Nginx · CertMate",
     "description": "Come emettere, installare e rinnovare automaticamente un certificato TLS Let's Encrypt su Nginx — la configurazione full-chain, l'hook di reload e gli errori che causano downtime.",
     "canonical": "https://www.certmate.org/it/deploy/nginx/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/it-deploy-nginx.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -669,7 +669,7 @@
     "title": "Riferimento errori SSL / TLS · CertMate",
     "description": "Spiegazioni chiare e soluzioni pronte da copiare per gli errori SSL/TLS che browser e client restituiscono — e come evitarli per sempre con la gestione automatica dei certificati.",
     "canonical": "https://www.certmate.org/it/errors/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/it-errors.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -692,7 +692,7 @@
     "title": "ERR_SSL_PROTOCOL_ERROR · CertMate",
     "description": "Risolvi ERR_SSL_PROTOCOL_ERROR — l'handshake TLS è fallito prima ancora della validazione del certificato. Cause: versione/cipher, SNI, proxy.",
     "canonical": "https://www.certmate.org/it/errors/err-ssl-protocol-error/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/it-errors-err-ssl-protocol-error.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -715,7 +715,7 @@
     "title": "ERR_SSL_VERSION_OR_CIPHER_MISMATCH · CertMate",
     "description": "Risolvi ERR_SSL_VERSION_OR_CIPHER_MISMATCH — browser e server non condividono alcuna versione TLS o cipher suite. Cause e configurazione TLS moderna.",
     "canonical": "https://www.certmate.org/it/errors/err-ssl-version-or-cipher-mismatch/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/it-errors-err-ssl-version-or-cipher-mismatch.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -738,7 +738,7 @@
     "title": "NET::ERR_CERT_AUTHORITY_INVALID · CertMate",
     "description": "Perché i browser mostrano NET::ERR_CERT_AUTHORITY_INVALID e come risolvere un'autorità di certificazione non attendibile — certificati self-signed, intermedi mancanti e CA interne.",
     "canonical": "https://www.certmate.org/it/errors/net-err-cert-authority-invalid/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/it-errors-net-err-cert-authority-invalid.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -761,7 +761,7 @@
     "title": "NET::ERR_CERT_COMMON_NAME_INVALID · CertMate",
     "description": "Risolvi NET::ERR_CERT_COMMON_NAME_INVALID — il certificato SSL non copre l'hostname visitato. Cause, controllo dei SAN e soluzioni.",
     "canonical": "https://www.certmate.org/it/errors/net-err-cert-common-name-invalid/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/it-errors-net-err-cert-common-name-invalid.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -784,7 +784,7 @@
     "title": "NET::ERR_CERT_DATE_INVALID · CertMate",
     "description": "Risolvi NET::ERR_CERT_DATE_INVALID — il certificato SSL è scaduto, non ancora valido, oppure l'orologio del dispositivo è sbagliato. Cause e soluzioni passo-passo.",
     "canonical": "https://www.certmate.org/it/errors/net-err-cert-date-invalid/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/it-errors-net-err-cert-date-invalid.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -807,7 +807,7 @@
     "title": "SEC_ERROR_UNKNOWN_ISSUER · CertMate",
     "description": "Risolvi SEC_ERROR_UNKNOWN_ISSUER di Firefox — l'emittente del certificato non è attendibile, di solito un intermedio mancante o una CA self-signed/interna.",
     "canonical": "https://www.certmate.org/it/errors/sec-error-unknown-issuer/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/it-errors-sec-error-unknown-issuer.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [
@@ -830,7 +830,7 @@
     "title": "Privacy & legal — CertMate",
     "description": "How certmate.org handles data: no cookies, no analytics, no tracking. Data controller, processors (GitHub, Cloudflare) and your GDPR rights.",
     "canonical": "https://www.certmate.org/privacy/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/privacy.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [],
@@ -848,7 +848,7 @@
     "title": "Security & trust — CertMate",
     "description": "How CertMate handles vulnerability reports, why its audit trail is independently verifiable off the box, how releases are gated on a real certificate, and its candid dependency-risk posture.",
     "canonical": "https://www.certmate.org/security/",
-    "ogImage": "https://www.certmate.org/assets/og.png",
+    "ogImage": "https://www.certmate.org/assets/og/security.png",
     "twitterCard": "summary_large_image",
     "twitterCardAttribute": "name",
     "hreflang": [],

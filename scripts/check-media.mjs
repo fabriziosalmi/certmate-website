@@ -43,9 +43,11 @@ function run(command, args) {
  * the output, since Astro re-uses the cached collection entry.
  */
 function build() {
-  const built = run('npx', ['astro', 'build']);
-  if (!built.ok) return built;
-  return run('node', ['scripts/check-seo.mjs']);
+  // The whole pipeline, not astro build alone: the social cards are drawn
+  // between the build and the gate, and running the two ends without the
+  // middle made this gate fail for a reason that had nothing to do with
+  // media. What deploy.yml runs is what is tested here.
+  return run('npm', ['run', 'build']);
 }
 
 function writeFixture() {

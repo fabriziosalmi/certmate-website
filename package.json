@@ -9,8 +9,7 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "prebuild": "npm run og || true",
-    "build": "npm run check && astro build && npm run index",
+    "build": "npm run check && astro build && npm run og && npm run index",
     "preview": "astro preview",
     "astro": "astro",
     "og": "node scripts/build-og.mjs",
@@ -34,6 +33,7 @@
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",
-    "cheerio": "^1.2.0"
+    "cheerio": "^1.2.0",
+    "sharp": "^0.34.4"
   }
 }
