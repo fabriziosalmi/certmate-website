@@ -14,10 +14,14 @@
 //
 // Usage: node scripts/seo-inventory.mjs [--out seo/inventory.json]
 
-import { execFileSync } from 'node:child_process';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { load } from 'cheerio';
+// Shared with the sitemap so the two cannot disagree about what a page is
+// built from. This mapping used to live here alone, and when the documentation
+// moved out of public/ it kept pointing at the old directory: every
+// documentation row reported source: null and the run still looked healthy.
+import { lastCommitDate, sourcesFor } from './lib/page-sources.mjs';
 
 const DIST = 'dist';
 const SKIP_DIRS = new Set(['pagefind', '_astro', 'assets', 'vendor']);
@@ -33,51 +37,6 @@ function walk(dir) {
     }
   }
   return out;
-}
-
-// The built file back to the thing a person edits. Ordered by specificity:
-// the first candidate that exists in git wins.
-function sourceCandidates(url) {
-  const clean = url.replace(/^\/|\/$/g, '');
-  const segments = clean ? clean.split('/') : [];
-  const out = [];
-  if (url.startsWith('/docs/')) {
-    out.push(join('public', clean || 'docs/index.html'));
-    if (!clean.endsWith('.html')) out.push(join('public', clean, 'index.html'));
-    return out;
-  }
-  // A content collection route: /errors/<slug>/ and /it/errors/<slug>/.
-  const localed = segments[0] === 'it' ? segments.slice(1) : segments;
-  const locale = segments[0] === 'it' ? 'it' : 'en';
-  if (localed.length === 2) {
-    for (const ext of ['mdx', 'md']) {
-      out.push(join('src/content', localed[0], locale, `${localed[1]}.${ext}`));
-    }
-  }
-  // A plain page route.
-  out.push(join('src/pages', clean || 'index', 'index.astro'));
-  out.push(join('src/pages', `${clean || 'index'}.astro`));
-  out.push(join('src/pages', clean, 'index.astro'));
-  return out;
-}
-
-let tracked = null;
-function isTracked(path) {
-  if (tracked === null) {
-    tracked = new Set(
-      execFileSync('git', ['ls-files'], { encoding: 'utf8' }).split('\n').filter(Boolean),
-    );
-  }
-  return tracked.has(path.split('\\').join('/'));
-}
-
-function lastChanged(path) {
-  try {
-    const out = execFileSync('git', ['log', '-1', '--format=%cI', '--', path], { encoding: 'utf8' }).trim();
-    return out || null;
-  } catch {
-    return null;
-  }
 }
 
 function inventory() {
@@ -112,13 +71,17 @@ function inventory() {
     $text('script, style, noscript, nav, footer, svg').remove();
     const words = ($text('body').text().match(/\S+/g) || []).length;
 
-    const source = sourceCandidates(url).find(isTracked) || null;
+    // Several files can hold one page (a documentation body plus the table
+    // that titles it); the first is reported and the newest date wins.
+    const sources = sourcesFor(url);
+    const source = sources[0] || null;
+    const changed = sources.map(lastCommitDate).filter(Boolean).sort();
 
     return {
       url,
       builtFrom: relative(DIST, file).split('\\').join('/'),
       source,
-      sourceLastChanged: source ? lastChanged(source) : null,
+      sourceLastChanged: changed.length ? changed[changed.length - 1] : null,
       title: $('title').first().text().trim() || null,
       description: meta('description'),
       canonical: $('link[rel="canonical"]').attr('href') || null,

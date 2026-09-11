@@ -52,6 +52,32 @@ const sitemapLocs = new Set(
 );
 if (sitemapLocs.size === 0) problems.push('the sitemap has no <loc> entries');
 
+// Every URL must carry a date, and the dates must not all be the same one.
+//
+// Both halves matter. A missing <lastmod> means a route shape the mapping in
+// scripts/lib/page-sources.mjs does not know about, which is how the
+// documentation rows silently lost their source once already. Identical dates
+// across the whole sitemap mean the dates came from the clock or from a
+// shallow checkout rather than from each page's own history, which is the
+// failure this is here to make loud: Google reads lastmod only while it stays
+// consistent with the page, so a uniform date is worse than none.
+if (existsSync(sitemapPath)) {
+  const sitemapXml = readFileSync(sitemapPath, 'utf8');
+  const urls = [...sitemapXml.matchAll(/<url>([\s\S]*?)<\/url>/g)].map((m) => m[1]);
+  const undated = urls.filter((entry) => !/<lastmod>/.test(entry));
+  if (undated.length) {
+    const names = undated.map((entry) => (entry.match(/<loc>([^<]+)<\/loc>/) || [])[1]).join(', ');
+    problems.push(`${undated.length} sitemap entries have no <lastmod>: ${names}`);
+  }
+  const stamps = new Set([...sitemapXml.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map((m) => m[1]));
+  if (urls.length > 1 && stamps.size === 1) {
+    problems.push(
+      `every sitemap entry claims the same lastmod (${[...stamps][0]}), which means the date came ` +
+        'from the clock or from a shallow checkout, not from the pages',
+    );
+  }
+}
+
 for (const file of files) {
   const rel = relative(DIST, file);
   const $ = load(readFileSync(file, 'utf8'));
