@@ -29,7 +29,7 @@ function escapeXml(value: string): string {
 }
 
 async function entries(): Promise<Entry[]> {
-  const out: Entry[] = [];
+  const rows: Entry[] = [];
   for (const [collection, prefix] of [
     ['errors', '/errors'],
     ['deploy', '/deploy'],
@@ -38,15 +38,15 @@ async function entries(): Promise<Entry[]> {
       const media = (entry.data as { media?: MediaItem[] }).media ?? [];
       if (media.length === 0) continue;
       const [locale, ...rest] = entry.id.split('/');
-      const path = `${prefix}/${rest.join('/')}`;
-      out.push({
-        url: SITE + localizedPath(locale === 'it' ? 'it' : 'en', path),
+      const localPath = `${prefix}/${rest.join('/')}`;
+      rows.push({
+        url: SITE + localizedPath(locale === 'it' ? 'it' : 'en', localPath),
         media,
       });
     }
   }
   // Sorted so two builds of the same content produce the same bytes.
-  return out.sort((a, b) => a.url.localeCompare(b.url));
+  return rows.sort((a, b) => a.url.localeCompare(b.url));
 }
 
 function videoNode(url: string, item: Extract<MediaItem, { type: 'video' }>): string {
