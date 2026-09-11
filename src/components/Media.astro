@@ -1,0 +1,89 @@
+---
+/**
+ * Renders whatever media a page declared.
+ *
+ * The declaration says what exists; everything about how it looks is decided
+ * here, so a page's frontmatter never grows a width or a colour. See
+ * src/lib/media-schema.ts.
+ *
+ * `describes` is printed rather than kept for the structured data alone. A
+ * crawler reads it either way, but a reader with the video blocked, the PDF
+ * unopened or the image not yet loaded gets the meaning too, which is the
+ * point of requiring it.
+ */
+import type { MediaItem } from '~/lib/media';
+
+interface Props {
+  items?: MediaItem[];
+}
+const { items = [] } = Astro.props;
+---
+
+{items.length > 0 && (
+  <div class="not-prose my-8 space-y-8">
+    {items.map((item) => (
+      <figure class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
+        {item.type === 'video' && (
+          <>
+            <video
+              class="w-full"
+              controls
+              preload="none"
+              playsinline
+              poster={item.poster}
+              width={item.sources[0].width}
+              height={item.sources[0].height}
+            >
+              {item.sources.map((source) => (
+                <source src={source.src} type="video/mp4" />
+              ))}
+              {item.captions.map((track, index) => (
+                <track
+                  kind="captions"
+                  src={track.src}
+                  srclang={track.lang}
+                  label={track.lang === 'it' ? 'Italiano' : 'English'}
+                  default={index === 0}
+                />
+              ))}
+            </video>
+            <figcaption class="border-t border-gray-200 p-4 text-sm text-gray-600 dark:border-gray-800 dark:text-gray-300">
+              <span class="font-medium text-gray-900 dark:text-white">{item.title}</span>
+              <p class="mt-1">{item.describes}</p>
+              {item.transcript && (
+                <p class="mt-2"><a class="text-primary hover:underline" href={item.transcript}>Transcript</a></p>
+              )}
+            </figcaption>
+          </>
+        )}
+
+        {item.type === 'image' && (
+          <>
+            <img
+              class="w-full"
+              src={item.src}
+              alt={item.alt}
+              width={item.width}
+              height={item.height}
+              loading="lazy"
+              decoding="async"
+            />
+            {item.caption && (
+              <figcaption class="border-t border-gray-200 p-4 text-sm text-gray-600 dark:border-gray-800 dark:text-gray-300">
+                {item.caption}
+              </figcaption>
+            )}
+          </>
+        )}
+
+        {item.type === 'document' && (
+          <figcaption class="p-4 text-sm text-gray-600 dark:text-gray-300">
+            <a class="font-medium text-primary hover:underline" href={item.src} download>{item.title}</a>
+            <span class="ml-2 text-gray-500">PDF, {item.pages} {item.pages === 1 ? 'page' : 'pages'}</span>
+            <p class="mt-1">{item.describes}</p>
+          </figcaption>
+        )}
+      </figure>
+    ))}
+  </div>
+)}

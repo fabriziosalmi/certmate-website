@@ -23,6 +23,7 @@ const d = entry.data;
   path={path}
   title={d.title}
   description={d.description}
+  media={d.media}
   breadcrumbs={[{ label: t.errors, path: '/errors' }]}
 >
   <p class="not-prose mb-4 inline-block rounded bg-red-50 px-3 py-1 font-mono text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">{d.errorCode}</p>
