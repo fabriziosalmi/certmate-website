@@ -1,0 +1,121 @@
+/**
+ * The head gate, read from dist/ after the build.
+ *
+ * Every defect asserted here was present on 0540ca2 and is recorded in
+ * seo/findings.md with the command that measured it. The point of the gate is
+ * that each one can only come back through a failing build.
+ *
+ * It reads the built output rather than the sources. A test that reads
+ * src/layouts/BaseLayout.astro proves the layout intends to emit a canonical;
+ * only dist/ says whether the ten pages that never went through a layout have
+ * one. That difference is the whole reason this file exists.
+ *
+ * Run: npm run build (via postbuild), or node scripts/check-seo.mjs
+ */
+import { readdirSync, readFileSync, existsSync } from 'node:fs';
+import { join, relative } from 'node:path';
+import { load } from 'cheerio';
+
+const DIST = 'dist';
+const SKIP_DIRS = new Set(['pagefind', '_astro', 'assets', 'vendor']);
+const problems = [];
+
+if (!existsSync(DIST)) {
+  console.error('dist/ does not exist. Run `astro build` first.');
+  process.exit(1);
+}
+
+function walk(dir) {
+  const out = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (!SKIP_DIRS.has(entry.name)) out.push(...walk(path));
+    } else if (entry.name.endsWith('.html')) out.push(path);
+  }
+  return out;
+}
+
+const files = walk(DIST).sort();
+if (files.length < 30) {
+  problems.push(
+    `only ${files.length} built pages found; this gate passes vacuously on an ` +
+      `empty or partial build, so that is a failure rather than a pass`,
+  );
+}
+
+const sitemapPath = join(DIST, 'sitemap-0.xml');
+const sitemapLocs = new Set(
+  existsSync(sitemapPath)
+    ? [...readFileSync(sitemapPath, 'utf8').matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1])
+    : [],
+);
+if (sitemapLocs.size === 0) problems.push('the sitemap has no <loc> entries');
+
+for (const file of files) {
+  const rel = relative(DIST, file);
+  const $ = load(readFileSync(file, 'utf8'));
+  const at = (what) => `${rel}: ${what}`;
+
+  const description = $('meta[name="description"]').attr('content');
+  if (!description) problems.push(at('no meta description'));
+
+  const canonical = $('link[rel="canonical"]').attr('href');
+  if (!canonical) {
+    problems.push(at('no rel=canonical'));
+  } else {
+    // The canonical and the sitemap must name the same URL for the same page.
+    // Google: "Don't specify different URLs as canonical for the same page
+    // using different canonicalization techniques".
+    if (!sitemapLocs.has(canonical)) {
+      problems.push(at(`canonical ${canonical} is not a <loc> in the sitemap`));
+    }
+    // /foo 301s to /foo/ on GitHub Pages, so a canonical without the slash
+    // points at a redirect. Paths ending in a file extension are files.
+    const last = canonical.slice(canonical.lastIndexOf('/') + 1);
+    if (!canonical.endsWith('/') && !last.includes('.')) {
+      problems.push(at(`canonical ${canonical} has no trailing slash and will redirect`));
+    }
+  }
+
+  if (!$('meta[property="og:image"]').attr('content') && !$('meta[name="og:image"]').attr('content')) {
+    problems.push(at('no og:image'));
+  }
+
+  // The card tags are documented with name=; property= is the Open Graph
+  // spelling and is a fallback parsers may or may not honour.
+  if ($('meta[property="twitter:card"]').length && !$('meta[name="twitter:card"]').length) {
+    problems.push(at('twitter:card uses property= instead of name='));
+  }
+
+  if ($('meta[name="keywords"]').length) {
+    problems.push(at('meta keywords is back; no search engine has used it in over a decade'));
+  }
+
+  // An hreflang annotation that is not reciprocated is ignored by Google, and
+  // one pointing at a redirect is a URL it has to resolve for you.
+  for (const el of $('link[rel="alternate"][hreflang]').toArray()) {
+    const href = $(el).attr('href') || '';
+    const tail = href.slice(href.lastIndexOf('/') + 1);
+    if (!href.endsWith('/') && !tail.includes('.')) {
+      problems.push(at(`hreflang ${$(el).attr('hreflang')} points at ${href}, which redirects`));
+    }
+  }
+
+  for (const el of $('script[type="application/ld+json"]').toArray()) {
+    try {
+      JSON.parse($(el).text());
+    } catch (error) {
+      problems.push(at(`structured data does not parse: ${error.message}`));
+    }
+  }
+}
+
+if (problems.length) {
+  console.error('\nSEO gate failed:\n');
+  for (const problem of problems) console.error('  ' + problem);
+  console.error(`\n${problems.length} problem(s). See seo/findings.md for what each one costs.\n`);
+  process.exit(1);
+}
+
+console.log(`SEO gate passed (${files.length} built pages checked).`);
