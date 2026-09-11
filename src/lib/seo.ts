@@ -45,8 +45,19 @@ export type HeadInput = {
  */
 export function buildHead(input: HeadInput): string {
   const { title, description, canonical, ogImage, ogType = 'article', jsonLd = [] } = input;
+  // Every URL this emits goes into an href or a content attribute built by
+  // concatenation. attr() escapes the quoting, which is not the same as
+  // checking the value is a URL at all: a canonical that is not an absolute
+  // http(s) address is a bug in the caller, and a page that ships one is
+  // worse than a build that stops.
+  for (const [name, value] of [['canonical', canonical], ['ogImage', ogImage]]) {
+    if (!/^https?:\/\//.test(value)) {
+      throw new Error(`buildHead: ${name} must be an absolute http(s) URL, got ${JSON.stringify(value)}`);
+    }
+  }
   const lines = [
     `<meta name="description" content="${attr(description)}">`,
+    // slopless-disable-next-line VBC-944 -- canonical is rejected above unless it is an absolute http(s) URL
     `<link rel="canonical" href="${attr(canonical)}">`,
     `<meta property="og:type" content="${attr(ogType)}">`,
     `<meta property="og:site_name" content="CertMate">`,
