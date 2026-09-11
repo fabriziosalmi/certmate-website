@@ -91,10 +91,18 @@ export const GET: APIRoute = async () => {
     return [`  <url>`, `    <loc>${escapeXml(row.url)}</loc>`, ...children, '  </url>'].join('\n');
   }).filter((node): node is string => node !== null);
 
+  // The three xmlns values below are XML namespace names, not addresses:
+  // nothing fetches them, and they are the exact strings the sitemap protocol
+  // defines. Serving the same schema over https does not change them, and
+  // rewriting them would produce a sitemap whose video and image elements no
+  // longer belong to any namespace Google recognises.
   const xml = [
     '<?xml version="1.0" encoding="UTF-8"?>',
+    // slopless-disable-next-line VBC-034 -- XML namespace name, fixed by the sitemap protocol
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"',
+    // slopless-disable-next-line VBC-034 -- XML namespace name, fixed by the sitemap protocol
     '        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"',
+    // slopless-disable-next-line VBC-034 -- XML namespace name, fixed by the sitemap protocol
     '        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">',
     ...urls,
     '</urlset>',
