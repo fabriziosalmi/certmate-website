@@ -62,10 +62,9 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
-    "words": 178
+    "words": 172
   },
   {
     "url": "/deploy/aws/",
@@ -85,8 +84,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 352
   },
@@ -108,8 +106,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 343
   },
@@ -131,8 +128,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 357
   },
@@ -154,8 +150,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 338
   },
@@ -357,8 +352,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 232
   },
@@ -380,8 +374,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 377
   },
@@ -403,8 +396,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 308
   },
@@ -426,8 +418,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 484
   },
@@ -449,8 +440,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 331
   },
@@ -472,8 +462,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 364
   },
@@ -495,8 +484,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 337
   },
@@ -518,8 +506,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 180
   },
@@ -564,8 +551,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 181
   },
@@ -587,8 +573,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 362
   },
@@ -610,8 +595,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 351
   },
@@ -633,8 +617,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 388
   },
@@ -656,8 +639,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 351
   },
@@ -679,8 +661,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 248
   },
@@ -702,8 +683,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 398
   },
@@ -725,8 +705,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 331
   },
@@ -748,8 +727,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 494
   },
@@ -771,8 +749,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 342
   },
@@ -794,8 +771,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 387
   },
@@ -817,8 +793,7 @@
     ],
     "keywords": null,
     "jsonLdTypes": [
-      "BreadcrumbList",
-      "SoftwareApplication"
+      "BreadcrumbList"
     ],
     "words": 356
   },
@@ -835,9 +810,7 @@
     "twitterCardAttribute": "name",
     "hreflang": [],
     "keywords": null,
-    "jsonLdTypes": [
-      "SoftwareApplication"
-    ],
+    "jsonLdTypes": [],
     "words": 496
   },
   {
@@ -853,9 +826,7 @@
     "twitterCardAttribute": "name",
     "hreflang": [],
     "keywords": null,
-    "jsonLdTypes": [
-      "SoftwareApplication"
-    ],
+    "jsonLdTypes": [],
     "words": 750
   }
 ]

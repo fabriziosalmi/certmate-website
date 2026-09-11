@@ -16,11 +16,17 @@ interface Props {
   lang?: string;
   /** hreflang alternates for this URL across locales. */
   alternates?: Alternate[];
+  /**
+   * Whether this page describes CertMate itself, and so carries the
+   * SoftwareApplication block. Off by default: see the note above ldJson.
+   */
+  product?: boolean;
 }
 
 const {
   lang = 'en',
   alternates = [],
+  product = false,
   // Title preserved verbatim from the previous static index.html so
   // search signal carries over. Description stays under Google's ~155
   // truncation cap and leads with the differentiators (verifiable audit
@@ -37,9 +43,25 @@ const {
   ogImage = ogImageFor(Astro.url.pathname),
 } = Astro.props;
 
-// The previous index.html shipped this structured-data block verbatim;
-// keep the same shape so SoftwareApplication rich-result eligibility
-// carries over without re-indexing.
+// This block describes CertMate, so it belongs on the pages that describe
+// CertMate and nowhere else. It used to be emitted by this layout on all 30
+// pages it renders, which put "this page is a software application, free,
+// MIT, 29 DNS providers" on an SSL error explanation, a deployment guide and
+// the privacy notice. Google's structured data guidelines are explicit about
+// both halves of that: "Put the structured data on the page that it
+// describes" and "Your structured data must be a true representation of the
+// page content".
+//
+// It is kept, unchanged, on the pages where it is true: the two home pages
+// and the two comparison pages, which show CertMate's features in their own
+// visible body.
+//
+// It is worth being honest about what it buys. Google's Software App
+// documentation requires name, offers.price, and one of aggregateRating or
+// review. This project has no ratings and will not invent any, so no page
+// here is eligible for the Software App rich result, and none was before
+// either. The block stays because it describes the entity accurately, not
+// because it is expected to draw stars.
 const ldJson = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
@@ -95,12 +117,14 @@ const ldJson = {
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json" />
 
-    <!-- Structured data -->
-    <script
-      is:inline
-      type="application/ld+json"
-      set:html={JSON.stringify(ldJson)}
-    />
+    <!-- Structured data: only where it describes this page. -->
+    {product && (
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={JSON.stringify(ldJson)}
+      />
+    )}
 
     <!-- Per-page <head> extras (extra structured data, etc.) -->
     <slot name="head" />
