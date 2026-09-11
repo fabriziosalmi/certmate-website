@@ -20,9 +20,11 @@ interface Props {
   title: string;
   description: string;
   breadcrumbs?: Crumb[];
+  /** True only where the page describes CertMate itself; see BaseLayout. */
+  product?: boolean;
 }
 
-const { lang, path, title, description, breadcrumbs = [], media = [] } = Astro.props;
+const { lang, path, title, description, breadcrumbs = [], media = [], product = false } = Astro.props;
 const t = ui[lang];
 const canonical = SITE + localizedPath(lang, path);
 const alternates = alternatesFor(path);
@@ -53,6 +55,7 @@ const crumbLd = {
   canonical={canonical}
   lang={lang}
   alternates={alternates}
+  product={product}
 >
   <script
     is:inline
