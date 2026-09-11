@@ -18,6 +18,10 @@ import { mkdirSync, rmSync, writeFileSync, readFileSync, existsSync } from 'node
 
 const MEDIA_DIR = 'public/media/__check__';
 const ENTRY = 'src/content/deploy/en/__check__.mdx';
+// Every page carries a language switch pointing at its counterpart, so a
+// fixture that exists in one language only links to a 404 and the head gate
+// says so. That is the gate working: it is also why the twin is written.
+const ENTRY_IT = 'src/content/deploy/it/__check__.mdx';
 const BUILT = 'dist/deploy/__check__/index.html';
 const SITEMAP = 'dist/sitemap-media.xml';
 const CLIP = `/media/__check__/clip-16x9.mp4`;
@@ -93,11 +97,34 @@ media:
 A fixture page.
 `,
   );
+  // The Italian twin exists so the language switch on the English fixture has
+  // somewhere to point. It declares no media: what is under test is the
+  // English page.
+  writeFileSync(
+    ENTRY_IT,
+    `---
+title: "Media check"
+platform: "Check"
+description: "Fixture usata da scripts/check-media.mjs. Non pubblicata."
+summary: "Fixture usata da scripts/check-media.mjs."
+order: 999
+---
+
+Pagina di prova.
+`,
+  );
 }
 
 function cleanup() {
   rmSync(MEDIA_DIR, { recursive: true, force: true });
   rmSync(ENTRY, { force: true });
+  rmSync(ENTRY_IT, { force: true });
+  // dist still holds the fixture page, and anything that measures the build
+  // afterwards measures it too: running scripts/seo-inventory.mjs straight
+  // after this gate once reported six extra words on /deploy/, because the
+  // fixture was still listed there. Removing the directory makes that
+  // impossible rather than documented.
+  rmSync('dist', { recursive: true, force: true });
   rmSync('dist/deploy/__check__', { recursive: true, force: true });
 }
 
