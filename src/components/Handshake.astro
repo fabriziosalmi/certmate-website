@@ -34,12 +34,21 @@ interface Props {
 }
 
 const { caption, steps } = Astro.props;
+
+const CAPTION_CLASS = [
+  'border-b border-gray-200 bg-gray-50 px-4 py-2',
+  'text-xs font-medium uppercase tracking-wide text-gray-500',
+  'dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400',
+].join(' ');
+
+const BADGE_CLASS = [
+  'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center',
+  'rounded-full text-[11px] font-semibold tabular-nums',
+].join(' ');
 ---
 
 <figure class="not-prose my-8 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
-  <figcaption
-    class="border-b border-gray-200 bg-gray-50 px-4 py-2 text-xs font-medium uppercase tracking-wide text-gray-500 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400"
-  >
+  <figcaption class={CAPTION_CLASS}>
     {caption}
   </figcaption>
   <ol class="divide-y divide-gray-100 dark:divide-gray-800">
@@ -47,7 +56,7 @@ const { caption, steps } = Astro.props;
       <li class:list={['flex gap-3 px-4 py-3', step.fails && 'bg-red-50/60 dark:bg-red-900/10']}>
         <span
           class:list={[
-            'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums',
+            BADGE_CLASS,
             step.fails
               ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
               : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400',
