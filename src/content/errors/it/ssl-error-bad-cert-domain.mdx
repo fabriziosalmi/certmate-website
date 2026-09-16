@@ -1,0 +1,102 @@
+---
+title: "SSL_ERROR_BAD_CERT_DOMAIN"
+errorCode: "SSL_ERROR_BAD_CERT_DOMAIN"
+description: "Risolvi SSL_ERROR_BAD_CERT_DOMAIN di Firefox: il certificato non copre il nome host richiesto. Controllo dei SAN, wildcard, www e SNI su IP condivisi."
+summary: "Il certificato è attendibile e in data, ma nessuno dei suoi Subject Alternative Name corrisponde al nome host richiesto da Firefox. È un problema di nome, non di fiducia."
+browsers: ["Firefox"]
+order: 8
+updated: "2026-09-16"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+Firefox segnala `SSL_ERROR_BAD_CERT_DOMAIN` con il messaggio *"Impossibile
+comunicare in modo sicuro con il peer: il nome di dominio richiesto non
+corrisponde al certificato del server."*
+
+Del certificato va bene tutto tranne l'unica cosa che lo lega a questa
+connessione. È firmato da una CA di cui Firefox si fida, è dentro la sua
+finestra di validità e appartiene a qualcuno, solo non al nome nella barra
+degli indirizzi.
+
+Contano soltanto i Subject Alternative Name. Il Common Name nel subject è
+ignorato dai browser da anni: un certificato con CN `example.com` e quel nome
+assente dalla lista SAN fallisce qui, e leggere il CN è esattamente ciò che fa
+sembrare la cosa impossibile.
+
+<Handshake
+  caption="Dove viene sollevato SSL_ERROR_BAD_CERT_DOMAIN"
+  steps={[
+    { from: 'Firefox', to: 'Server', label: 'ClientHello con SNI: shop.example.com' },
+    { from: 'Server', to: 'Firefox', label: 'Certificato per example.com, SAN: example.com, www.example.com' },
+    { from: 'Firefox', label: 'Catena e date: entrambe valide' },
+    { from: 'Firefox', label: 'Confronta shop.example.com con la lista SAN: nessuna voce corrisponde' },
+    { from: 'Firefox', to: 'Server', label: 'Nome non corrispondente: connessione rifiutata (SSL_ERROR_BAD_CERT_DOMAIN)', fails: true },
+  ]}
+/>
+
+## Cause comuni
+
+- **Il nome non è mai stato sul certificato.** È stato richiesto
+  `www.example.com` e non `example.com`, o viceversa. Sono due nomi e ognuno
+  va elencato.
+- **Una wildcard di un livello troppo alto.** `*.example.com` copre
+  `shop.example.com` e **non** copre `example.com`, né `eu.shop.example.com`.
+  Una wildcard corrisponde esattamente a un'etichetta.
+- **Ha risposto il vhost sbagliato.** Più nomi condividono un IP e il server non
+  ha un certificato per il nome indicato nello SNI, quindi serve quello del sito
+  predefinito. Il certificato nell'errore appartiene a un sito completamente
+  diverso, e questa è la firma inconfondibile del caso.
+- **Un bilanciatore o una CDN davanti.** L'origine è corretta e il bordo serve
+  il proprio certificato, oppure un percorso senza SNI raggiunge un backend
+  predefinito.
+- **CN al posto dei SAN.** Una CA interna o un vecchio template che riempie il
+  Common Name e lascia vuota l'estensione SAN. I browser non la guarderanno.
+
+## Come risolverlo
+
+**1. Leggi i nomi che il server sta davvero servendo per questo host:**
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername shop.example.com 2>/dev/null \
+  | openssl x509 -noout -subject -ext subjectAltName
+```
+
+`-servername` è la parte che conta: imposta lo SNI, quindi vedi il certificato
+che quel nome host riceve davvero e non quello del vhost predefinito.
+
+**2. Confronta con quello che hai chiesto.** Se la lista SAN è di un altro
+sito, hai un problema di vhost o di SNI e il certificato è innocente. Se la
+lista SAN è del tuo sito e semplicemente non contiene il nome, riemetti con
+tutti i nomi.
+
+**3. Riemetti coprendo tutti i nomi:**
+
+```bash
+certbot certonly -d example.com -d www.example.com -d shop.example.com
+```
+
+**4. Se il certificato è corretto, sistema l'instradamento.** Verifica che il
+blocco server per quel nome host esista, che sia quello selezionato, e che
+qualunque proxy davanti inoltri lo SNI.
+
+## Evitare che si ripresenti
+
+La versione ricorrente di questo problema non è un certificato sbagliato. È un
+nuovo nome host aggiunto a un servizio mesi dopo l'emissione del certificato,
+senza niente che colleghi i due eventi.
+
+CertMate tiene la lista completa dei nomi di ogni certificato come
+configurazione, e non come un comando che qualcuno ha digitato una volta:
+aggiungere un nome è una modifica al certificato, non una nuova emissione di cui
+qualcuno deve ricordare i parametri. La sua sonda legge i Subject Alternative
+Name dal certificato servito dall'host e ricava se il nome host corrisponde
+davvero, ed è così che un nome rimasto scoperto viene trovato da un controllo
+invece che da un visitatore.
+
+## Errori correlati
+
+- `NET::ERR_CERT_COMMON_NAME_INVALID`: l'equivalente in Chromium di questo errore.
+- `SEC_ERROR_UNKNOWN_ISSUER`: il nome corrisponde e l'emittente non è attendibile.
+- `ERR_SSL_PROTOCOL_ERROR`: l'handshake è fallito prima di controllare i nomi.

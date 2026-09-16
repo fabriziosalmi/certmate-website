@@ -1,0 +1,100 @@
+---
+title: "SSL_ERROR_BAD_CERT_DOMAIN"
+errorCode: "SSL_ERROR_BAD_CERT_DOMAIN"
+description: "Fix Firefox's SSL_ERROR_BAD_CERT_DOMAIN: the certificate does not cover the hostname you asked for. SAN checks, wildcards, www, and SNI on shared IPs."
+summary: "The certificate is trusted and in date, but none of its Subject Alternative Names matches the hostname Firefox asked for. A name problem, not a trust problem."
+browsers: ["Firefox"]
+order: 8
+updated: "2026-09-16"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+Firefox reports `SSL_ERROR_BAD_CERT_DOMAIN` with the message *"Unable to
+communicate securely with peer: requested domain name does not match the
+server's certificate."*
+
+Everything about the certificate is fine except the one thing that ties it to
+this connection. It was signed by a CA Firefox trusts, it is inside its
+validity window, and it belongs to somebody, just not to the name in the
+address bar.
+
+Only Subject Alternative Names count. The Common Name in the subject has been
+ignored by browsers for years; a certificate whose CN is `example.com` and
+whose SAN list omits it fails here, and reading the CN is what makes that look
+impossible.
+
+<Handshake
+  caption="Where SSL_ERROR_BAD_CERT_DOMAIN is raised"
+  steps={[
+    { from: 'Firefox', to: 'Server', label: 'ClientHello with SNI: shop.example.com' },
+    { from: 'Server', to: 'Firefox', label: 'Certificate for example.com, SAN: example.com, www.example.com' },
+    { from: 'Firefox', label: 'Chain and dates: both valid' },
+    { from: 'Firefox', label: 'Matches shop.example.com against the SAN list: no entry matches' },
+    { from: 'Firefox', to: 'Server', label: 'Name mismatch: connection refused (SSL_ERROR_BAD_CERT_DOMAIN)', fails: true },
+  ]}
+/>
+
+## Common causes
+
+- **The name was never on the certificate.** `www.example.com` was requested
+  and `example.com` was not, or the other way round. They are two names and
+  each has to be listed.
+- **A wildcard one level too shallow.** `*.example.com` covers
+  `shop.example.com` and does **not** cover `example.com` itself, nor
+  `eu.shop.example.com`. A wildcard matches exactly one label.
+- **The wrong vhost answered.** Several names share one IP and the server has
+  no certificate for the name in SNI, so it serves its default site's
+  certificate instead. The certificate in the error belongs to a different
+  site entirely, and that is the signature of this case.
+- **A load balancer or CDN in front.** The origin is right and the edge is
+  serving its own certificate, or an SNI-less path is reaching a default
+  backend.
+- **CN instead of SAN.** An internal CA or an old template that fills the
+  Common Name and leaves the SAN extension empty. Browsers will not look.
+
+## How to fix it
+
+**1. Read the names the server is actually serving for this hostname:**
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername shop.example.com 2>/dev/null \
+  | openssl x509 -noout -subject -ext subjectAltName
+```
+
+`-servername` is the part that matters: it sets SNI, so you see the certificate
+that hostname gets rather than the default vhost's.
+
+**2. Compare against what you asked for.** If the SAN list is for another site,
+you have a vhost or SNI problem and the certificate is innocent. If the SAN
+list is for your site and simply lacks the name, reissue with every name on it.
+
+**3. Reissue covering all the names:**
+
+```bash
+certbot certonly -d example.com -d www.example.com -d shop.example.com
+```
+
+**4. If the certificate is right, fix the routing.** Confirm the server block
+for that hostname exists, that it is the one being selected, and that any proxy
+in front passes SNI through.
+
+## Prevent it from recurring
+
+The recurring version of this is not a wrong certificate. It is a new hostname
+added to a service months after the certificate was issued, with nothing
+connecting the two events.
+
+CertMate holds each certificate's full name list as configuration rather than
+as a command someone once typed, so adding a name is a change to the
+certificate rather than a fresh issuance somebody has to remember the flags
+for. Its probe reads the Subject Alternative Names from the certificate served
+at the host and derives whether the hostname actually matches, which is how a
+name that stopped being covered gets found by a check rather than by a visitor.
+
+## Related errors
+
+- `NET::ERR_CERT_COMMON_NAME_INVALID`: the Chromium equivalent of this error.
+- `SEC_ERROR_UNKNOWN_ISSUER`: the name matches and the issuer is not trusted.
+- `ERR_SSL_PROTOCOL_ERROR`: the handshake failed before any name was checked.

@@ -1,0 +1,106 @@
+---
+title: "SSL_ERROR_RX_RECORD_TOO_LONG"
+errorCode: "SSL_ERROR_RX_RECORD_TOO_LONG"
+description: "Fix Firefox's SSL_ERROR_RX_RECORD_TOO_LONG: the server answered an HTTPS request with something that is not TLS, usually plain HTTP on port 443."
+summary: "Firefox spoke TLS and the server answered in the clear. What came back was not a TLS record at all, so the length field read as nonsense."
+browsers: ["Firefox"]
+order: 11
+updated: "2026-09-16"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+Firefox reports `SSL_ERROR_RX_RECORD_TOO_LONG`: *"SSL received a record that
+exceeded the maximum permissible length."*
+
+Read literally this sounds like a size problem. It almost never is. A TLS
+record begins with a type byte, two version bytes and a two-byte length, and a
+record may not exceed 16 KB. When a server answers an HTTPS request with plain
+HTTP, the first bytes on the wire are `HTTP/1.1 400 Bad Request`. Firefox reads
+those as a record header anyway, and the length field it derives from the
+ASCII is enormous.
+
+So this error means: the thing answering on this port is not speaking TLS. No
+certificate was involved, which is why nothing about certificates will fix it.
+
+<Handshake
+  caption="Where SSL_ERROR_RX_RECORD_TOO_LONG is raised"
+  steps={[
+    { from: 'Firefox', to: 'Server', label: 'ClientHello, as a TLS record on port 443' },
+    { from: 'Server', label: 'The listener is a plain HTTP server: it sees an unparseable request' },
+    { from: 'Server', to: 'Firefox', label: 'HTTP/1.1 400 Bad Request, in cleartext' },
+    { from: 'Firefox', label: 'Parses the first five bytes as a record header; the length is not a TLS length' },
+    { from: 'Firefox', to: 'Server', label: 'Not a TLS stream: connection refused (SSL_ERROR_RX_RECORD_TOO_LONG)', fails: true },
+  ]}
+/>
+
+## Common causes
+
+- **Plain HTTP on port 443.** A virtual host that listens on 443 without
+  `ssl` on the listener, or an Apache vhost with no `SSLEngine on`. This is the
+  overwhelming majority of cases.
+- **The wrong service is on the port.** Something else bound 443 first: a
+  container publishing a port it should not, an application server, a second
+  instance of the proxy.
+- **The proxy terminates TLS and forwards to itself.** A reverse proxy
+  configured to pass requests back to its own plain port, so the answer comes
+  from the cleartext side.
+- **An HTTPS URL for a service that only speaks HTTP** on a non-standard port.
+
+## How to fix it
+
+**1. Find out whether the port speaks TLS at all.** This is the decisive test,
+and it takes one command:
+
+```bash
+openssl s_client -connect example.com:443 -servername example.com </dev/null
+```
+
+`wrong version number` or a dump of readable text means the port is not TLS.
+A certificate chain means it is, and the problem is elsewhere.
+
+**2. Or ask it in the clear** and see whether it answers like a web server:
+
+```bash
+curl -sI http://example.com:443 | head -3
+```
+
+A normal HTTP response header from port 443 confirms the diagnosis outright.
+
+**3. Fix the listener.** In nginx, the `ssl` keyword on the listen directive is
+the thing that is missing:
+
+```nginx
+server {
+    listen 443 ssl;
+    ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+}
+```
+
+In Apache, the vhost needs `SSLEngine on` together with `SSLCertificateFile`
+and `SSLCertificateKeyFile`.
+
+**4. Check what actually owns the port**, if the configuration looks right:
+
+```bash
+ss -lntp | grep ':443'
+```
+
+## Prevent it from recurring
+
+This error is a deployment state, not a certificate state, and that is exactly
+why it survives a correct issuance. Every certificate file can be perfect and
+the port can still be answering in cleartext.
+
+A check that only reads certificate files on disk cannot see this. CertMate's
+deployment check connects to the host over TLS the way a browser would, and a
+port that does not complete a handshake is reported as a failure against that
+domain rather than passing quietly because the files are in order. That is the
+difference between "the certificate is valid" and "the site is serving it".
+
+## Related errors
+
+- `ERR_SSL_PROTOCOL_ERROR`: the Chromium code for the same class of failure.
+- `SSL_ERROR_NO_CYPHER_OVERLAP`: the port does speak TLS, with nothing in common.

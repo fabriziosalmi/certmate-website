@@ -1,0 +1,113 @@
+---
+title: "SEC_ERROR_REVOKED_CERTIFICATE"
+errorCode: "SEC_ERROR_REVOKED_CERTIFICATE"
+description: "Fix Firefox's SEC_ERROR_REVOKED_CERTIFICATE: the CA has withdrawn the certificate before its expiry date. What revocation means, why it happens, and how to recover."
+summary: "The certificate has not expired: the authority that issued it has withdrawn it. Firefox found it on a revocation list and will not let you past."
+browsers: ["Firefox"]
+order: 10
+updated: "2026-09-16"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+Firefox reports `SEC_ERROR_REVOKED_CERTIFICATE`: *"Peer's Certificate has been
+revoked."*
+
+Revocation is the one failure on this list that is not a mistake in
+configuration. The certificate is well formed, correctly chained and inside its
+validity window. The authority that issued it has said, after the fact, that it
+should no longer be honoured, and Firefox is enforcing that.
+
+Firefox distinguishes how it learned this.
+`SEC_ERROR_REVOKED_CERTIFICATE_OCSP` means the issuer's OCSP responder answered
+"revoked" live. `SEC_ERROR_REVOKED_CERTIFICATE_CRL` means the certificate
+appeared on a revocation list. For a public certificate the practical source is
+usually CRLite or an OCSP response stapled by the server itself.
+
+<Handshake
+  caption="Where SEC_ERROR_REVOKED_CERTIFICATE is raised"
+  steps={[
+    { from: 'Firefox', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Firefox', label: 'Certificate chain, valid and in date' },
+    { from: 'Firefox', label: 'Builds a trusted path: succeeds' },
+    { from: 'Firefox', label: 'Checks revocation status for the leaf (CRLite, stapled OCSP, or a live query)' },
+    { from: 'Firefox', to: 'Server', label: 'Status is revoked: connection refused (SEC_ERROR_REVOKED_CERTIFICATE)', fails: true },
+  ]}
+/>
+
+## Common causes
+
+- **The private key was exposed.** A key committed to a repository, left in a
+  backup, or present on a machine that was compromised. Revocation is the
+  correct response and the certificate is not coming back.
+- **Somebody revoked it during cleanup.** Decommissioning a host, rotating
+  keys, or a `certbot revoke` aimed at the wrong lineage. Common, and easy to
+  do without noticing which certificate was live.
+- **The CA revoked it.** A validation problem found after issuance, a
+  misissuance incident, or a compliance rule the certificate turned out to
+  break. These arrive as an email to the account address with a deadline, and
+  the deadline is short.
+- **The domain changed hands** and the previous holder's certificate was
+  withdrawn.
+- **An old certificate is still deployed.** It was revoked deliberately, a
+  replacement was issued, and the server was never reloaded, so the revoked
+  one is still what visitors get.
+
+## How to fix it
+
+**1. Identify exactly which certificate is being served**, by serial. The
+serial is what a revocation record names:
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/null \
+  | openssl x509 -noout -serial -dates -issuer
+```
+
+**2. Ask the issuer for its status**, rather than assuming:
+
+```bash
+openssl s_client -connect example.com:443 -servername example.com -status </dev/null 2>/dev/null \
+  | grep -A1 'OCSP Response Status'
+```
+
+**3. Issue a new certificate with a new key.** Reissuing with the same key is
+the mistake to avoid: if the certificate was revoked because the key leaked, a
+new certificate over that key solves nothing.
+
+```bash
+certbot certonly --force-renewal --new-key -d example.com
+```
+
+**4. Then confirm the server is serving the new serial**, not the old one. A
+revoked certificate that is still deployed after a successful reissue is the
+most common way this error survives its own fix. Compare the serial from step
+1 before and after the reload.
+
+**5. If the key was exposed, treat it as an incident.** Rotate anything that
+key protected, and find out how it got out. A new certificate closes the
+browser error, not the exposure.
+
+## Prevent it from recurring
+
+Most revocations trace back to a private key that ended up somewhere it should
+not have been. That is a custody problem, and custody is something a
+certificate manager can actually track.
+
+CertMate records the state of the private key for each certificate: whether it
+holds it, whether the key lives in an external store, or whether it genuinely
+does not know, rather than assuming a key exists because a certificate does.
+It never writes private keys into its share-safe backups. Where CertMate is
+itself the issuer, running its own private CA for internal and client
+certificates, it operates the revocation list and an OCSP responder directly,
+so withdrawing a compromised internal certificate is an action inside the tool
+rather than a manual list somebody maintains.
+
+For publicly issued certificates, revocation stays with the CA: no certificate
+manager can withdraw a certificate it did not sign.
+
+## Related errors
+
+- `SEC_ERROR_REVOKED_CERTIFICATE_OCSP`: the issuer's OCSP responder said revoked.
+- `SEC_ERROR_REVOKED_CERTIFICATE_CRL`: found on the issuer's revocation list.
+- `SEC_ERROR_EXPIRED_CERTIFICATE`: withdrawn by time rather than by the issuer.

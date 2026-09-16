@@ -31,7 +31,7 @@ const d = entry.data;
   {(d.browsers.length > 0 || d.updated) && (
     <p class="not-prose mb-6 text-xs text-gray-500 dark:text-gray-400">
       {d.browsers.length > 0 && <>{t.affectedBrowsers}: {d.browsers.join(', ')}</>}
-      {d.updated && <> · {t.updated} {d.updated}</>}
+      {d.updated && <> · {t.updated}{' '}{d.updated}</>}
     </p>
   )}
   <Content />

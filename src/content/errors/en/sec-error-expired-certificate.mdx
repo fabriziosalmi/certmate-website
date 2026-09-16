@@ -1,0 +1,116 @@
+---
+title: "SEC_ERROR_EXPIRED_CERTIFICATE"
+errorCode: "SEC_ERROR_EXPIRED_CERTIFICATE"
+description: "Fix Firefox's SEC_ERROR_EXPIRED_CERTIFICATE: the certificate's notAfter date has passed. Renewal that never ran, renewal that ran without a reload, and clock skew."
+summary: "Firefox read the certificate, found its notAfter date in the past, and stopped. Usually a renewal that never ran, or one that ran and was never reloaded into the running server."
+browsers: ["Firefox"]
+order: 7
+updated: "2026-09-16"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+Firefox reports `SEC_ERROR_EXPIRED_CERTIFICATE` with the message *"Peer's
+Certificate has expired."* The certificate was received and parsed correctly;
+its `notAfter` timestamp is simply in the past, so nothing about it can be
+trusted any more.
+
+This is validation failing at the last and simplest step. The chain may be
+complete, the hostname may match, the key may be sound. None of that is
+reached, because an expired certificate is rejected on its dates alone.
+
+<Handshake
+  caption="Where SEC_ERROR_EXPIRED_CERTIFICATE is raised"
+  steps={[
+    { from: 'Firefox', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Firefox', label: 'ServerHello, Certificate (leaf + intermediates)' },
+    { from: 'Firefox', label: 'Builds the chain to a trusted root: succeeds' },
+    { from: 'Firefox', label: 'Compares the current time against notBefore / notAfter' },
+    { from: 'Firefox', to: 'Server', label: 'notAfter is in the past: connection refused (SEC_ERROR_EXPIRED_CERTIFICATE)', fails: true },
+  ]}
+/>
+
+## Common causes
+
+- **Renewal never ran.** A timer that was disabled, a container rebuilt without
+  its scheduler, a cron entry on a host that was replaced. This is the single
+  most common cause and the least visible, because nothing complains until the
+  day the certificate dies.
+- **Renewal ran, and the server never reloaded.** The new certificate is on
+  disk with a good `notAfter`, and the running process still holds the old one
+  in memory. `openssl x509` on the file says everything is fine; the browser
+  disagrees, and the browser is right.
+- **The wrong file is deployed.** The server block points at a path that is not
+  the one renewal writes to: a copy made once by hand, or a second vhost that
+  was never migrated.
+- **The client's clock is wrong.** A valid certificate looks expired on a
+  device whose date is months ahead. If one visitor sees it and nobody else
+  does, check their clock before touching the server.
+- **The intermediate expired, not the leaf.** Firefox reports this as
+  `SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE`, a distinct code, and the fix is a
+  new chain rather than a new certificate.
+
+## How to fix it
+
+**1. Ask the server, not the disk.** This is the whole diagnosis in one
+command, because it reads what is actually being served:
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/null \
+  | openssl x509 -noout -subject -dates
+```
+
+**2. Compare it with the file on disk:**
+
+```bash
+openssl x509 -in /etc/letsencrypt/live/example.com/fullchain.pem -noout -dates
+```
+
+If the file is current and the server is serving an older date, the certificate
+was renewed and never loaded. That is a reload problem, not a certificate
+problem, and reissuing will not fix it.
+
+**3. Renew, then reload:**
+
+```bash
+certbot renew
+systemctl reload nginx
+```
+
+**4. Check every name, not just the one that broke.** An expiry that surprised
+you once will surprise you again on the next host:
+
+```bash
+for host in example.com www.example.com api.example.com; do
+  printf '%-28s ' "$host"
+  echo | openssl s_client -connect "$host:443" -servername "$host" 2>/dev/null \
+    | openssl x509 -noout -enddate
+done
+```
+
+## Prevent it from recurring
+
+An expiry incident is almost never a failure to *issue*. It is a failure to
+notice: either that renewal stopped running, or that a renewed certificate
+never reached the process serving it.
+
+CertMate is built around that second failure. It renews ahead of expiry on a
+schedule, runs a deploy hook so the service actually reloads, and then does the
+part that catches the silent case: its deployment check opens a connection to
+the host and compares the fingerprint of the certificate **being served** with
+the one it holds. A renewal that succeeded on disk and never reached the
+running server shows up as a mismatch, weeks before a visitor would have found
+it.
+
+One detail worth knowing if you run short-lived certificates: a certificate
+with less than a day left has zero *whole* days remaining, and tooling that
+tests `days_left <= 0` calls that expired when it is still valid. CertMate
+reports seconds as well as days for exactly this reason. The 24-hour
+certificates a private CA issues by default sit entirely inside that gap.
+
+## Related errors
+
+- `NET::ERR_CERT_DATE_INVALID`: the Chromium equivalent of this error.
+- `SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE`: the intermediate expired, not the leaf.
+- `SEC_ERROR_UNKNOWN_ISSUER`: a trust problem rather than a date problem.
