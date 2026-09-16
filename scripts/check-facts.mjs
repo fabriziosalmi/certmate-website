@@ -105,6 +105,34 @@ if (Number.isFinite(declared) && rendered > 0 && declared > rendered) {
   );
 }
 
+// Markdown in a field that is rendered as text.
+//
+// UpdateRow.astro prints `{u.description}`, and Astro escapes an expression
+// rather than parsing it, so `**like this**` reaches the reader as asterisks.
+// It did: certmate.org carried 20 literal `**` on its home page, ten emphasis
+// pairs written across four What's New cards, from the day they were written
+// until this check was added. Nothing was broken enough to notice, which is
+// the whole problem with prose defects.
+//
+// The fix is to write the prose without the syntax, not to start parsing
+// markdown here: these strings are authored in this repository and read by
+// people, and a renderer would be a dependency and an escaping decision taken
+// on for formatting nobody asked for.
+// Prose files whose fields are printed as text rather than parsed.
+const PLAIN_TEXT_PROSE = ['src/data/whats-new.ts'];
+for (const relativePath of PLAIN_TEXT_PROSE) {
+  const text = readFileSync(join(ROOT, relativePath), 'utf8');
+  text.split('\n').forEach((line, index) => {
+    if (/\*\*[^*]+\*\*/.test(line)) {
+      problems.push(
+        `${relativePath}:${index + 1}  markdown emphasis in a field rendered as ` +
+          `plain text. UpdateRow.astro prints it with {u.description}, so the ` +
+          `reader sees the asterisks. Write it without the syntax.`
+      );
+    }
+  });
+}
+
 if (problems.length) {
   console.error('\nFact check failed:\n');
   for (const p of problems) console.error('  ' + p);
