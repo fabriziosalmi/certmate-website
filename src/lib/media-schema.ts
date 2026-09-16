@@ -66,7 +66,11 @@ function publicFile(what: string, extension?: { suffix: string; because: string 
  */
 const describes = z
   .string()
-  .min(120, 'describes must say what the media actually shows, in at least 120 characters: it is what a search engine reads instead of the file');
+  .min(
+    120,
+    'describes must say what the media actually shows, in at least 120 characters: '
+      + 'it is what a search engine reads instead of the file',
+  );
 
 const videoSource = z.object({
   /** The shape the file is cut for. Which one a layout shows is its business. */

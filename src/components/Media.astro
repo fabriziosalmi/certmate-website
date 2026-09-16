@@ -47,7 +47,9 @@ const { items = [] } = Astro.props;
                 />
               ))}
             </video>
-            <figcaption class="border-t border-gray-200 p-4 text-sm text-gray-600 dark:border-gray-800 dark:text-gray-300">
+            <figcaption
+              class="border-t border-gray-200 p-4 text-sm text-gray-600 dark:border-gray-800 dark:text-gray-300"
+            >
               <span class="font-medium text-gray-900 dark:text-white">{item.title}</span>
               <p class="mt-1">{item.describes}</p>
               {item.transcript && (
@@ -69,7 +71,9 @@ const { items = [] } = Astro.props;
               decoding="async"
             />
             {item.caption && (
-              <figcaption class="border-t border-gray-200 p-4 text-sm text-gray-600 dark:border-gray-800 dark:text-gray-300">
+              <figcaption
+                class="border-t border-gray-200 p-4 text-sm text-gray-600 dark:border-gray-800 dark:text-gray-300"
+              >
                 {item.caption}
               </figcaption>
             )}
