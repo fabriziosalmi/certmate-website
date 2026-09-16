@@ -2,3 +2,6 @@ User-agent: *
 Allow: /
 
 Sitemap: https://www.certmate.org/sitemap-index.xml
+# Media declared by pages. Separate because the sitemap integration builds
+# page entries only and cannot attach video or image children.
+Sitemap: https://www.certmate.org/sitemap-media.xml

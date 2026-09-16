@@ -3,6 +3,8 @@ import { Icon } from 'astro-icon/components';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Footer from '~/components/Footer.astro';
 import { SITE, DEFAULT_LOCALE, localizedPath, alternatesFor, ui, type Locale } from '~/i18n';
+import Media from '~/components/Media.astro';
+import { mediaJsonLd, type MediaItem } from '~/lib/media';
 
 interface Crumb {
   label: string;
@@ -13,12 +15,16 @@ interface Props {
   lang: Locale;
   /** Locale-relative path of THIS page, e.g. "/errors/foo". */
   path: string;
+  /** Declared by the page's frontmatter; see src/lib/media-schema.ts. */
+  media?: MediaItem[];
   title: string;
   description: string;
   breadcrumbs?: Crumb[];
+  /** True only where the page describes CertMate itself; see BaseLayout. */
+  product?: boolean;
 }
 
-const { lang, path, title, description, breadcrumbs = [] } = Astro.props;
+const { lang, path, title, description, breadcrumbs = [], media = [], product = false } = Astro.props;
 const t = ui[lang];
 const canonical = SITE + localizedPath(lang, path);
 const alternates = alternatesFor(path);
@@ -49,6 +55,7 @@ const crumbLd = {
   canonical={canonical}
   lang={lang}
   alternates={alternates}
+  product={product}
 >
   <script
     is:inline
@@ -56,6 +63,14 @@ const crumbLd = {
     type="application/ld+json"
     set:html={JSON.stringify(crumbLd)}
   />
+  {media.map((item) => (
+    <script
+      is:inline
+      slot="head"
+      type="application/ld+json"
+      set:html={JSON.stringify(mediaJsonLd(item, SITE, canonical))}
+    />
+  ))}
 
   <header class="sticky top-0 z-40 border-b border-gray-200 bg-white/80 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
     <div class="mx-auto flex max-w-container items-center justify-between gap-4 px-4 py-3">
@@ -96,6 +111,7 @@ const crumbLd = {
 
     <article class="prose prose-slate max-w-none dark:prose-invert prose-headings:scroll-mt-24 prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-a:text-primary">
       <slot />
+      <Media items={media} />
     </article>
 
     <aside class="not-prose mt-12 rounded-xl border border-primary-100 bg-primary-50 p-6 dark:border-primary-900/40 dark:bg-primary-900/10">
