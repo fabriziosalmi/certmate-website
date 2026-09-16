@@ -77,6 +77,32 @@ if (declared !== appProviders.length) {
   );
 }
 
+// --- storage backends -----------------------------------------------------
+//
+// STORAGE_BACKEND_COUNT sat in site.ts declaring 6 and was read by nothing, so
+// nothing noticed that src/docs/storage-backends.html listed 5: the site said
+// six in the comparison table and in the docs card, and five on the page about
+// storage. check-facts.mjs now pins the page to a list; this pins that number
+// to the app, so a seventh backend upstream is a finding here rather than a
+// silence on both sides.
+const storage = await fetchText(`${RAW}/modules/core/storage_backends.py`);
+const appBackends = [
+  ...new Set([...storage.matchAll(/backend_type\s*==\s*'([a-z0-9_]+)'/g)].map((m) => m[1])),
+];
+if (appBackends.length === 0) {
+  throw new Error(
+    "could not find the backend_type branches in the app's storage_backends.py. " +
+      'The shape changed; fix the pattern rather than reporting no drift.'
+  );
+}
+const declaredBackends = Number(fromSiteTs('STORAGE_BACKEND_COUNT'));
+if (declaredBackends !== appBackends.length) {
+  findings.push(
+    `STORAGE_BACKEND_COUNT is ${declaredBackends}; the app ships ` +
+      `${appBackends.length}: ${appBackends.sort().join(', ')}.`
+  );
+}
+
 // --- version --------------------------------------------------------------
 try {
   const release = JSON.parse(await fetchText(RELEASES));
@@ -91,7 +117,7 @@ try {
   console.log(`note: could not read the latest release (${error.message})`);
 }
 
-console.log(`checked the site against the app (${appProviders.length} providers upstream)`);
+console.log(`checked the site against the app (${appProviders.length} providers, ${appBackends.length} storage backends upstream)`);
 if (findings.length === 0) {
   console.log('no drift');
   process.exit(0);

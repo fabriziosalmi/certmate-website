@@ -118,6 +118,82 @@ if (Number.isFinite(declared) && rendered > 0 && declared > rendered) {
 // markdown here: these strings are authored in this repository and read by
 // people, and a renderer would be a dependency and an escaping decision taken
 // on for formatting nobody asked for.
+// The documentation pages have to name what the grid names.
+//
+// This gate already pinned PROVIDER_COUNT to the provider grid, and its own
+// docstring gives EfficientIP SOLIDserver as the example of what happens when
+// a page a visitor scans to answer "do you support X?" falls behind. It then
+// checked the home page and never the page called "DNS Providers": that page
+// named 24 of the 29 providers in the grid, and the five it omitted were
+// DuckDNS, deSEC, Scaleway, Akamai EdgeDNS and EfficientIP SOLIDserver. The
+// same example, on a different page, for months.
+//
+// Names are matched loosely on purpose: the full name, or its longest word,
+// anywhere in the page's text. A stricter match would fail on "Akamai EdgeDNS"
+// being written as "EdgeDNS" in a sentence, and this is a check for absence,
+// not for phrasing.
+function pageText(relativePath) {
+  return readFileSync(join(ROOT, relativePath), 'utf8')
+    .replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .toLowerCase();
+}
+
+function namesAbsentFrom(relativePath, names) {
+  const text = pageText(relativePath);
+  return names.filter((name) => {
+    if (text.includes(name.toLowerCase())) return false;
+    const longest = name.split(/\s+/).sort((a, b) => b.length - a.length)[0];
+    return !text.includes(longest.toLowerCase());
+  });
+}
+
+const gridNames = [...gridText.matchAll(/name:\s*'([^']+)'/g)].map((m) => m[1]);
+const absentProviders = namesAbsentFrom('src/docs/dns-providers.html', gridNames);
+if (gridNames.length === 0) {
+  problems.push(
+    'src/components/DnsProviders.astro  no provider names matched, so the ' +
+      'documentation page cannot be checked against them.'
+  );
+} else if (absentProviders.length) {
+  problems.push(
+    `src/docs/dns-providers.html  does not name ${absentProviders.length} of ` +
+      `the ${gridNames.length} providers the grid lists: ` +
+      `${absentProviders.join(', ')}. That page is what a visitor reads to ` +
+      `find out whether their provider is supported.`
+  );
+}
+
+// The same question for storage backends. STORAGE_BACKEND_COUNT sat in
+// site.ts declaring 6 and was read by nothing, while the storage page listed
+// 5: the site said six in the comparison table and in the docs card, and five
+// on the page about storage.
+const STORAGE_BACKENDS = [
+  'Local Filesystem',
+  'Azure Key Vault',
+  'AWS Secrets Manager',
+  'HashiCorp Vault',
+  'Infisical',
+  'S3-compatible',
+];
+const declaredBackends = Number(siteText.match(/STORAGE_BACKEND_COUNT\s*=\s*(\d+)/)?.[1]);
+if (declaredBackends !== STORAGE_BACKENDS.length) {
+  problems.push(
+    `src/data/site.ts  STORAGE_BACKEND_COUNT is ${declaredBackends} but ` +
+      `check-facts.mjs knows ${STORAGE_BACKENDS.length} backends. One of the ` +
+      `two is behind the app; scripts/check-against-app.mjs pins this list to ` +
+      `modules/core/storage_backends.py.`
+  );
+}
+const absentBackends = namesAbsentFrom('src/docs/storage-backends.html', STORAGE_BACKENDS);
+if (absentBackends.length) {
+  problems.push(
+    `src/docs/storage-backends.html  does not name ${absentBackends.length} ` +
+      `of the ${STORAGE_BACKENDS.length} storage backends: ` +
+      `${absentBackends.join(', ')}.`
+  );
+}
+
 // Prose files whose fields are printed as text rather than parsed.
 const PLAIN_TEXT_PROSE = ['src/data/whats-new.ts'];
 for (const relativePath of PLAIN_TEXT_PROSE) {
