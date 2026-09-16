@@ -1,0 +1,113 @@
+---
+title: "SSL_ERROR_NO_CYPHER_OVERLAP"
+errorCode: "SSL_ERROR_NO_CYPHER_OVERLAP"
+description: "Risolvi SSL_ERROR_NO_CYPHER_OVERLAP di Firefox: browser e server non condividono alcuna suite di cifratura o versione TLS. Configurazioni obsolete, tipo di chiave e cosa abilitare."
+summary: "Firefox e il server non sono riusciti ad accordarsi su un solo modo di cifrare la connessione. Di solito è un server che offre soltanto ciò che i browser moderni hanno rimosso."
+browsers: ["Firefox"]
+order: 12
+updated: "2026-09-16"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+Firefox segnala `SSL_ERROR_NO_CYPHER_OVERLAP`: *"Impossibile comunicare in modo
+sicuro con il peer: nessun algoritmo di cifratura in comune."*
+
+Il ClientHello porta la lista di suite di cifratura e versioni TLS che Firefox è
+disposto a usare. Il server la confronta con la propria e trova l'intersezione
+vuota. Non c'è niente da negoziare, quindi l'handshake si ferma prima che venga
+inviato qualunque certificato.
+
+Vale la pena dire l'asimmetria: questo errore di solito significa che il server
+è vecchio e il browser è attuale. Firefox ha rimosso RC4, 3DES, le suite export,
+gli algoritmi di firma SHA-1 puri e, nelle versioni rilasciate, TLS 1.0 e 1.1.
+Un server che offre solo quelli non ha più niente da offrire.
+
+<Handshake
+  caption="Dove viene sollevato SSL_ERROR_NO_CYPHER_OVERLAP"
+  steps={[
+    { from: 'Firefox', to: 'Server', label: 'ClientHello con le suite TLS 1.2 / 1.3' },
+    { from: 'Server', label: 'Interseca quella lista con le proprie suite e versioni abilitate' },
+    { from: 'Server', label: "L'intersezione è vuota" },
+    { from: 'Server', to: 'Firefox', label: 'Alert: handshake_failure, prima di qualunque messaggio Certificate' },
+    { from: 'Firefox', to: 'Server', label: 'Niente in comune: connessione rifiutata (SSL_ERROR_NO_CYPHER_OVERLAP)', fails: true },
+  ]}
+/>
+
+## Cause comuni
+
+- **Sono abilitate solo suite obsolete.** Una stringa di cifrari copiata da una
+  guida anni fa e mai più rivista, oppure una lista volutamente stretta che si è
+  fatta sopravvivere dalle proprie voci.
+- **Sono abilitate solo versioni di protocollo obsolete.** Il server consente
+  TLS 1.0 e 1.1 e nulla di successivo, e Firefox non offre più nessuna delle
+  due.
+- **Il tipo di chiave del certificato non corrisponde alle suite.** Una
+  configurazione ristretta alle suite `ECDHE-ECDSA-*` non può usare un
+  certificato RSA, e una lista ristretta a `ECDHE-RSA-*` non può usarne uno
+  ECDSA. Ogni pezzo sembra corretto preso da solo, e la coppia non funziona.
+- **Un profilo irrigidito o FIPS** ha ristretto la lista più del previsto.
+- **Un apparato che termina TLS** e fa la negoziazione al posto del server, con
+  la propria configurazione datata.
+
+## Come risolverlo
+
+**1. Chiedi al server cosa accetta davvero.** Provare una versione alla volta
+dice quali sono vive:
+
+```bash
+for v in tls1 tls1_1 tls1_2 tls1_3; do
+  printf '%-9s ' "$v"
+  echo | openssl s_client -connect example.com:443 -servername example.com -"$v" 2>&1 \
+    | grep -qE 'Cipher.*:.*[A-Z]' && echo accettata || echo rifiutata
+done
+```
+
+**2. Leggi le suite che il server offre** e confrontale con quelle che i browser
+accettano ancora. Se tutto quello che c'è in lista contiene `RC4`, `3DES`, `DES`
+o `NULL`, hai la risposta.
+
+**3. Abilita versioni attuali e una lista di suite moderna:**
+
+```nginx
+ssl_protocols TLSv1.2 TLSv1.3;
+ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+ssl_prefer_server_ciphers off;
+```
+
+Tieni sia la forma `ECDSA` sia la `RSA`, a meno di essere certo del tipo di
+chiave del certificato, perché è proprio quell'accoppiamento la terza causa
+elencata sopra.
+
+**4. Controlla il tipo di chiave del certificato che stai servendo:**
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/null \
+  | openssl x509 -noout -text | grep -A1 'Public Key Algorithm'
+```
+
+## Evitare che si ripresenti
+
+La parte di questo errore che un gestore di certificati può davvero governare è
+il tipo di chiave: il certificato deve essere del tipo che la configurazione
+dei cifrari del server è in grado di usare.
+
+CertMate la rende una proprietà esplicita di ogni certificato, invece che un
+parametro passato una volta. Tipo di chiave, dimensione RSA e curva ellittica
+sono impostazioni, con RSA come valore predefinito di serie, scelte per
+certificato e validate prima dell'emissione invece di essere scoperte
+all'handshake. Produce inoltre un inventario crittografico su tutto ciò che
+gestisce, classificando algoritmi di chiave e di firma rispetto ai calendari di
+dismissione pubblicati, ed è così che un tipo di chiave rimasto indietro
+rispetto alla configurazione che lo circonda diventa visibile prima che lo trovi
+un browser.
+
+La scelta di suite e protocolli resta dove deve stare, nella configurazione del
+server. Niente che gestisca certificati può negoziare al posto del server.
+
+## Errori correlati
+
+- `ERR_SSL_VERSION_OR_CIPHER_MISMATCH`: l'equivalente in Chromium di questo errore.
+- `ERR_SSL_PROTOCOL_ERROR`: un fallimento di handshake Chromium più generale.
+- `SSL_ERROR_RX_RECORD_TOO_LONG`: la porta non parla TLS del tutto.

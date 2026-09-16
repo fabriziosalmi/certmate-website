@@ -1,0 +1,118 @@
+---
+title: "SEC_ERROR_EXPIRED_CERTIFICATE"
+errorCode: "SEC_ERROR_EXPIRED_CERTIFICATE"
+description: "Risolvi SEC_ERROR_EXPIRED_CERTIFICATE di Firefox: la data notAfter del certificato è passata. Rinnovo mai eseguito, rinnovo senza reload e orologio sfasato."
+summary: "Firefox ha letto il certificato, ha trovato la data notAfter nel passato e si è fermato. Di solito è un rinnovo mai eseguito, oppure eseguito e mai ricaricato nel server attivo."
+browsers: ["Firefox"]
+order: 7
+updated: "2026-09-16"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+Firefox segnala `SEC_ERROR_EXPIRED_CERTIFICATE` con il messaggio *"Il
+certificato del server è scaduto."* Il certificato è stato ricevuto e
+interpretato correttamente: semplicemente la sua data `notAfter` è nel passato,
+quindi nulla di ciò che afferma è più affidabile.
+
+È la validazione che fallisce all'ultimo passo, il più semplice. La catena può
+essere completa, il nome host può corrispondere, la chiave può essere solida.
+Niente di tutto questo viene raggiunto, perché un certificato scaduto viene
+rifiutato solo in base alle date.
+
+<Handshake
+  caption="Dove viene sollevato SEC_ERROR_EXPIRED_CERTIFICATE"
+  steps={[
+    { from: 'Firefox', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Firefox', label: 'ServerHello, Certificate (foglia + intermedi)' },
+    { from: 'Firefox', label: 'Costruisce la catena fino a una radice attendibile: riesce' },
+    { from: 'Firefox', label: "Confronta l'ora attuale con notBefore / notAfter" },
+    { from: 'Firefox', to: 'Server', label: 'notAfter è nel passato: connessione rifiutata (SEC_ERROR_EXPIRED_CERTIFICATE)', fails: true },
+  ]}
+/>
+
+## Cause comuni
+
+- **Il rinnovo non è mai partito.** Un timer disattivato, un container
+  ricostruito senza il suo scheduler, una voce di cron su una macchina
+  sostituita. È la causa più frequente e la meno visibile, perché nessuno se ne
+  accorge fino al giorno in cui il certificato muore.
+- **Il rinnovo è partito e il server non ha mai ricaricato.** Il nuovo
+  certificato è su disco con una `notAfter` valida, e il processo in esecuzione
+  tiene ancora in memoria quello vecchio. `openssl x509` sul file dice che va
+  tutto bene, il browser dice di no, e ha ragione il browser.
+- **Viene distribuito il file sbagliato.** Il blocco di configurazione punta a
+  un percorso che non è quello su cui scrive il rinnovo: una copia fatta a mano
+  una volta, oppure un secondo vhost mai migrato.
+- **L'orologio del client è sbagliato.** Un certificato valido sembra scaduto su
+  un dispositivo con la data avanti di mesi. Se lo vede un solo visitatore e
+  nessun altro, controlla il suo orologio prima di toccare il server.
+- **È scaduto l'intermedio, non la foglia.** Firefox lo riporta come
+  `SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE`, che è un codice distinto, e la
+  soluzione è una nuova catena, non un nuovo certificato.
+
+## Come risolverlo
+
+**1. Chiedi al server, non al disco.** Questa è tutta la diagnosi in un comando,
+perché legge ciò che viene davvero servito:
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/null \
+  | openssl x509 -noout -subject -dates
+```
+
+**2. Confrontalo con il file su disco:**
+
+```bash
+openssl x509 -in /etc/letsencrypt/live/example.com/fullchain.pem -noout -dates
+```
+
+Se il file è aggiornato e il server serve una data più vecchia, il certificato è
+stato rinnovato e mai caricato. È un problema di reload, non di certificato, e
+riemetterlo non lo risolve.
+
+**3. Rinnova, poi ricarica:**
+
+```bash
+certbot renew
+systemctl reload nginx
+```
+
+**4. Controlla tutti i nomi, non solo quello che si è rotto.** Una scadenza che
+ti ha sorpreso una volta ti sorprenderà di nuovo sul prossimo host:
+
+```bash
+for host in example.com www.example.com api.example.com; do
+  printf '%-28s ' "$host"
+  echo | openssl s_client -connect "$host:443" -servername "$host" 2>/dev/null \
+    | openssl x509 -noout -enddate
+done
+```
+
+## Evitare che si ripresenti
+
+Un incidente da scadenza non è quasi mai un fallimento nell'*emettere*. È un
+fallimento nell'*accorgersi*: o che il rinnovo ha smesso di girare, o che un
+certificato rinnovato non è mai arrivato al processo che lo serve.
+
+CertMate è costruito attorno al secondo caso. Rinnova in anticipo sulla scadenza
+in modo pianificato, esegue un deploy hook perché il servizio ricarichi davvero,
+e poi fa la cosa che intercetta il caso silenzioso: il suo controllo di
+distribuzione apre una connessione verso l'host e confronta l'impronta del
+certificato **effettivamente servito** con quella che ha in archivio. Un rinnovo
+riuscito su disco e mai arrivato al server attivo compare come discrepanza,
+settimane prima che lo trovi un visitatore.
+
+Un dettaglio utile se usi certificati a vita breve: un certificato con meno di
+un giorno residuo ha zero giorni *interi* rimanenti, e gli strumenti che
+verificano `days_left <= 0` lo dichiarano scaduto mentre è ancora valido.
+CertMate riporta anche i secondi, oltre ai giorni, proprio per questo. I
+certificati da 24 ore che una CA privata emette di serie cadono interamente in
+quell'intervallo.
+
+## Errori correlati
+
+- `NET::ERR_CERT_DATE_INVALID`: l'equivalente in Chromium di questo errore.
+- `SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE`: è scaduto l'intermedio, non la foglia.
+- `SEC_ERROR_UNKNOWN_ISSUER`: un problema di fiducia, non di date.

@@ -1,0 +1,114 @@
+[
+  {
+    "code": "ERR_SSL_PROTOCOL_ERROR",
+    "symbol": "ERR_SSL_PROTOCOL_ERROR",
+    "emittedBy": "Chromium (Chrome, Edge, Brave, Opera, Vivaldi)",
+    "source": "chromium/net/base/net_error_list.h",
+    "evidence": "NET_ERROR(SSL_PROTOCOL_ERROR, -107)"
+  },
+  {
+    "code": "ERR_SSL_VERSION_OR_CIPHER_MISMATCH",
+    "symbol": "ERR_SSL_VERSION_OR_CIPHER_MISMATCH",
+    "emittedBy": "Chromium (Chrome, Edge, Brave, Opera, Vivaldi)",
+    "source": "chromium/net/base/net_error_list.h",
+    "evidence": "NET_ERROR(SSL_VERSION_OR_CIPHER_MISMATCH, -113)"
+  },
+  {
+    "code": "MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY",
+    "symbol": "MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY",
+    "emittedBy": "NSS (Firefox, Thunderbird)",
+    "source": "gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
+    "evidence": "The server uses a certificate with a basic constraints extension identifying it as a certificate authority. For a properly-issued certificate, this should not be the case."
+  },
+  {
+    "code": "MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT",
+    "symbol": "MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT",
+    "emittedBy": "NSS (Firefox, Thunderbird)",
+    "source": "gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
+    "evidence": "The certificate is not trusted because it is self-signed."
+  },
+  {
+    "code": "NET::ERR_CERT_AUTHORITY_INVALID",
+    "symbol": "ERR_CERT_AUTHORITY_INVALID",
+    "emittedBy": "Chromium (Chrome, Edge, Brave, Opera, Vivaldi)",
+    "source": "chromium/net/base/net_error_list.h",
+    "evidence": "NET_ERROR(CERT_AUTHORITY_INVALID, -202)"
+  },
+  {
+    "code": "NET::ERR_CERT_COMMON_NAME_INVALID",
+    "symbol": "ERR_CERT_COMMON_NAME_INVALID",
+    "emittedBy": "Chromium (Chrome, Edge, Brave, Opera, Vivaldi)",
+    "source": "chromium/net/base/net_error_list.h",
+    "evidence": "NET_ERROR(CERT_COMMON_NAME_INVALID, -200)"
+  },
+  {
+    "code": "NET::ERR_CERT_DATE_INVALID",
+    "symbol": "ERR_CERT_DATE_INVALID",
+    "emittedBy": "Chromium (Chrome, Edge, Brave, Opera, Vivaldi)",
+    "source": "chromium/net/base/net_error_list.h",
+    "evidence": "NET_ERROR(CERT_DATE_INVALID, -201)"
+  },
+  {
+    "code": "SEC_ERROR_EXPIRED_CERTIFICATE",
+    "symbol": "SEC_ERROR_EXPIRED_CERTIFICATE",
+    "emittedBy": "NSS (Firefox, Thunderbird)",
+    "source": "gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
+    "evidence": "Peer’s Certificate has expired."
+  },
+  {
+    "code": "SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE",
+    "symbol": "SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE",
+    "emittedBy": "NSS (Firefox, Thunderbird)",
+    "source": "gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
+    "evidence": "The certificate issuer’s certificate has expired. Check your system date and time."
+  },
+  {
+    "code": "SEC_ERROR_REVOKED_CERTIFICATE",
+    "symbol": "SEC_ERROR_REVOKED_CERTIFICATE",
+    "emittedBy": "NSS (Firefox, Thunderbird)",
+    "source": "gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
+    "evidence": "Peer’s Certificate has been revoked."
+  },
+  {
+    "code": "SEC_ERROR_REVOKED_CERTIFICATE_CRL",
+    "symbol": "SEC_ERROR_REVOKED_CERTIFICATE_CRL",
+    "emittedBy": "NSS (Firefox, Thunderbird)",
+    "source": "gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
+    "evidence": "Certificate is revoked in issuer’s certificate revocation list."
+  },
+  {
+    "code": "SEC_ERROR_REVOKED_CERTIFICATE_OCSP",
+    "symbol": "SEC_ERROR_REVOKED_CERTIFICATE_OCSP",
+    "emittedBy": "NSS (Firefox, Thunderbird)",
+    "source": "gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
+    "evidence": "Issuer’s OCSP responder reports certificate is revoked."
+  },
+  {
+    "code": "SEC_ERROR_UNKNOWN_ISSUER",
+    "symbol": "SEC_ERROR_UNKNOWN_ISSUER",
+    "emittedBy": "NSS (Firefox, Thunderbird)",
+    "source": "gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
+    "evidence": "Peer’s Certificate issuer is not recognized."
+  },
+  {
+    "code": "SSL_ERROR_BAD_CERT_DOMAIN",
+    "symbol": "SSL_ERROR_BAD_CERT_DOMAIN",
+    "emittedBy": "NSS (Firefox, Thunderbird)",
+    "source": "nss/lib/ssl/sslerr.h + gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
+    "evidence": "Unable to communicate securely with peer: requested domain name does not match the server’s certificate."
+  },
+  {
+    "code": "SSL_ERROR_NO_CYPHER_OVERLAP",
+    "symbol": "SSL_ERROR_NO_CYPHER_OVERLAP",
+    "emittedBy": "NSS (Firefox, Thunderbird)",
+    "source": "nss/lib/ssl/sslerr.h + gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
+    "evidence": "Cannot communicate securely with peer: no common encryption algorithm(s)."
+  },
+  {
+    "code": "SSL_ERROR_RX_RECORD_TOO_LONG",
+    "symbol": "SSL_ERROR_RX_RECORD_TOO_LONG",
+    "emittedBy": "NSS (Firefox, Thunderbird)",
+    "source": "nss/lib/ssl/sslerr.h + gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
+    "evidence": "SSL received a record that exceeded the maximum permissible length."
+  }
+]

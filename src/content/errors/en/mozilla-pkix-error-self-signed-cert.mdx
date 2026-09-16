@@ -1,0 +1,104 @@
+---
+title: "MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT"
+errorCode: "MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT"
+description: "Fix Firefox's MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT: the certificate signed itself, so no authority vouches for it. Public CA, internal CA, and when self-signed is the right answer."
+summary: "The certificate's issuer is itself. Nothing outside the server asserts that it belongs to this host, so Firefox has nothing to verify against."
+browsers: ["Firefox"]
+order: 9
+updated: "2026-09-16"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+Firefox reports `MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT`: *"The certificate is not
+trusted because it is self-signed."*
+
+A self-signed certificate is one whose issuer and subject are the same. There
+is no chain to walk, because the certificate's only claim to authenticity is
+its own. Firefox is precise here: this is a different code from the general
+untrusted-issuer case, and it means the chain did not end somewhere unknown,
+it ended immediately.
+
+This is not the same as a certificate from your own internal CA. That one is
+signed by something else, a root Firefox does not know, and reports
+`SEC_ERROR_UNKNOWN_ISSUER` instead. The distinction matters because the fixes
+are different: an internal CA can be trusted once, for every certificate it
+will ever issue, while a self-signed certificate can only be trusted one at a
+time.
+
+<Handshake
+  caption="Where MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT is raised"
+  steps={[
+    { from: 'Firefox', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Firefox', label: 'Certificate: issuer equals subject, and no chain follows' },
+    { from: 'Firefox', label: 'Starts building a path towards a trusted root' },
+    { from: 'Firefox', label: 'The path is one certificate long and that certificate is not a trust anchor' },
+    { from: 'Firefox', to: 'Server', label: 'No authority vouches for this: connection refused (MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT)', fails: true },
+  ]}
+/>
+
+## Common causes
+
+- **A placeholder that was never replaced.** Most server packages generate a
+  self-signed certificate on install so the port answers at all. It is meant to
+  be temporary, and it survives into production more often than anyone admits.
+- **An internal service nobody planned to expose.** It was reachable only from
+  the LAN, and then it was not.
+- **A device or appliance certificate.** Printers, hypervisors, storage
+  controllers and management interfaces ship self-signed and usually let you
+  replace it.
+- **A TLS-intercepting proxy or antivirus** that re-signs traffic with its own
+  certificate.
+- **A deliberate choice** for a service with no public name at all, in which
+  case the error is correct and the fix is to distribute trust, not to change
+  the certificate.
+
+## How to fix it
+
+**1. Confirm the certificate signed itself.** Issuer identical to subject is
+the whole test:
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/null \
+  | openssl x509 -noout -subject -issuer
+```
+
+**2. If the host has a public DNS name, get a real certificate.** A publicly
+resolvable name is all a public CA needs, and it removes the problem for every
+visitor at once rather than for each one separately:
+
+```bash
+certbot certonly -d example.com
+```
+
+**3. If the host has no public name**, a DNS-01 challenge still works: it
+proves control of the name through DNS rather than by being reachable, so an
+internal host with a real domain name can hold a publicly trusted certificate
+without being exposed to the internet.
+
+**4. If it must stay private**, stop self-signing per host and run one internal
+CA. Distribute that root once through your MDM or configuration management, and
+every certificate it issues is trusted from then on. Firefox keeps its own
+trust store, so pushing a root to Windows or macOS is not enough for Firefox
+unless you also set the enterprise policy.
+
+## Prevent it from recurring
+
+Self-signed certificates persist for a structural reason: there is no issuing
+process, so nothing ever expires loudly enough to force one.
+
+CertMate covers both directions. For a host with a resolvable name it issues
+from a public CA over DNS-01, so the host never has to be reachable from the
+internet to be trusted by it. For a host that genuinely has no public name, it
+runs a private CA and issues from that, which is the difference between one
+root to distribute and a self-signed certificate on every machine. Its probe
+reports self-signed as a distinct state, read from the served certificate, so a
+placeholder that was never replaced is something a check finds rather than a
+visitor.
+
+## Related errors
+
+- `SEC_ERROR_UNKNOWN_ISSUER`: signed by a CA Firefox does not know, not by itself.
+- `NET::ERR_CERT_AUTHORITY_INVALID`: the Chromium code covering both cases.
+- `MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY`: a CA certificate served directly as the site's own.

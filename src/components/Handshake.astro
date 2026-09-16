@@ -1,0 +1,87 @@
+---
+/**
+ * The point in a TLS handshake where one specific error is raised.
+ *
+ * Why this is a component and not a diagram image: an error page is found by
+ * someone pasting a code into a search box, so the words on it are the whole
+ * mechanism by which it is found. A rendered sequence diagram takes the one
+ * part of the page that explains the mechanism and turns it into pixels no
+ * crawler and no screen reader can read, in exchange for a build dependency
+ * that drives a headless browser.
+ *
+ * So the diagram is an ordered list, styled. It reads correctly with CSS off,
+ * it is text to a crawler, it inherits both themes from the same tokens as
+ * everything else, and it adds nothing to package.json.
+ *
+ * `fails` marks the step where the connection dies. Exactly one step should
+ * carry it: that is the step the page is about, and a diagram that shows the
+ * handshake but not where it broke is a diagram of a handshake.
+ */
+export interface Step {
+  /** Who acts. Free text so a page can say "Server (nginx)" where it matters. */
+  from: string;
+  /** Who receives. Omitted for a local decision that never reaches the wire. */
+  to?: string;
+  /** What is sent or decided, in the protocol's own words where one exists. */
+  label: string;
+  /** The step that ends the connection. */
+  fails?: boolean;
+}
+
+interface Props {
+  caption: string;
+  steps: Step[];
+}
+
+const { caption, steps } = Astro.props;
+---
+
+<figure class="not-prose my-8 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
+  <figcaption
+    class="border-b border-gray-200 bg-gray-50 px-4 py-2 text-xs font-medium uppercase tracking-wide text-gray-500 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400"
+  >
+    {caption}
+  </figcaption>
+  <ol class="divide-y divide-gray-100 dark:divide-gray-800">
+    {steps.map((step, index) => (
+      <li class:list={['flex gap-3 px-4 py-3', step.fails && 'bg-red-50/60 dark:bg-red-900/10']}>
+        <span
+          class:list={[
+            'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums',
+            step.fails
+              ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+              : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400',
+          ]}
+          aria-hidden="true"
+        >
+          {index + 1}
+        </span>
+        <div class="min-w-0">
+          <p class="font-mono text-xs text-gray-500 dark:text-gray-400">
+            {step.from}
+            {step.to ? (
+              <>
+                {' '}<span class:list={[step.fails ? 'text-red-600 dark:text-red-400' : '']}>
+                  {step.fails ? '✗' : '→'}
+                </span>{' '}
+                {step.to}
+              </>
+            ) : (
+              <>{' '}<span aria-hidden="true">·</span> internal</>
+            )}
+          </p>
+          <p
+            class:list={[
+              'mt-0.5 text-sm',
+              step.fails
+                ? 'font-medium text-red-800 dark:text-red-300'
+                : 'text-gray-700 dark:text-gray-300',
+            ]}
+          >
+            {step.label}
+          </p>
+        </div>
+      </li>
+    ))}
+  </ol>
+</figure>

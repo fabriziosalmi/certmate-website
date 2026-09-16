@@ -1,0 +1,110 @@
+---
+title: "SSL_ERROR_NO_CYPHER_OVERLAP"
+errorCode: "SSL_ERROR_NO_CYPHER_OVERLAP"
+description: "Fix Firefox's SSL_ERROR_NO_CYPHER_OVERLAP: browser and server share no cipher suite or TLS version. Legacy configs, key type mismatches, and what to enable."
+summary: "Firefox and the server could not agree on a single way to encrypt the connection. Usually a server still offering only what modern browsers have removed."
+browsers: ["Firefox"]
+order: 12
+updated: "2026-09-16"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+Firefox reports `SSL_ERROR_NO_CYPHER_OVERLAP`: *"Cannot communicate securely
+with peer: no common encryption algorithm(s)."*
+
+The ClientHello carries the list of cipher suites and TLS versions Firefox is
+willing to use. The server compares that list with its own and finds the
+intersection empty. There is nothing to negotiate, so the handshake stops
+before any certificate is sent.
+
+The asymmetry is worth naming: this error normally means the server is old and
+the browser is current. Firefox has removed RC4, 3DES, the export suites,
+plain SHA-1 signature algorithms and, in released versions, TLS 1.0 and 1.1. A
+server that offers only those has nothing left to offer.
+
+<Handshake
+  caption="Where SSL_ERROR_NO_CYPHER_OVERLAP is raised"
+  steps={[
+    { from: 'Firefox', to: 'Server', label: 'ClientHello listing TLS 1.2 / 1.3 suites' },
+    { from: 'Server', label: 'Intersects that list with its own enabled suites and versions' },
+    { from: 'Server', label: 'The intersection is empty' },
+    { from: 'Server', to: 'Firefox', label: 'Alert: handshake_failure, before any Certificate message' },
+    { from: 'Firefox', to: 'Server', label: 'Nothing in common: connection refused (SSL_ERROR_NO_CYPHER_OVERLAP)', fails: true },
+  ]}
+/>
+
+## Common causes
+
+- **Only obsolete suites enabled.** A cipher string copied from a guide years
+  ago and never revisited, or a deliberately narrow list that has since been
+  outlived by its entries.
+- **Only obsolete protocol versions.** The server permits TLS 1.0 and 1.1 and
+  nothing later, and Firefox no longer offers either.
+- **The certificate's key type does not match the suites.** A configuration
+  restricted to `ECDHE-ECDSA-*` suites cannot use an RSA certificate, and a
+  restricted `ECDHE-RSA-*` list cannot use an ECDSA one. Every part looks
+  correct in isolation, and the pair does not work.
+- **A hardened or FIPS profile** narrowed the list further than intended.
+- **A TLS-terminating middlebox** doing the negotiation, with its own dated
+  configuration.
+
+## How to fix it
+
+**1. Ask the server what it will actually accept.** Testing each version in
+turn tells you which are alive:
+
+```bash
+for v in tls1 tls1_1 tls1_2 tls1_3; do
+  printf '%-9s ' "$v"
+  echo | openssl s_client -connect example.com:443 -servername example.com -"$v" 2>&1 \
+    | grep -qE 'Cipher.*:.*[A-Z]' && echo accepted || echo refused
+done
+```
+
+**2. Read the suites the server offers**, and compare them against what
+browsers still accept. If everything on the list contains `RC4`, `3DES`, `DES`
+or `NULL`, that is the answer.
+
+**3. Enable current protocol versions and a modern suite list:**
+
+```nginx
+ssl_protocols TLSv1.2 TLSv1.3;
+ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+ssl_prefer_server_ciphers off;
+```
+
+Keep both the `ECDSA` and `RSA` forms unless you are certain which key type the
+certificate uses, because that pairing is the failure mode in the third cause above.
+
+**4. Check the key type of the certificate you are serving:**
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/null \
+  | openssl x509 -noout -text | grep -A1 'Public Key Algorithm'
+```
+
+## Prevent it from recurring
+
+The part of this error a certificate manager can genuinely own is the key type:
+the certificate has to be the kind the server's cipher configuration can use.
+
+CertMate makes that an explicit property of each certificate rather than a
+flag someone passed once. Key type, RSA size and elliptic curve are settings
+with a shipped default of RSA, chosen per certificate, validated before
+issuance rather than discovered at the handshake. It also produces a
+cryptographic inventory across everything it manages, classifying key and
+signature algorithms against published deprecation timelines, which is how a
+key type that has fallen behind the configuration around it becomes visible
+before a browser finds it.
+
+Cipher suite and protocol selection stay where they belong, in the server
+configuration. Nothing that manages certificates can negotiate on the server's
+behalf.
+
+## Related errors
+
+- `ERR_SSL_VERSION_OR_CIPHER_MISMATCH`: the Chromium equivalent of this error.
+- `ERR_SSL_PROTOCOL_ERROR`: a broader Chromium handshake failure.
+- `SSL_ERROR_RX_RECORD_TOO_LONG`: the port is not speaking TLS at all.

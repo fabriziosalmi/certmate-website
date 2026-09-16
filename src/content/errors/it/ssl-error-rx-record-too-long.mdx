@@ -1,0 +1,112 @@
+---
+title: "SSL_ERROR_RX_RECORD_TOO_LONG"
+errorCode: "SSL_ERROR_RX_RECORD_TOO_LONG"
+description: "Risolvi SSL_ERROR_RX_RECORD_TOO_LONG di Firefox: il server ha risposto a una richiesta HTTPS con qualcosa che non è TLS, di solito HTTP in chiaro sulla porta 443."
+summary: "Firefox ha parlato TLS e il server ha risposto in chiaro. Quello che è tornato indietro non era affatto un record TLS, quindi il campo lunghezza è risultato assurdo."
+browsers: ["Firefox"]
+order: 11
+updated: "2026-09-16"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+Firefox segnala `SSL_ERROR_RX_RECORD_TOO_LONG`: *"SSL ha ricevuto un record che
+ha superato la lunghezza massima consentita."*
+
+Letto alla lettera sembra un problema di dimensioni. Quasi mai lo è. Un record
+TLS inizia con un byte di tipo, due byte di versione e due byte di lunghezza, e
+un record non può superare i 16 KB. Quando un server risponde a una richiesta
+HTTPS con HTTP in chiaro, i primi byte sul filo sono `HTTP/1.1 400 Bad Request`.
+Firefox li legge comunque come intestazione di record, e la lunghezza che ne
+ricava da quell'ASCII è enorme.
+
+Quindi questo errore significa: la cosa che risponde su questa porta non parla
+TLS. Non è stato coinvolto nessun certificato, ed è per questo che nulla che
+riguardi i certificati lo risolverà.
+
+<Handshake
+  caption="Dove viene sollevato SSL_ERROR_RX_RECORD_TOO_LONG"
+  steps={[
+    { from: 'Firefox', to: 'Server', label: 'ClientHello, come record TLS sulla porta 443' },
+    { from: 'Server', label: 'Il listener è un server HTTP in chiaro: vede una richiesta illeggibile' },
+    { from: 'Server', to: 'Firefox', label: 'HTTP/1.1 400 Bad Request, in chiaro' },
+    { from: 'Firefox', label: 'Interpreta i primi cinque byte come intestazione di record: la lunghezza non è una lunghezza TLS' },
+    { from: 'Firefox', to: 'Server', label: 'Non è un flusso TLS: connessione rifiutata (SSL_ERROR_RX_RECORD_TOO_LONG)', fails: true },
+  ]}
+/>
+
+## Cause comuni
+
+- **HTTP in chiaro sulla porta 443.** Un virtual host in ascolto su 443 senza
+  `ssl` nella direttiva di listen, o un vhost Apache senza `SSLEngine on`. È la
+  stragrande maggioranza dei casi.
+- **Sulla porta c'è il servizio sbagliato.** Qualcos'altro ha occupato la 443
+  per primo: un container che pubblica una porta che non dovrebbe, un
+  application server, una seconda istanza del proxy.
+- **Il proxy termina TLS e inoltra a se stesso.** Un reverse proxy configurato
+  per rimandare le richieste alla propria porta in chiaro, così la risposta
+  arriva dal lato non cifrato.
+- **Un URL HTTPS per un servizio che parla solo HTTP** su una porta non
+  standard.
+
+## Come risolverlo
+
+**1. Scopri se la porta parla TLS.** È il test decisivo, e basta un comando:
+
+```bash
+openssl s_client -connect example.com:443 -servername example.com </dev/null
+```
+
+`wrong version number` oppure uno sversamento di testo leggibile significano che
+la porta non è TLS. Una catena di certificati significa che lo è, e il problema
+sta altrove.
+
+**2. Oppure interrogala in chiaro** e guarda se risponde come un server web:
+
+```bash
+curl -sI http://example.com:443 | head -3
+```
+
+Un'intestazione di risposta HTTP normale dalla porta 443 conferma la diagnosi
+senza appello.
+
+**3. Sistema il listener.** In nginx la parola chiave `ssl` nella direttiva
+listen è la cosa che manca:
+
+```nginx
+server {
+    listen 443 ssl;
+    ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+}
+```
+
+In Apache il vhost ha bisogno di `SSLEngine on` insieme a `SSLCertificateFile` e
+`SSLCertificateKeyFile`.
+
+**4. Controlla chi occupa davvero la porta**, se la configurazione sembra
+corretta:
+
+```bash
+ss -lntp | grep ':443'
+```
+
+## Evitare che si ripresenti
+
+Questo errore è uno stato della distribuzione, non del certificato, ed è
+esattamente per questo che sopravvive a un'emissione perfettamente riuscita.
+Ogni file del certificato può essere a posto e la porta può comunque rispondere
+in chiaro.
+
+Un controllo che legge solo i file dei certificati su disco non può vederlo. Il
+controllo di distribuzione di CertMate si collega all'host in TLS come farebbe
+un browser, e una porta che non completa l'handshake viene riportata come
+fallimento su quel dominio invece di passare in silenzio perché i file sono in
+ordine. È la differenza fra "il certificato è valido" e "il sito lo sta
+servendo".
+
+## Errori correlati
+
+- `ERR_SSL_PROTOCOL_ERROR`: il codice Chromium per la stessa classe di fallimento.
+- `SSL_ERROR_NO_CYPHER_OVERLAP`: la porta parla TLS, senza niente in comune.

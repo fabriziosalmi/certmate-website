@@ -14,8 +14,9 @@
     "astro": "astro",
     "og": "node scripts/build-og.mjs",
     "index": "pagefind --site dist",
-    "check": "node scripts/check-facts.mjs",
-    "postbuild": "node scripts/check-seo.mjs"
+    "check": "node scripts/check-facts.mjs && node scripts/check-error-codes.mjs",
+    "postbuild": "node scripts/check-seo.mjs",
+    "verify:error-codes": "node scripts/verify-error-codes.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",

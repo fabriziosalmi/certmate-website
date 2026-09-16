@@ -1,0 +1,107 @@
+---
+title: "MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT"
+errorCode: "MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT"
+description: "Risolvi MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT di Firefox: il certificato ha firmato se stesso, quindi nessuna autorità garantisce per lui. CA pubblica, CA interna e quando l'autofirma è la scelta giusta."
+summary: "L'emittente del certificato è il certificato stesso. Nulla al di fuori del server afferma che appartenga a questo host, quindi Firefox non ha niente da verificare."
+browsers: ["Firefox"]
+order: 9
+updated: "2026-09-16"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+Firefox segnala `MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT`: *"Il certificato non è
+attendibile in quanto autofirmato."*
+
+Un certificato autofirmato è un certificato il cui emittente coincide con il
+soggetto. Non c'è nessuna catena da percorrere, perché l'unica garanzia di
+autenticità che porta è la propria. Qui Firefox è preciso: è un codice diverso
+da quello generico di emittente non attendibile, e significa che la catena non è
+finita in un punto sconosciuto, è finita subito.
+
+Non è la stessa cosa di un certificato emesso dalla tua CA interna. Quello è
+firmato da qualcos'altro, una radice che Firefox non conosce, e produce
+`SEC_ERROR_UNKNOWN_ISSUER`. La distinzione conta perché le soluzioni sono
+diverse: una CA interna si può rendere attendibile una volta sola, per tutti i
+certificati che emetterà mai, mentre un certificato autofirmato si può rendere
+attendibile solo uno alla volta.
+
+<Handshake
+  caption="Dove viene sollevato MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT"
+  steps={[
+    { from: 'Firefox', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Firefox', label: 'Certificate: emittente uguale al soggetto, e nessuna catena a seguire' },
+    { from: 'Firefox', label: 'Inizia a costruire un percorso verso una radice attendibile' },
+    { from: 'Firefox', label: 'Il percorso è lungo un solo certificato, e quel certificato non è un trust anchor' },
+    { from: 'Firefox', to: 'Server', label: 'Nessuna autorità garantisce: connessione rifiutata (MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT)', fails: true },
+  ]}
+/>
+
+## Cause comuni
+
+- **Un segnaposto mai sostituito.** Quasi tutti i pacchetti server generano un
+  certificato autofirmato all'installazione, solo perché la porta risponda. È
+  pensato come temporaneo, e sopravvive in produzione più spesso di quanto si
+  ammetta.
+- **Un servizio interno che nessuno pensava di esporre.** Era raggiungibile solo
+  dalla LAN, e poi non lo è più stato.
+- **Il certificato di un dispositivo o di un apparato.** Stampanti, hypervisor,
+  controller di storage e interfacce di gestione escono autofirmati, e di solito
+  permettono di sostituirlo.
+- **Un proxy o un antivirus che intercetta TLS** e rifirma il traffico con il
+  proprio certificato.
+- **Una scelta deliberata** per un servizio che non ha alcun nome pubblico. In
+  quel caso l'errore è corretto e la soluzione è distribuire la fiducia, non
+  cambiare il certificato.
+
+## Come risolverlo
+
+**1. Verifica che il certificato abbia firmato se stesso.** Emittente identico
+al soggetto è tutto il test:
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/null \
+  | openssl x509 -noout -subject -issuer
+```
+
+**2. Se l'host ha un nome DNS pubblico, prendi un certificato vero.** Un nome
+risolvibile pubblicamente è tutto ciò che serve a una CA pubblica, e risolve il
+problema per tutti i visitatori in una volta invece che per uno alla volta:
+
+```bash
+certbot certonly -d example.com
+```
+
+**3. Se l'host non è raggiungibile da internet**, una sfida DNS-01 funziona
+comunque: dimostra il controllo del nome tramite DNS e non tramite
+raggiungibilità, quindi un host interno con un vero nome di dominio può avere un
+certificato pubblicamente attendibile senza essere esposto.
+
+**4. Se deve restare privato**, smetti di autofirmare host per host e usa una
+sola CA interna. Distribuisci quella radice una volta con MDM o gestione della
+configurazione, e da lì in poi ogni certificato che emette è attendibile.
+Firefox mantiene un proprio archivio di fiducia, quindi inserire la radice in
+Windows o macOS non basta per Firefox, a meno di impostare anche il criterio
+aziendale.
+
+## Evitare che si ripresenti
+
+I certificati autofirmati sopravvivono per un motivo strutturale: non esiste un
+processo di emissione, quindi non scade mai niente in modo abbastanza rumoroso
+da obbligare a rifarne uno.
+
+CertMate copre entrambe le direzioni. Per un host con un nome risolvibile emette
+da una CA pubblica tramite DNS-01, quindi l'host non deve mai essere
+raggiungibile da internet per esserne attendibile. Per un host che davvero non
+ha nomi pubblici gestisce una CA privata ed emette da quella, che è la
+differenza fra una radice da distribuire e un certificato autofirmato su ogni
+macchina. La sua sonda riporta l'autofirma come stato distinto, ricavato dal
+certificato servito, così un segnaposto mai sostituito lo trova un controllo e
+non un visitatore.
+
+## Errori correlati
+
+- `SEC_ERROR_UNKNOWN_ISSUER`: firmato da una CA che Firefox non conosce, non da sé.
+- `NET::ERR_CERT_AUTHORITY_INVALID`: il codice Chromium che copre entrambi i casi.
+- `MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY`: un certificato di CA servito direttamente come certificato del sito.
