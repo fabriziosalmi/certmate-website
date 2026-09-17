@@ -179,6 +179,21 @@ for (const file of files) {
     }
   }
 
+  // Every icon a page declares is in the build.
+  //
+  // Nothing checked these, and a drift report went looking for the icons by
+  // the conventional root names rather than the declared ones. The declared
+  // ones were all fine; what was missing was /favicon.ico, which browsers,
+  // crawlers and feed readers request unconditionally whether or not a page
+  // links to it. The site answered that request with a 404 HTML page.
+  for (const el of $('link[rel~="icon"], link[rel="apple-touch-icon"], link[rel="manifest"]').toArray()) {
+    const value = $(el).attr('href') || '';
+    if (!value.startsWith('/')) continue;
+    if (!existsSync(join(DIST, value))) {
+      problems.push(at(`declares ${$(el).attr('rel')} ${value}, which is not in the build`));
+    }
+  }
+
   // Every internal link resolves to something in the build.
   //
   // This is how /it once came to 404 while thirteen pages in the sitemap
@@ -204,6 +219,19 @@ for (const file of files) {
       problems.push(at(`structured data does not parse: ${error.message}`));
     }
   }
+}
+
+// The root favicon, which is requested by convention and not by declaration.
+//
+// A page can declare PNG icons and be perfectly correct, and a client that
+// asks for /favicon.ico before parsing any HTML still gets whatever the host
+// serves for a missing file. On GitHub Pages that is a 404 with an HTML body.
+if (!existsSync(join(DIST, 'favicon.ico'))) {
+  problems.push(
+    'there is no favicon.ico at the root of the build. Clients ask for it by '
+    + 'convention, before and regardless of any <link rel="icon">, and a 404 '
+    + 'is what they get instead.',
+  );
 }
 
 if (problems.length) {
