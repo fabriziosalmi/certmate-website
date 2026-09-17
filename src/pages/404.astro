@@ -1,0 +1,110 @@
+---
+/**
+ * The page GitHub Pages serves for any path that is not in the build.
+ *
+ * Until this existed a wrong URL produced GitHub's own "Page not found"
+ * screen: no branding, no navigation, no way back, and no hint that the site
+ * has 52 pages one of which is probably the one you wanted. That screen is
+ * what a reader with an old link sees, which is exactly the moment the site
+ * has something to offer them.
+ *
+ * So the search box is the page, not decoration. Pagefind already indexes
+ * every built page (`npm run index`) and is embedded on /docs/ the same way;
+ * someone who followed a link to a page that moved can type what they
+ * remember and find where it went. Everything else here is a fallback for
+ * when they would rather browse.
+ *
+ * One language, deliberately. This file is served for /nonsense and for
+ * /it/nonsense alike, because GitHub Pages picks it by status and not by
+ * path, so it cannot know which language the reader was reading. It says so
+ * and offers both.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Navbar from '~/components/Navbar.astro';
+import Footer from '~/components/Footer.astro';
+
+const title = 'Page not found — CertMate';
+const description =
+  'That page is not here. Search the CertMate documentation, the SSL error reference and the deployment guides.';
+
+const card =
+  'rounded-lg border border-gray-200 p-4 transition-colors hover:border-primary dark:border-gray-700';
+const cardTitle = 'font-semibold text-gray-900 dark:text-white';
+const cardText = 'mt-1 text-sm text-gray-600 dark:text-gray-300';
+---
+
+<BaseLayout title={title} description={description} lang="en" noindex>
+  <Navbar />
+
+  <main id="main-content" class="mx-auto w-full max-w-3xl flex-1 px-4 py-16">
+    <p class="text-sm font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+      404
+    </p>
+    <h1 class="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
+      That page is not here
+    </h1>
+    <p class="mt-3 text-gray-600 dark:text-gray-300">
+      The address may have changed, or the link that brought you here may be
+      out of date. The site is searchable, so if you know roughly what you were
+      after you can probably find where it went.
+    </p>
+
+    <!-- Pagefind, embedded the way /docs/ embeds it: the UI auto-initialises
+         against the index built by `npm run index`. Client-side after the
+         first load, no third-party service. -->
+    <link rel="stylesheet" href="/pagefind/pagefind-ui.css" />
+    <div id="search" class="mt-8"></div>
+    <script src="/pagefind/pagefind-ui.js" is:inline></script>
+    <script is:inline>
+      window.addEventListener('DOMContentLoaded', function () {
+        if (typeof PagefindUI === 'undefined') return; // index not built (dev)
+        new PagefindUI({
+          element: '#search',
+          showSubResults: true,
+          resetStyles: false,
+          placeholder: 'Search the site',
+        });
+      });
+    </script>
+
+    <h2 class="mt-12 text-lg font-semibold text-gray-900 dark:text-white">
+      Or start from one of these
+    </h2>
+    <div class="not-prose mt-4 grid gap-3 sm:grid-cols-2">
+      <a href="/" class={card}>
+        <span class={cardTitle}>Home</span>
+        <p class={cardText}>What CertMate is, and how to install it.</p>
+      </a>
+      <a href="/docs/getting-started.html" class={card}>
+        <span class={cardTitle}>Documentation</span>
+        <p class={cardText}>Setup, DNS providers, storage backends, the API.</p>
+      </a>
+      <a href="/errors/" class={card}>
+        <span class={cardTitle}>SSL error reference</span>
+        <p class={cardText}>
+          What a browser certificate error means, and how to fix it.
+        </p>
+      </a>
+      <a href="/deploy/" class={card}>
+        <span class={cardTitle}>Deployment guides</span>
+        <p class={cardText}>Docker, Kubernetes, nginx, AWS.</p>
+      </a>
+    </div>
+
+    <p class="mt-10 text-sm text-gray-500 dark:text-gray-400">
+      Questa pagina è in inglese perché viene servita per qualunque indirizzo
+      mancante, in entrambe le lingue, e non può sapere quale stavi leggendo.
+      <a href="/it/" class="text-primary hover:underline">Vai alla home in italiano</a>.
+    </p>
+
+    <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
+      If a link on this site led you here, that is a bug worth reporting:
+      <a
+        href="https://github.com/fabriziosalmi/certmate/issues"
+        class="text-primary hover:underline">open an issue</a
+      >.
+    </p>
+  </main>
+
+  <Footer />
+</BaseLayout>

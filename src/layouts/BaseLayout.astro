@@ -21,12 +21,21 @@ interface Props {
    * SoftwareApplication block. Off by default: see the note above ldJson.
    */
   product?: boolean;
+  /**
+   * A page that must not be indexed, and must not claim a canonical.
+   *
+   * The 404 is the case. It is served for every missing address, so a
+   * canonical would tell a crawler that every wrong URL on the site is
+   * whatever that canonical names, and the default here is the home page.
+   */
+  noindex?: boolean;
 }
 
 const {
   lang = 'en',
   alternates = [],
   product = false,
+  noindex = false,
   // Title preserved verbatim from the previous static index.html so
   // search signal carries over. Description stays under Google's ~155
   // truncation cap and leads with the differentiators (verifiable audit
@@ -110,9 +119,9 @@ const ldJson = {
 
     <!-- Enhanced SEO Meta Tags — preserved from the static site. -->
     <meta name="author" content="Fabrizio Salmi" />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content={noindex ? 'noindex, follow' : 'index, follow'} />
     <meta name="theme-color" content="#2563eb" />
-    <link rel="canonical" href={canonical} />
+    {!noindex && <link rel="canonical" href={canonical} />}
 
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json" />
