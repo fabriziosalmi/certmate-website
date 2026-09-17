@@ -37,6 +37,11 @@ const t = ui[lang];
 // it themselves.
 const ENGLISH_ONLY = new Set(['/privacy/', '/security/', '/docs/getting-started.html']);
 
+// The one class every footer link wears. Inline it eight times and the
+// lines run past 120 characters, which is what the long-line check was
+// reporting; the content is not the length.
+const LINK = 'text-gray-600 hover:text-primary dark:text-gray-400';
+
 const path = (to: string) =>
   ENGLISH_ONLY.has(to) ? to : localizedPath(lang, to);
 
@@ -91,12 +96,12 @@ const year = new Date().getFullYear();
       <div>
         <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{t.footerProduct}</h4>
         <ul class="mt-3 space-y-2 text-sm">
-          <li><a href={path('/#features')}     class="text-gray-600 hover:text-primary dark:text-gray-400">{t.footerFeatures}</a></li>
-          <li><a href={path('/#providers')}    class="text-gray-600 hover:text-primary dark:text-gray-400">{t.footerProviders}</a></li>
-          <li><a href={path('/#installation')} class="text-gray-600 hover:text-primary dark:text-gray-400">{t.footerInstallation}</a></li>
-          <li><a href={path('/#api')}          class="text-gray-600 hover:text-primary dark:text-gray-400">{t.footerApi}</a></li>
-          <li><a href={path('/security/')}      class="text-gray-600 hover:text-primary dark:text-gray-400">{t.footerSecurity}</a></li>
-          <li><a href={path('/cert-manager-alternative/')} class="text-gray-600 hover:text-primary dark:text-gray-400">{t.footerCompare}</a></li>
+          <li><a href={path('/#features')}     class={LINK}>{t.footerFeatures}</a></li>
+          <li><a href={path('/#providers')}    class={LINK}>{t.footerProviders}</a></li>
+          <li><a href={path('/#installation')} class={LINK}>{t.footerInstallation}</a></li>
+          <li><a href={path('/#api')}          class={LINK}>{t.footerApi}</a></li>
+          <li><a href={path('/security/')}      class={LINK}>{t.footerSecurity}</a></li>
+          <li><a href={path('/cert-manager-alternative/')} class={LINK}>{t.footerCompare}</a></li>
         </ul>
       </div>
 
@@ -108,24 +113,24 @@ const year = new Date().getFullYear();
               href="https://github.com/fabriziosalmi/certmate/blob/main/README.md"
               target="_blank"
               rel="noopener noreferrer"
-              class="text-gray-600 hover:text-primary dark:text-gray-400"
+              class={LINK}
             >{t.footerDocumentation}</a>
           </li>
           <li>
-            <a href={path('/docs/getting-started.html')} class="text-gray-600 hover:text-primary dark:text-gray-400">{t.footerInstallGuide}</a>
+            <a href={path('/docs/getting-started.html')} class={LINK}>{t.footerInstallGuide}</a>
           </li>
           <li>
-            <a href={path('/errors/')} class="text-gray-600 hover:text-primary dark:text-gray-400">{t.footerErrors}</a>
+            <a href={path('/errors/')} class={LINK}>{t.footerErrors}</a>
           </li>
           <li>
-            <a href={path('/deploy/')} class="text-gray-600 hover:text-primary dark:text-gray-400">{t.footerDeploy}</a>
+            <a href={path('/deploy/')} class={LINK}>{t.footerDeploy}</a>
           </li>
           <li>
             <a
               href="https://github.com/fabriziosalmi/certmate/issues"
               target="_blank"
               rel="noopener noreferrer"
-              class="text-gray-600 hover:text-primary dark:text-gray-400"
+              class={LINK}
             >{t.footerSupport}</a>
           </li>
           <li>
@@ -133,7 +138,7 @@ const year = new Date().getFullYear();
               href="https://github.com/fabriziosalmi/certmate/blob/main/CONTRIBUTING.md"
               target="_blank"
               rel="noopener noreferrer"
-              class="text-gray-600 hover:text-primary dark:text-gray-400"
+              class={LINK}
             >{t.footerContributing}</a>
           </li>
         </ul>
@@ -147,7 +152,7 @@ const year = new Date().getFullYear();
               href="https://github.com/fabriziosalmi/certmate/blob/main/LICENSE"
               target="_blank"
               rel="noopener noreferrer"
-              class="text-gray-600 hover:text-primary dark:text-gray-400"
+              class={LINK}
             >{t.footerLicense}</a>
           </li>
           <li>
@@ -155,11 +160,11 @@ const year = new Date().getFullYear();
               href="https://github.com/fabriziosalmi/certmate/blob/main/CODE_OF_CONDUCT.md"
               target="_blank"
               rel="noopener noreferrer"
-              class="text-gray-600 hover:text-primary dark:text-gray-400"
+              class={LINK}
             >{t.footerConduct}</a>
           </li>
           <li>
-            <a href={path('/privacy/')} class="text-gray-600 hover:text-primary dark:text-gray-400">{t.footerPrivacy}</a>
+            <a href={path('/privacy/')} class={LINK}>{t.footerPrivacy}</a>
           </li>
         </ul>
       </div>

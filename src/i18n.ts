@@ -133,7 +133,8 @@ export const ui = {
     docsBtn: 'Leggi la documentazione',
     // Footer, in italiano. Vedi la nota nel blocco inglese.
     footerTagline:
-      'Gestione self-hosted dei certificati TLS, con un registro di controllo verificabile e a prova di manomissione. Licenza MIT.',
+      'Gestione self-hosted dei certificati TLS, con un registro di controllo '
+      + 'verificabile e a prova di manomissione. Licenza MIT.',
     footerProduct: 'Prodotto',
     footerResources: 'Risorse',
     footerLegal: 'Note legali',
