@@ -1,5 +1,50 @@
 ---
 import { Icon } from 'astro-icon/components';
+import { ui, localizedPath, type Locale } from '~/i18n';
+
+interface Props {
+  /**
+   * The language of the page this footer sits on.
+   *
+   * It had none, and was called as `<Footer />` from all four call sites,
+   * including DocLayout which knows the locale perfectly well. So the footer
+   * was English on every page including the 20 Italian ones, and its "SSL
+   * Error Reference" link sent an Italian reader to the English index.
+   */
+  lang?: Locale;
+}
+
+const { lang = 'en' } = Astro.props;
+const t = ui[lang];
+
+/**
+ * Pages that exist in English only.
+ *
+ * Localising every href blindly is what the first version of this did, and
+ * scripts/check-seo.mjs refused it with 60 dead links: /it/privacy/,
+ * /it/security/ and /it/docs/getting-started.html are not pages. The label
+ * stays translated, because the reader still needs to know what the link is;
+ * the address stays English, because that is where the page is. An English
+ * page is a worse answer than an Italian one and a much better answer than a
+ * 404.
+ *
+ * When one of these gains an Italian version, delete it from here and the
+ * link follows.
+ */
+// The trailing slash is load-bearing: /privacy, /security and
+// /cert-manager-alternative are all 301s without it, verified against the
+// live site. localizedPath() adds it for the paths it handles; these carry
+// it themselves.
+const ENGLISH_ONLY = new Set(['/privacy/', '/security/', '/docs/getting-started.html']);
+
+// The one class every footer link wears. Inline it eight times and the
+// lines run past 120 characters, which is what the long-line check was
+// reporting; the content is not the length.
+const LINK = 'text-gray-600 hover:text-primary dark:text-gray-400';
+
+const path = (to: string) =>
+  ENGLISH_ONLY.has(to) ? to : localizedPath(lang, to);
+
 // Footer copy preserved verbatim from the static site. The "Made with"
 // line previously rendered with a heart emoji glyph; we use a Font
 // Awesome icon instead so the rendering is identical on every OS and
@@ -24,7 +69,7 @@ const year = new Date().getFullYear();
           <span class="text-lg font-bold tracking-tight">CertMate</span>
         </div>
         <p class="mt-3 text-sm text-gray-600 dark:text-gray-300">
-          Self-hosted TLS certificate management with a tamper-evident, verifiable audit trail. MIT-licensed.
+          {t.footerTagline}
         </p>
         <div class="mt-4 flex items-center gap-3">
           <a
@@ -49,105 +94,99 @@ const year = new Date().getFullYear();
       </div>
 
       <div>
-        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Product</h4>
+        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{t.footerProduct}</h4>
         <ul class="mt-3 space-y-2 text-sm">
-          <li><a href="/#features"     class="text-gray-600 hover:text-primary dark:text-gray-400">Features</a></li>
-          <li><a href="/#providers"    class="text-gray-600 hover:text-primary dark:text-gray-400">DNS Providers</a></li>
-          <li><a href="/#installation" class="text-gray-600 hover:text-primary dark:text-gray-400">Installation</a></li>
-          <li><a href="/#api"          class="text-gray-600 hover:text-primary dark:text-gray-400">API</a></li>
-          <li><a href="/security"      class="text-gray-600 hover:text-primary dark:text-gray-400">Security &amp; trust</a></li>
-          <li><a href="/cert-manager-alternative" class="text-gray-600 hover:text-primary dark:text-gray-400">Compare alternatives</a></li>
+          <li><a href={path('/#features')}     class={LINK}>{t.footerFeatures}</a></li>
+          <li><a href={path('/#providers')}    class={LINK}>{t.footerProviders}</a></li>
+          <li><a href={path('/#installation')} class={LINK}>{t.footerInstallation}</a></li>
+          <li><a href={path('/#api')}          class={LINK}>{t.footerApi}</a></li>
+          <li><a href={path('/security/')}      class={LINK}>{t.footerSecurity}</a></li>
+          <li><a href={path('/cert-manager-alternative/')} class={LINK}>{t.footerCompare}</a></li>
         </ul>
       </div>
 
       <div>
-        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Resources</h4>
+        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{t.footerResources}</h4>
         <ul class="mt-3 space-y-2 text-sm">
           <li>
             <a
               href="https://github.com/fabriziosalmi/certmate/blob/main/README.md"
               target="_blank"
               rel="noopener noreferrer"
-              class="text-gray-600 hover:text-primary dark:text-gray-400"
-            >Documentation</a>
+              class={LINK}
+            >{t.footerDocumentation}</a>
           </li>
           <li>
-            <a href="/docs/getting-started.html" class="text-gray-600 hover:text-primary dark:text-gray-400">
-              Installation Guide
-            </a>
+            <a href={path('/docs/getting-started.html')} class={LINK}>{t.footerInstallGuide}</a>
           </li>
           <li>
-            <a href="/errors/" class="text-gray-600 hover:text-primary dark:text-gray-400">
-              SSL Error Reference
-            </a>
+            <a href={path('/errors/')} class={LINK}>{t.footerErrors}</a>
           </li>
           <li>
-            <a href="/deploy/" class="text-gray-600 hover:text-primary dark:text-gray-400">
-              Deploy Guides
-            </a>
+            <a href={path('/deploy/')} class={LINK}>{t.footerDeploy}</a>
           </li>
           <li>
             <a
               href="https://github.com/fabriziosalmi/certmate/issues"
               target="_blank"
               rel="noopener noreferrer"
-              class="text-gray-600 hover:text-primary dark:text-gray-400"
-            >Support</a>
+              class={LINK}
+            >{t.footerSupport}</a>
           </li>
           <li>
             <a
               href="https://github.com/fabriziosalmi/certmate/blob/main/CONTRIBUTING.md"
               target="_blank"
               rel="noopener noreferrer"
-              class="text-gray-600 hover:text-primary dark:text-gray-400"
-            >Contributing</a>
+              class={LINK}
+            >{t.footerContributing}</a>
           </li>
         </ul>
       </div>
 
       <div>
-        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Legal</h4>
+        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{t.footerLegal}</h4>
         <ul class="mt-3 space-y-2 text-sm">
           <li>
             <a
               href="https://github.com/fabriziosalmi/certmate/blob/main/LICENSE"
               target="_blank"
               rel="noopener noreferrer"
-              class="text-gray-600 hover:text-primary dark:text-gray-400"
-            >MIT License</a>
+              class={LINK}
+            >{t.footerLicense}</a>
           </li>
           <li>
             <a
               href="https://github.com/fabriziosalmi/certmate/blob/main/CODE_OF_CONDUCT.md"
               target="_blank"
               rel="noopener noreferrer"
-              class="text-gray-600 hover:text-primary dark:text-gray-400"
-            >Code of Conduct</a>
+              class={LINK}
+            >{t.footerConduct}</a>
           </li>
           <li>
-            <a href="/privacy" class="text-gray-600 hover:text-primary dark:text-gray-400">Privacy &amp; legal</a>
+            <a href={path('/privacy/')} class={LINK}>{t.footerPrivacy}</a>
           </li>
         </ul>
       </div>
     </div>
 
     <div class="mt-10 flex flex-col items-center gap-2 border-t border-gray-200 pt-6 text-sm text-gray-500 dark:border-gray-800 dark:text-gray-400 sm:flex-row sm:justify-between">
-      <p>&copy; {year} CertMate. Licensed under MIT License.</p>
+      <p>&copy; {year} CertMate. {t.footerLicensed}</p>
       <p>
-        Built by
+        {t.footerBuiltBy}
         <a
           href="https://github.com/fabriziosalmi"
           target="_blank"
           rel="noopener noreferrer"
           class="font-medium text-gray-700 hover:text-primary dark:text-gray-300"
         >Fabrizio Salmi</a>
-        and
+        {t.footerAnd}
         <a
           href="https://github.com/fabriziosalmi/certmate/graphs/contributors"
           target="_blank"
           rel="noopener noreferrer"
           class="font-medium text-gray-700 hover:text-primary dark:text-gray-300"
-        >contributors</a>.
+        >{t.footerContributors}</a>.
       </p>
     </div>
   </div>

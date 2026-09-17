@@ -9,7 +9,8 @@ const links = [
   { href: '/#providers', label: 'DNS Providers' },
   { href: '/#installation', label: 'Installation' },
   { href: '/#api', label: 'API' },
-  { href: '/security', label: 'Security' },
+  // Trailing slash: /security is a 301 without it, on every page of the site.
+  { href: '/security/', label: 'Security' },
   { href: '/#docs', label: 'Documentation' },
 ];
 

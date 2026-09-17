@@ -179,6 +179,41 @@ for (const file of files) {
     }
   }
 
+  // No internal link is a redirect.
+  //
+  // The existing link check asks whether a link RESOLVES, and a 301 resolves,
+  // so /errors, /deploy, /privacy, /security and /cert-manager-alternative all
+  // passed it while costing every visitor a round trip and every crawler a hop.
+  // Found twice by hand: once in the footer, once in the navbar and a hero
+  // button, which is twice too many for something a rule can state.
+  //
+  // The rule is the build's own shape: with `format: 'directory'` every page is
+  // a directory, so an internal link without a trailing slash is a redirect
+  // unless it names a file.
+  for (const el of $('a[href^="/"]').toArray()) {
+    const href = ($(el).attr('href') || '').split('#')[0].split('?')[0];
+    if (!href || href.endsWith('/')) continue;
+    const last = href.slice(href.lastIndexOf('/') + 1);
+    if (last.includes('.')) continue;     // a file, e.g. /docs/x.html
+    problems.push(
+      at(`links to ${href} without a trailing slash, which is a redirect`),
+    );
+  }
+
+  // A fragment that gained a trailing slash.
+  //
+  // The check above strips the hash before looking, so `/#api/` reaches it as
+  // `/` and passes. That is exactly what happened: localising the footer put
+  // `/#api` through a helper that appends a trailing slash to whatever it is
+  // given, and the anchor became one that scrolls nowhere.
+  for (const el of $('a[href*="#"]').toArray()) {
+    const href = $(el).attr('href') || '';
+    const fragment = href.slice(href.indexOf('#') + 1);
+    if (fragment.endsWith('/')) {
+      problems.push(at(`links to ${href}; the fragment has a trailing slash and matches no id`));
+    }
+  }
+
   // Every icon a page declares is in the build.
   //
   // Nothing checked these, and a drift report went looking for the icons by
