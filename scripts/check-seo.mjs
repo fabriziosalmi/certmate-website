@@ -41,7 +41,16 @@ function walk(dir) {
   return out;
 }
 
-const files = walk(DIST).sort();
+const allFiles = walk(DIST).sort();
+
+// 404.html is not a page of the site; it is what the host serves INSTEAD of a
+// page. It has no place in the sitemap, so every check below that compares a
+// page against the sitemap would fail on it, and it must not carry a canonical
+// at all: it answers for every missing address, so a canonical would tell a
+// crawler that each of them is whatever that canonical names. It is checked
+// separately, at the bottom.
+const NOT_A_PAGE = new Set(['404.html']);
+const files = allFiles.filter((file) => !NOT_A_PAGE.has(relative(DIST, file)));
 if (files.length < 30) {
   problems.push(
     `only ${files.length} built pages found; this gate passes vacuously on an ` +
@@ -218,6 +227,31 @@ for (const file of files) {
     } catch (error) {
       problems.push(at(`structured data does not parse: ${error.message}`));
     }
+  }
+}
+
+// The 404 page exists, and refuses to be indexed.
+//
+// Without one, GitHub Pages serves its own "Page not found" screen: no
+// branding, no navigation, no way back, and no hint that the site has 52 pages
+// one of which is probably the one the reader wanted. That screen is what
+// somebody with an out-of-date link sees.
+const notFound = join(DIST, '404.html');
+if (!existsSync(notFound)) {
+  problems.push(
+    'there is no 404.html in the build, so a wrong address gets the host\'s '
+      + 'generic error page instead of this site\'s.',
+  );
+} else {
+  const html = readFileSync(notFound, 'utf8');
+  if (!/<meta\s+name="robots"\s+content="noindex/i.test(html)) {
+    problems.push('404.html does not say noindex, so the error page can be indexed');
+  }
+  if (/<link\s+rel="canonical"/i.test(html)) {
+    problems.push(
+      '404.html declares a canonical. It answers for every missing address, so '
+        + 'that would name one page as the canonical of all of them.',
+    );
   }
 }
 
