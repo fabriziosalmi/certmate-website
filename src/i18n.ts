@@ -27,6 +27,14 @@ export const DEFAULT_LOCALE: Locale = 'en';
  * is a file, and a slash would make it something else.
  */
 export function localizedPath(locale: Locale, path: string): string {
+  // A fragment is not part of the path, and appending the trailing slash to it
+  // produces a different anchor: `/#api` became `/#api/`, which scrolls
+  // nowhere. Split it off, localise the path, put it back.
+  const hash = path.indexOf('#');
+  if (hash !== -1) {
+    const base = path.slice(0, hash);
+    return localizedPath(locale, base || '/') + path.slice(hash);
+  }
   const clean = path === '/' ? '' : path.startsWith('/') ? path : `/${path}`;
   const withLocale = locale === DEFAULT_LOCALE ? clean || '/' : `/${locale}${clean || ''}`;
   const lastSegment = withLocale.slice(withLocale.lastIndexOf('/') + 1);
@@ -70,6 +78,33 @@ export const ui = {
       `CertMate issues, renews and deploys TLS certificates automatically across ${PROVIDER_COUNT} DNS providers — open source, self-hosted, with a REST API.`,
     automateBtn: 'Get CertMate (open source)',
     docsBtn: 'Read the docs',
+    // Footer. Until these existed the footer was English on every page,
+    // including the 20 Italian ones, and its SSL Error Reference link sent an
+    // Italian reader to the English index.
+    footerTagline:
+      'Self-hosted TLS certificate management with a tamper-evident, verifiable audit trail. MIT-licensed.',
+    footerProduct: 'Product',
+    footerResources: 'Resources',
+    footerLegal: 'Legal',
+    footerFeatures: 'Features',
+    footerProviders: 'DNS Providers',
+    footerInstallation: 'Installation',
+    footerApi: 'API',
+    footerSecurity: 'Security & trust',
+    footerCompare: 'Compare alternatives',
+    footerDocumentation: 'Documentation',
+    footerInstallGuide: 'Installation Guide',
+    footerErrors: 'SSL Error Reference',
+    footerDeploy: 'Deploy Guides',
+    footerSupport: 'Support',
+    footerContributing: 'Contributing',
+    footerLicense: 'MIT License',
+    footerConduct: 'Code of Conduct',
+    footerPrivacy: 'Privacy & legal',
+    footerLicensed: 'Licensed under MIT License.',
+    footerBuiltBy: 'Built by',
+    footerAnd: 'and',
+    footerContributors: 'contributors',
   },
   it: {
     locale: 'it',
@@ -96,5 +131,30 @@ export const ui = {
       `CertMate emette, rinnova e fa il deploy dei certificati TLS in automatico su ${PROVIDER_COUNT} provider DNS — open source, self-hosted, con API REST.`,
     automateBtn: 'Scarica CertMate (open source)',
     docsBtn: 'Leggi la documentazione',
+    // Footer, in italiano. Vedi la nota nel blocco inglese.
+    footerTagline:
+      'Gestione self-hosted dei certificati TLS, con un registro di controllo verificabile e a prova di manomissione. Licenza MIT.',
+    footerProduct: 'Prodotto',
+    footerResources: 'Risorse',
+    footerLegal: 'Note legali',
+    footerFeatures: 'Funzionalità',
+    footerProviders: 'Provider DNS',
+    footerInstallation: 'Installazione',
+    footerApi: 'API',
+    footerSecurity: 'Sicurezza e affidabilità',
+    footerCompare: 'Confronto con le alternative',
+    footerDocumentation: 'Documentazione',
+    footerInstallGuide: 'Guida all\'installazione',
+    footerErrors: 'Riferimento errori SSL',
+    footerDeploy: 'Guide al deploy',
+    footerSupport: 'Assistenza',
+    footerContributing: 'Come contribuire',
+    footerLicense: 'Licenza MIT',
+    footerConduct: 'Codice di condotta',
+    footerPrivacy: 'Privacy e note legali',
+    footerLicensed: 'Distribuito con licenza MIT.',
+    footerBuiltBy: 'Realizzato da',
+    footerAnd: 'e dai',
+    footerContributors: 'contributori',
   },
 } as const;

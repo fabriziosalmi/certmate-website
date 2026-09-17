@@ -209,6 +209,49 @@ for (const relativePath of PLAIN_TEXT_PROSE) {
   });
 }
 
+// --- the two locales carry the same keys ---------------------------------
+//
+// Localising the footer added 23 strings to each of `ui.en` and `ui.it`, and
+// the English block landed one line too low: outside the `en` object, as a
+// top-level property of `ui`. That is valid JavaScript, so `astro check`
+// passed, the build passed and the SEO gate passed, while every English page
+// rendered a footer with the colophon missing. Only reading the built page
+// found it.
+//
+// A key present in one locale and absent from the other is either a
+// translation nobody wrote or a key in the wrong place, and both render as
+// nothing at all.
+{
+  const source = readFileSync(join(SRC, 'i18n.ts'), 'utf8');
+  const body = source.slice(source.indexOf('export const ui'));
+  const locales = {};
+  for (const match of body.matchAll(/^  ([a-z]{2}): \{$/gm)) {
+    const from = match.index + match[0].length;
+    const to = body.indexOf('\n  },', from);
+    locales[match[1]] = body.slice(from, to);
+  }
+  const names = Object.keys(locales);
+  if (names.length < 2) {
+    problems.push(
+      `src/data i18n: found ${names.length} locale block(s) in i18n.ts; the `
+        + `comparison below would pass by having nothing to compare`,
+    );
+  }
+  const keysOf = (text) =>
+    new Set([...text.matchAll(/^    ([A-Za-z][A-Za-z0-9]*):/gm)].map((m) => m[1]));
+  const [first, ...rest] = names;
+  for (const other of rest) {
+    const a = keysOf(locales[first]);
+    const b = keysOf(locales[other]);
+    for (const key of a) {
+      if (!b.has(key)) problems.push(`i18n: ui.${other} has no "${key}", which ui.${first} does`);
+    }
+    for (const key of b) {
+      if (!a.has(key)) problems.push(`i18n: ui.${first} has no "${key}", which ui.${other} does`);
+    }
+  }
+}
+
 if (problems.length) {
   console.error('\nFact check failed:\n');
   for (const p of problems) console.error('  ' + p);
