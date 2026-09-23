@@ -1,0 +1,120 @@
+---
+title: "MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY"
+errorCode: "MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY"
+description: "Risolvi MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY di Firefox: il certificato del sito dichiara CA:TRUE. Riemetti la foglia con CA:FALSE."
+summary: "Il certificato che il server presenta come proprio è marcato come autorità di certificazione. Firefox non accetta come identità di un sito un certificato che può firmarne altri."
+browsers: ["Firefox"]
+order: 13
+updated: "2026-09-23"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+Firefox segnala `MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY`: *"Il server
+utilizza un certificato con un’estensione limitazioni di base che lo identifica
+come autorità di certificazione. Questo non dovrebbe accadere per un
+certificato emesso correttamente."*
+
+La condizione è un solo bit. Il certificato del server porta un'estensione
+basicConstraints con `cA` impostato a true, e mozilla::pkix rifiuta qualsiasi
+certificato finale che lo dichiari. Una foglia con `CA:FALSE`, o del tutto
+priva dell'estensione basicConstraints, supera questo controllo.
+
+Il momento in cui scatta il controllo decide quale errore vedi. Per una foglia
+normale Firefox mette il problema da parte e prima costruisce una catena fino a
+una radice attendibile: solo se ci riesce segnala il flag di CA. Se la catena
+fallisce, vedi l'errore della catena, ed è per questo che un certificato
+autofirmato con `CA:TRUE` di solito mostra `MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT`.
+L'eccezione è un certificato che Firefox stesso considera un trust anchor, per
+esempio uno importato come autorità: lì questo errore viene sollevato subito.
+
+<Handshake
+  caption="Dove viene sollevato MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY"
+  steps={[
+    { from: 'Firefox', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Firefox', label: 'Certificate: la foglia porta basicConstraints cA=TRUE' },
+    { from: 'Firefox', label: 'Controlla la foglia: flag di CA su un certificato finale, errore messo da parte' },
+    { from: 'Firefox', label: 'Costruisce la catena fino a una radice attendibile: riesce' },
+    { from: 'Firefox', to: 'Server', label: "Segnala l'errore messo da parte: connessione rifiutata (MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY)", fails: true },
+  ]}
+/>
+
+## Cause comuni
+
+- **Un certificato autofirmato poi reso attendibile come autorità.**
+  `openssl req -x509` con l'`openssl.cnf` di esempio distribuito con OpenSSL
+  prende le estensioni dalla sezione `[ v3_ca ]`, che imposta
+  `basicConstraints = critical,CA:true`. Servito così com'è, Firefox lo
+  considera autofirmato. Se lo importi in Firefox come autorità attendibile per
+  far sparire quell'avviso, diventa un trust anchor: alla visita successiva
+  l'errore è questo.
+- **Una CA interna che firma le foglie con il profilo da CA.** Una sezione
+  `-extfile` o `-extensions` copiata da quella della radice. La catena verso la
+  tua radice interna si costruisce senza problemi; a fallire è il flag della
+  foglia.
+- **Un certificato che fa due mestieri.** Un certificato generato una volta
+  come "la CA" di un laboratorio o di un apparato, distribuito come radice e
+  installato anche come certificato server sull'host che l'ha creato.
+
+## Come risolverlo
+
+**1. Leggi il flag sul certificato effettivamente servito:**
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/null \
+  | openssl x509 -noout -text | grep -E 'Issuer:|Subject:|CA:'
+```
+
+`CA:TRUE` conferma la diagnosi. Se anche emittente e soggetto coincidono, il
+certificato è una radice autofirmata servita come foglia.
+
+**2. Tieni separate la CA e la foglia.** Il certificato della CA resta dov'è,
+distribuito come radice e mai configurato su un server. Emetti per il server
+una foglia sua, con un profilo esplicito da certificato finale:
+
+```bash
+openssl req -new -newkey rsa:2048 -nodes -keyout server.key -out server.csr \
+  -subj "/CN=intranet.example.com"
+
+openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial \
+  -days 365 -out server.crt -extfile <(printf '%s\n' \
+    'basicConstraints=critical,CA:FALSE' \
+    'keyUsage=critical,digitalSignature,keyEncipherment' \
+    'extendedKeyUsage=serverAuth' \
+    'subjectAltName=DNS:intranet.example.com')
+```
+
+**3. Se il nome è pubblico, lascia perdere la CA interna.** Una CA
+pubblicamente attendibile emette certificati finali, e una sfida DNS-01
+funziona anche per host non raggiungibili da internet.
+
+**4. Distribuisci, ricarica e ricontrolla il flag:**
+
+```bash
+systemctl reload nginx
+echo | openssl s_client -connect intranet.example.com:443 -servername intranet.example.com 2>/dev/null \
+  | openssl x509 -noout -text | grep -A1 'Basic Constraints'
+```
+
+Ora la risposta deve essere `CA:FALSE`. Se un certificato autofirmato era stato
+importato in Firefox come autorità, rimuovilo dalla gestione certificati.
+
+## Evitare che si ripresenti
+
+Questo errore non nasce dal passare del tempo. Nasce da come è stato fatto un
+certificato, quindi ritorna ogni volta che qualcuno ne fa uno a mano.
+
+CertMate non genera certificati server con comandi openssl. Li richiede via
+ACME alla CA che configuri, pubblica o il tuo server ACME interno, quindi il
+profilo della foglia, basicConstraints compreso, lo decide quella CA e non un
+`-extfile` incollato. Dove CertMate firma certificati in proprio, con la CA
+integrata che usa per i certificati client, fissa `CA:FALSE`, marcato critico,
+e ignora qualunque basicConstraints e keyUsage chieda la CSR. Non controlla
+questo flag sul certificato che un server sta già servendo, quindi per i
+certificati fatti altrove il controllo da eseguire è il passo 1.
+
+## Errori correlati
+
+- `MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT`: ciò che lo stesso certificato di CA autofirmato segnala prima che qualcuno lo renda attendibile.
+- `SEC_ERROR_UNKNOWN_ISSUER`: la catena non si costruisce, quindi il flag di CA messo da parte non viene mai segnalato.

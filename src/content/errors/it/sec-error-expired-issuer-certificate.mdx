@@ -1,0 +1,130 @@
+---
+title: "SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE"
+errorCode: "SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE"
+description: "Risolvi SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE di Firefox: la foglia è valida, è scaduto un certificato sopra di lei. Catene vecchie, CA interne, orologi."
+summary: "Il certificato del sito può essere valido. È scaduto un certificato sopra di lui, e Firefox non ha trovato nessun altro emittente valido attraverso cui costruire la catena."
+browsers: ["Firefox"]
+order: 14
+updated: "2026-09-23"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+Firefox segnala `SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE`: *"Il certificato
+dell’autorità emittente del certificato è scaduto. Verificare data e ora del
+sistema."*
+
+Il certificato del sito può essere perfettamente valido. A non superare il
+controllo delle date è un certificato sopra di lui: un intermedio, oppure la
+radice. mozilla::pkix solleva questo errore durante la costruzione del
+percorso, attribuendo l'emittente scaduto al certificato sottostante.
+
+Qui conta come si costruisce il percorso. Firefox non usa solo i certificati
+inviati dal server. Per ogni nome di emittente prova tutti i candidati che ha:
+le radici integrate, i certificati dell'handshake, radici e intermedi presi dal
+sistema operativo, gli intermedi che precarica e il proprio archivio di
+certificati. Se un candidato qualsiasi porta a una radice attendibile, la
+connessione riesce, anche se il server ha inviato pure un intermedio scaduto.
+Questo codice compare solo quando tutti i candidati hanno fallito, e tutti per
+scadenza. Fallimenti di tipo diverso producono invece
+`SEC_ERROR_UNKNOWN_ISSUER`.
+
+I problemi dell'emittente hanno anche la precedenza su quelli della foglia. Se
+sono scaduti sia la foglia sia il suo intermedio, Firefox segnala questo
+codice, non `SEC_ERROR_EXPIRED_CERTIFICATE`.
+
+<Handshake
+  caption="Dove viene sollevato SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE"
+  steps={[
+    { from: 'Firefox', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Firefox', label: 'ServerHello, Certificate (foglia + intermedi)' },
+    { from: 'Firefox', label: 'Controlla la foglia; ogni suo problema resta da parte finché non trova una catena' },
+    { from: 'Firefox', label: "Prova ogni certificato che può esserne l'emittente: servito, precaricato, integrato" },
+    { from: 'Firefox', to: 'Server', label: 'Tutti gli emittenti candidati sono scaduti: connessione rifiutata (SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE)', fails: true },
+  ]}
+/>
+
+## Cause comuni
+
+- **Il server invia ancora un intermedio vecchio.** Un file di catena
+  assemblato a mano una volta, oppure un server configurato con la foglia in
+  una direttiva e un file di catena separato che il rinnovo non tocca mai. La
+  foglia si rinnova puntuale; l'intermedio accanto ha anni. Firefox se la cava
+  solo se ha un altro certificato valido per quell'emittente: non contarci.
+- **Una CA interna con l'intermedio o la radice scaduti.** Falliscono tutte le
+  foglie sotto di lei nello stesso momento, e rinnovarle non cambia niente.
+- **L'orologio del client è sbagliato.** Lo dice il messaggio stesso. Un
+  orologio abbastanza avanti supera anche la `notAfter` dell'intermedio, e dato
+  che il problema dell'emittente ha la precedenza su quello della foglia, il
+  codice che Firefox mostra è questo. Se lo vede un solo visitatore e nessun
+  altro, controlla prima il suo orologio.
+
+## Come risolverlo
+
+**1. Elenca ciò che il server invia, con le date.** `openssl x509` legge solo
+il primo certificato, quindi prima dividi la catena:
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com -showcerts 2>/dev/null \
+  | awk '/BEGIN CERT/{n++; p=1} p{print > ("served-" n ".pem")} /END CERT/{p=0}'
+for f in served-*.pem; do
+  openssl x509 -in "$f" -noout -subject -issuer -enddate
+done
+```
+
+Una `notAfter` nel passato in un file oltre `served-1.pem` è il certificato di
+cui parla Firefox.
+
+**2. Confrontala con la catena su disco:**
+
+```bash
+awk '/BEGIN CERT/{n++; p=1} p{print > ("disk-" n ".pem")} /END CERT/{p=0}' \
+  /etc/letsencrypt/live/example.com/fullchain.pem
+for f in disk-*.pem; do
+  openssl x509 -in "$f" -noout -subject -issuer -enddate
+done
+```
+
+Se il file su disco è aggiornato e il server invia qualcosa di più vecchio, il
+server sta leggendo un altro file.
+
+**3. Servi la catena completa arrivata con il certificato attuale, e ricarica:**
+
+```nginx
+ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
+ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+```
+
+```bash
+nginx -t && systemctl reload nginx
+```
+
+Se è vecchia anche la catena su disco, fatti dare dalla CA un nuovo certificato
+con la sua catena usando `certbot renew --force-renewal`, poi ricarica.
+
+**4. Se il certificato scaduto è della tua CA,** riemetti quell'intermedio o
+quella radice, ridistribuiscilo, e riemetti le foglie se la chiave è cambiata.
+Nessuna modifica al server web ripara una CA scaduta.
+
+## Evitare che si ripresenti
+
+La foglia si sostituisce a ogni rinnovo. La catena accanto dura anni, e un
+file di catena copiato a mano al suo posto si dimentica facilmente.
+
+CertMate non tratta la catena come un file separato da mantenere. Ogni
+emissione o rinnovo pubblica insieme `cert.pem`, `chain.pem` e `fullchain.pem`,
+dalla stessa emissione, e i deploy hook ricevono i percorsi in
+`CERTMATE_FULLCHAIN_PATH` e `CERTMATE_CHAIN_PATH`. Un server configurato con
+quei percorsi riceve a ogni rinnovo la catena arrivata con il certificato
+attuale, non quella che qualcuno ha copiato la prima volta.
+
+Non controlla da solo le date degli intermedi, e il suo controllo di
+distribuzione confronta l'impronta della foglia servita. Una foglia valida
+accanto a un file di catena vecchio e mantenuto a mano è esattamente il caso
+per cui esiste il passo 1.
+
+## Errori correlati
+
+- `SEC_ERROR_EXPIRED_CERTIFICATE`: è scaduto il certificato del sito, non il suo emittente.
+- `SEC_ERROR_UNKNOWN_ISSUER`: gli emittenti candidati hanno fallito per motivi diversi, oppure non ne è stato trovato nessuno.

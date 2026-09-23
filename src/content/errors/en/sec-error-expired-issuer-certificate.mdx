@@ -1,0 +1,126 @@
+---
+title: "SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE"
+errorCode: "SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE"
+description: "Fix Firefox's SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE: the leaf is fine, a certificate above it has expired. Stale chain files, internal CAs, wrong clocks."
+summary: "The site's own certificate may be current. What expired is a certificate above it, and Firefox found no other valid issuer to build the chain through."
+browsers: ["Firefox"]
+order: 14
+updated: "2026-09-23"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+Firefox reports `SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE`: *"The certificate
+issuer’s certificate has expired. Check your system date and time."*
+
+The site's own certificate may be perfectly current. What failed its date check
+is a certificate above it: an intermediate, or the root. mozilla::pkix raises
+this while building the path, recording an expired candidate issuer against
+the certificate below it.
+
+Path building matters here. Firefox does not only use the certificates the
+server sent. For each issuer name it tries every candidate it holds: built-in
+roots, the handshake's certificates, roots and intermediates from the operating
+system, intermediates it preloads, and its own certificate database. If any
+candidate leads to a trusted root, the connection succeeds, even when the
+server also sent an expired intermediate. This code appears only when every
+candidate failed, all on expiry. Mixed failures give
+`SEC_ERROR_UNKNOWN_ISSUER` instead.
+
+Issuer problems also outrank the leaf's own. If the leaf and its intermediate
+have both expired, Firefox reports this code, not
+`SEC_ERROR_EXPIRED_CERTIFICATE`.
+
+<Handshake
+  caption="Where SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE is raised"
+  steps={[
+    { from: 'Firefox', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Firefox', label: 'ServerHello, Certificate (leaf + intermediates)' },
+    { from: 'Firefox', label: 'Checks the leaf; any problem with it is held back until a chain is found' },
+    { from: 'Firefox', label: 'Tries every certificate that could be the issuer: served, preloaded, built in' },
+    { from: 'Firefox', to: 'Server', label: 'Every candidate issuer has expired: connection refused (SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE)', fails: true },
+  ]}
+/>
+
+## Common causes
+
+- **The server still sends an old intermediate.** A chain file assembled by
+  hand once, or a server configured with the leaf in one directive and a
+  separate chain file that renewal never touches. The leaf is renewed on
+  schedule; the intermediate beside it is years old. Firefox recovers only if
+  it holds another valid certificate for that issuer; do not rely on it.
+- **An internal CA whose intermediate or root has run out.** Every leaf under
+  it fails at once, and renewing the leaves changes nothing.
+- **The client's clock is wrong.** The message itself says so. A clock far
+  enough ahead passes the intermediate's `notAfter` too, and because the
+  issuer's problem outranks the leaf's, this is the code Firefox shows. If one
+  visitor sees it and nobody else does, check their clock first.
+
+## How to fix it
+
+**1. List what the server sends, with dates.** `openssl x509` reads only the
+first certificate, so split the chain first:
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com -showcerts 2>/dev/null \
+  | awk '/BEGIN CERT/{n++; p=1} p{print > ("served-" n ".pem")} /END CERT/{p=0}'
+for f in served-*.pem; do
+  openssl x509 -in "$f" -noout -subject -issuer -enddate
+done
+```
+
+Any `notAfter` in the past above `served-1.pem` is the certificate Firefox is
+talking about.
+
+**2. Compare it with the chain on disk:**
+
+```bash
+awk '/BEGIN CERT/{n++; p=1} p{print > ("disk-" n ".pem")} /END CERT/{p=0}' \
+  /etc/letsencrypt/live/example.com/fullchain.pem
+for f in disk-*.pem; do
+  openssl x509 -in "$f" -noout -subject -issuer -enddate
+done
+```
+
+If the file on disk is current and the server sends something older, the
+server is reading a different file.
+
+**3. Serve the full chain that came with the current certificate, and reload:**
+
+```nginx
+ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
+ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+```
+
+```bash
+nginx -t && systemctl reload nginx
+```
+
+If the chain on disk is itself stale, fetch a new certificate and chain from
+the CA with `certbot renew --force-renewal`, then reload.
+
+**4. If the expired certificate is your own CA's,** reissue that intermediate
+or root, redistribute it, and reissue the leaves if its key changed. No change
+on the web server fixes an expired CA.
+
+## Prevent it from recurring
+
+The leaf is replaced at every renewal. The chain beside it lasts years, and a
+chain file copied into place by hand is easy to forget.
+
+CertMate does not treat the chain as a separate file to maintain. Each issuance
+or renewal publishes `cert.pem`, `chain.pem` and `fullchain.pem` together, from
+the same issuance, and deploy hooks receive the paths as
+`CERTMATE_FULLCHAIN_PATH` and `CERTMATE_CHAIN_PATH`. A server configured from
+those paths gets the chain that came with the current certificate at every
+renewal, not the one someone copied in the first time.
+
+It does not check intermediates' dates on its own, and its deployment check
+compares the served leaf's fingerprint. A current leaf next to a stale,
+hand-maintained chain file is the case step 1 exists for.
+
+## Related errors
+
+- `SEC_ERROR_EXPIRED_CERTIFICATE`: the site's own certificate expired, not its issuer.
+- `SEC_ERROR_UNKNOWN_ISSUER`: candidate issuers failed for different reasons, or none was found.
