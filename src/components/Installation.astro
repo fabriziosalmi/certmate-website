@@ -152,7 +152,7 @@ const tabs = [
     </div>
 
     <div class="mx-auto mt-12 max-w-3xl">
-      <div class="flex gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-800 dark:bg-gray-900" role="tablist" aria-label="Installation methods">
+      <div class="flex flex-wrap gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-800 dark:bg-gray-900" role="tablist" aria-label="Installation methods">
         {
           tabs.map((t, i) => (
             <button
@@ -162,7 +162,7 @@ const tabs = [
               aria-controls={t.id}
               aria-selected={i === 0 ? 'true' : 'false'}
               data-tab={t.id}
-              class={`tab-button flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${i === 0 ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}`}
+              class={`tab-button inline-flex flex-1 items-center justify-center whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors ${i === 0 ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}`}
             >
               <Icon name={t.icon} class="mr-1.5" aria-hidden="true" />
               {t.label}

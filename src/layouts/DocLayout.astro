@@ -90,7 +90,11 @@ const crumbLd = {
     </div>
   </header>
 
-  <main id="main-content" class="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
+  {/* overflow-wrap:anywhere, not break-words: error codes such as
+     MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY are one 45-character token,
+     and only `anywhere` lets the breadcrumb, the prose and the index grid
+     shrink below it. Measured at 390px, three pages scrolled sideways. */}
+  <main id="main-content" class="mx-auto w-full max-w-3xl flex-1 px-4 py-8 [overflow-wrap:anywhere]">
     <nav aria-label="Breadcrumb" class="mb-6 text-sm text-gray-500 dark:text-gray-400">
       <ol class="flex flex-wrap items-center gap-1">
         <li><a href={localizedPath(lang, '/')} class="hover:text-primary">{t.home}</a></li>
