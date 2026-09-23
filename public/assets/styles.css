@@ -1887,7 +1887,10 @@ section {
     max-width: 100%;
     overflow-x: auto;
 }
+.doc-content,
 .doc-content code {
+    /* Environment variables and error strings also appear in plain prose,
+       e.g. CERTMATE_ALLOW_INTERNAL_WEBHOOKS=true inside a quoted message. */
     overflow-wrap: anywhere;
 }
 .doc-content pre {
