@@ -99,6 +99,12 @@ export const features: Feature[] = [
       'Confirm a certificate is actually live, not just issued: per-certificate probes over https-tls, plain tls, or smtp-starttls on a configurable port, comparing the real peer certificate. Works through an outbound HTTP proxy (CONNECT) on locked-down hosts.',
   },
   {
+    icon: 'fa6-solid:heart-pulse',
+    title: 'Domain Health',
+    body:
+      'Opt-in: registration expiry from RDAP or WHOIS, and daily SPF, DMARC, MX, blocklist, HSTS and security-header checks. A check nobody could answer reports unknown, never a pass.',
+  },
+  {
     icon: 'fa6-solid:ghost',
     title: 'Zombie Certificate Scanner',
     body:

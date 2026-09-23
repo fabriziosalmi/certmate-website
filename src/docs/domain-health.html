@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain Health - CertMate Documentation</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="preload" href="vendor/font-awesome/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/font-awesome/all.min.css"></noscript>
+    <link rel="preload" as="style" href="vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/fonts/fonts.css"></noscript>
+    <style>
+        .doc-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h1 {
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-6);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content p, .doc-content li {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+        .doc-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin: var(--spacing-6) 0;
+        }
+        .doc-content pre code {
+            background: none;
+            padding: 0;
+            color: white;
+        }
+        .doc-content ul, .doc-content ol {
+            margin: var(--spacing-4) 0;
+            padding-left: var(--spacing-8);
+        }
+        .doc-content li {
+            margin: var(--spacing-2) 0;
+        }
+    
+    /* In-page TOC, injected by toc.js. Sticky right column on lg+
+       viewports; collapsed to a top disclosure on smaller screens. */
+    .doc-toc {
+      display: none;
+    }
+    /* Shown only when it fits in the right margin: this page's content
+       column is 900px wide, the TOC 220px plus 24px of gap, so the viewport
+       must be at least 900 + 2 * 244 = 1388px. Below that the old rule
+       placed the TOC over the text (#588). */
+    @media (min-width: 1388px) {
+      .doc-toc {
+        display: block;
+        position: fixed;
+        top: 100px;
+        right: max(24px, calc((100vw - 900px) / 2 - 244px));
+        width: 220px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+      }
+    }
+    .doc-toc-inner {
+      border-left: 2px solid var(--gray-200);
+      padding-left: 16px;
+    }
+    .doc-toc-list { list-style: none; padding: 0; margin: 0; }
+    .doc-toc-item { margin: 4px 0; line-height: 1.4; }
+    .doc-toc-item-h3 { padding-left: 12px; }
+    .doc-toc-link {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: block;
+      padding: 2px 0;
+      transition: color 120ms ease;
+    }
+    .doc-toc-link:hover { color: var(--gray-900); }
+    .doc-toc-link.is-active {
+      color: var(--blue-600, #2563eb);
+      font-weight: 600;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="../assets/certmate_logo.png" alt="CertMate Logo" class="brand-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html#features" class="nav-link">Features</a>
+                <a href="../index.html#providers" class="nav-link">DNS Providers</a>
+                <a href="index.html" class="nav-link active">Documentation</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-heart-pulse"></i> Domain Health</h1>
+                <p class="docs-subtitle">How CertMate checks when each domain's registration expires, and whether its mail records, blocklist standing, response headers and TLS versions still hold.</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <h2>What v2.34.0 Adds</h2>
+            <p>These checks arrive in CertMate v2.34.0. They look at the domain rather than the certificate, which cannot show a lapsed registration or a blocklisted address.</p>
+            <ul>
+                <li><code>domain_registration</code>: when each domain's registration expires.</li>
+                <li><code>domain_health</code>: seven checks run daily, plus an eighth, <code>weak_tls</code>, that is off until you turn it on.</li>
+            </ul>
+            <p>Both are opt-in: each section defaults to <code>enabled: false</code>.</p>
+
+            <h2>Unknown Means Nobody Answered</h2>
+            <p>A check that reports <code>unknown</code> could not be completed. It is not a pass. For the blocklist check, <code>unknown</code> means no blocklist gave CertMate a usable answer. It does not mean the domain is clean. The inventory page labels this status "Not verifiable".</p>
+            <p>It exists because blocklists (DNSBLs) often refuse without saying so clearly:</p>
+            <ul>
+                <li>A DNSBL that will not serve a query answers with a <code>127.255.255.x</code> code instead of an error; <code>.254</code> means the query came through a public resolver. Spamhaus says these codes must not be taken to mean the address is listed.</li>
+                <li>Through a forwarder, such as a corporate resolver, a caching proxy or Tailscale's MagicDNS, the refusal can arrive as a plain NXDOMAIN, which at the DNS level is identical to "not listed".</li>
+                <li>So CertMate first asks each list about its own test points: every DNSBL keeps <code>127.0.0.2</code> permanently listed and <code>127.0.0.1</code> permanently unlisted. A list that does not report <code>127.0.0.2</code> as listed is not asked about your domains and is named in <code>unanswered</code>. A list that reports <code>127.0.0.1</code> is answering everything (a hijacked or wildcarding resolver) and is dropped too.</li>
+            </ul>
+            <p>What to do: the app's documentation says the fix is almost always to point CertMate at a resolver of your own rather than a public one.</p>
+            <p>The rule holds for every check: a timed-out TXT lookup is <code>unknown</code>, not "no SPF record"; an unreachable host is <code>unknown</code>, not "no HSTS". And <code>weak_tls</code> is <code>unknown</code> when the CertMate runtime cannot offer TLS 1.0 or 1.1 at all, so the host was never asked; it is never reported as "refuses old TLS". Same trap, different cause.</p>
+
+            <h2>Domain Registration Expiry</h2>
+            <p>CertMate follows each registrable domain once, however many hosts sit under it: <code>www.shop.example.co.uk</code> and <code>api.example.co.uk</code> are both <code>example.co.uk</code>. The set is every managed domain and its SANs, what discovery found (unless <code>include_inventory</code> is off), and any <code>extra_domains</code>.</p>
+            <ol>
+                <li>RDAP, at the server the IANA bootstrap (<code>https://data.iana.org/rdap/dns.json</code>) lists for the TLD.</li>
+                <li>WHOIS on port 43, only for a TLD with no RDAP service. <code>.it</code>, <code>.eu</code>, <code>.de</code>, <code>.es</code>, <code>.ch</code>, <code>.at</code>, <code>.io</code> and <code>.co</code> had none when this was written.</li>
+            </ol>
+            <table>
+                <thead>
+                    <tr><th><code>status</code></th><th>Meaning</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>ok</code></td><td>Registered, and the registry published the expiry date.</td></tr>
+                    <tr><td><code>not_published</code></td><td>Registered, but the registry does not publish an expiry (DENIC for <code>.de</code>, EURid for <code>.eu</code>). This is an answer, never replaced by an estimate.</td></tr>
+                    <tr><td><code>not_registered</code></td><td>The registry says the name does not exist.</td></tr>
+                    <tr><td><code>unavailable</code></td><td>No answer this time; <code>error</code> says why. A known expiry is kept. A WHOIS date in a format CertMate does not recognise also lands here, rather than being guessed.</td></tr>
+                </tbody>
+            </table>
+            <p>The check runs daily at 06:00. Registries rate-limit, so one sweep asks at most 100 domains, one second apart. A domain is asked again daily within 60 days of expiry, weekly otherwise, and 6 hours after a failed lookup. WHOIS is a raw TCP connection and cannot go through an HTTP proxy, so behind a proxy the TLDs without RDAP come back <code>unavailable</code>.</p>
+
+            <h2>Domain Health Checks</h2>
+            <p>Seven checks run daily against every name CertMate tracks. An eighth, <code>weak_tls</code>, is opt-in because it is the only check that opens a connection the host did not invite.</p>
+            <table>
+                <thead>
+                    <tr><th>Check</th><th>What it asks</th><th>Runs on</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>spf</code></td><td>Exactly one <code>v=spf1</code> TXT record, ending in an <code>all</code> mechanism?</td><td>Registrable domain</td></tr>
+                    <tr><td><code>dmarc</code></td><td>A <code>v=DMARC1</code> TXT record at <code>_dmarc</code>, with a <code>p=</code> policy?</td><td>Registrable domain</td></tr>
+                    <tr><td><code>mx</code></td><td>Does the domain accept mail at all?</td><td>Registrable domain</td></tr>
+                    <tr><td><code>blocklists</code></td><td>Are the domain's addresses listed on a DNSBL?</td><td>Registrable domain</td></tr>
+                    <tr><td><code>hsts</code></td><td>What <code>Strict-Transport-Security</code> does the host serve?</td><td>Each host</td></tr>
+                    <tr><td><code>security_headers</code></td><td>Is the browser told to refuse framing, MIME sniffing and unsanctioned script?</td><td>Each host</td></tr>
+                    <tr><td><code>disclosure</code></td><td>Does the response name the software and version answering it?</td><td>Each host</td></tr>
+                    <tr><td><code>weak_tls</code> (opt-in)</td><td>Does the host still accept TLS 1.0 or 1.1?</td><td>Each host</td></tr>
+                </tbody>
+            </table>
+            <p>Mail and blocklist checks use the registrable domain, since DMARC falls back to it. Header checks belong to each host, so <code>www.example.com</code> and <code>example.com</code> each get a row.</p>
+            <table>
+                <thead>
+                    <tr><th><code>status</code></th><th>Meaning</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>failing</code></td><td>A finding: no SPF or DMARC, two SPF records, <code>+all</code>, a DMARC record with no <code>p=</code>, a blocklist listing, no HSTS header.</td></tr>
+                    <tr><td><code>warning</code></td><td>Worth knowing, not broken: no MX, an SPF with no <code>all</code>, an HSTS <code>max-age</code> under six months.</td></tr>
+                    <tr><td><code>unknown</code></td><td>The check could not be completed. Not a pass.</td></tr>
+                    <tr><td><code>ok</code></td><td>The check ran and found nothing wrong.</td></tr>
+                </tbody>
+            </table>
+            <p>A name's overall status is its worst check, in that order. DMARC <code>p=none</code> is <code>ok</code>: the policy is reported, not graded.</p>
+
+            <h3>Blocklists</h3>
+            <p>The lists are <code>zen.spamhaus.org</code>, <code>bl.spamcop.net</code>, <code>b.barracudacentral.org</code> and <code>dnsbl-1.uceprotect.net</code>. At most four addresses per domain are checked against each.</p>
+            <ul>
+                <li><code>failing</code>: listed on at least one list.</li>
+                <li><code>ok</code>: not listed, and every lookup was answered.</li>
+                <li><code>warning</code>: not listed where it could be checked, but some lookups went unanswered; <code>unanswered</code> names them.</li>
+                <li><code>unknown</code>: no list answered usefully, or the domain's addresses could not be resolved.</li>
+            </ul>
+
+            <h3>Response Headers</h3>
+            <p><code>hsts</code>, <code>security_headers</code> and <code>disclosure</code> share one <code>HEAD</code> request per host. It verifies the certificate, because a browser ignores these policies on a connection it does not trust.</p>
+            <p><code>hsts</code>: no header, no <code>max-age</code>, or <code>max-age=0</code> is failing; under 15552000 seconds (six months) is a warning. It is read from the first response, including a redirect, as a browser records it.</p>
+            <p><code>security_headers</code> keeps two states apart:</p>
+            <ul>
+                <li>Missing is a warning: no <code>X-Frame-Options</code> and no CSP <code>frame-ancestors</code> (either is enough), no <code>Content-Security-Policy</code>, or no <code>X-Content-Type-Options: nosniff</code>.</li>
+                <li>Broken is failing, and worse than missing, because it looks like protection and is not: <code>X-Frame-Options</code> other than <code>DENY</code> or <code>SAMEORIGIN</code> (such as <code>ALLOW-FROM</code>, which modern browsers ignore), a <code>Content-Security-Policy-Report-Only</code> with no enforcing policy (it reports and blocks nothing), or <code>X-Content-Type-Options</code> other than <code>nosniff</code>.</li>
+            </ul>
+            <p><code>disclosure</code> is at most a warning. <code>Server</code> counts only when it carries a version (<code>nginx/1.24.0</code>, not <code>cloudflare</code>); any <code>X-Powered-By</code>, <code>X-AspNet-Version</code>, <code>X-AspNetMvc-Version</code> or <code>X-Generator</code> counts.</p>
+            <p>The protective headers live on the page, not on the redirect, so CertMate follows up to three hops, only to <code>https</code> and only within the same registrable domain. If a hop cannot be followed, <code>security_headers</code> is <code>unknown</code> and says the host only redirects.</p>
+
+            <h3>Old TLS Versions</h3>
+            <p>RFC 8996 deprecated TLS 1.0 and 1.1, and CertMate's other probes require TLS 1.2, so they cannot see this. With <code>check_weak_tls</code> on, CertMate makes two handshakes per host, offering TLS 1.0 and then 1.1, sending no data. An acceptance, counted only when the handshake completed at the version offered, is <code>failing</code>.</p>
+            <p>An <code>unknown</code> here does not mean the host is fine. Modern OpenSSL builds often refuse to offer these versions, so a handshake would fail on the CertMate machine before a byte leaves it. Before contacting any host, CertMate asks its own runtime, in memory, whether it can produce a ClientHello for each version. If it cannot, the result is <code>unknown</code> and <code>unasked</code> says the host was never asked. A host that could not be reached is also <code>unknown</code>. "Refuses" is reported only when CertMate made the offer and the host declined it.</p>
+
+            <h2>Configuration and Schedule</h2>
+            <p>An admin sets both sections in the Discovery configuration panel on <code>/inventory</code>, or with <code>POST /api/inventory/config</code>. Except <code>enabled</code> and <code>extra_domains</code>, the values shown are defaults.</p>
+            <pre><code>curl -X POST https://certmate.example.com/api/inventory/config \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "domain_registration": {"enabled": true, "include_inventory": true, "extra_domains": ["brand.it"]},
+    "domain_health": {
+      "enabled": true,
+      "include_inventory": true,
+      "check_mail": true,
+      "check_blocklists": true,
+      "check_headers": true,
+      "check_weak_tls": false,
+      "extra_domains": ["brand.it"]
+    }
+  }'</code></pre>
+            <p><code>check_mail</code> covers SPF, DMARC and MX; <code>check_headers</code> covers the three header checks. An extra name that is not a domain, or for registration not under a public suffix, returns 400.</p>
+            <p>Domain health runs daily at 06:30, between the 06:00 registration check and the 07:00 expiry warnings. A name is checked again only after 20 hours, and one run checks at most 200 names. <code>POST /api/inventory/scan</code> (Scan now) also runs both checks, after discovery and the CT poll, when they are enabled.</p>
+
+            <h2>API</h2>
+            <table>
+                <thead>
+                    <tr><th>Method and path</th><th>Role</th><th>Purpose</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>GET /api/inventory/domains</code></td><td>viewer</td><td>Registration expiry per registrable domain, soonest first.</td></tr>
+                    <tr><td><code>GET /api/inventory/health</code></td><td>viewer</td><td>Every check per name, worst first, with a count per status.</td></tr>
+                    <tr><td><code>GET /api/inventory/config</code></td><td>viewer</td><td>Effective configuration.</td></tr>
+                    <tr><td><code>POST /api/inventory/config</code></td><td>admin</td><td>Update the configuration.</td></tr>
+                    <tr><td><code>POST /api/inventory/scan</code></td><td>admin</td><td>Run discovery, the CT poll and both checks now.</td></tr>
+                </tbody>
+            </table>
+            <p>A scoped API key sees only the names its scope covers. <code>weak_tls</code> is absent until <code>check_weak_tls</code> is on.</p>
+
+            <h2>Next Steps</h2>
+            <ul>
+                <li><a href="certificate-discovery.html">Certificate Discovery</a>: where the tracked names come from</li>
+                <li><a href="api-reference.html">API Reference</a>: authentication and the rest of the API</li>
+                <li><a href="security.html">Security</a>: roles and scoped API keys</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributors</a></p>
+        </div>
+    </footer>
+
+    <script src="../assets/script.js"></script>
+    <script src="toc.js" defer></script>
+</body>
+</html>
