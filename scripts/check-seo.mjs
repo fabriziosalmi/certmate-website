@@ -110,6 +110,20 @@ for (const file of files) {
 
   const description = $('meta[name="description"]').attr('content');
   if (!description) problems.push(at('no meta description'));
+  // Google cuts the snippet at roughly 160 characters. It does not rank on
+  // the description, so this is not a penalty; it is the sentence a searcher
+  // reads before deciding to click, losing its end. 18 of 52 were over.
+  else if (description.length > 160) {
+    problems.push(at(`meta description is ${description.length} characters; results cut it at about 160`));
+  }
+
+  // One h1, and it is the page's own. Measured on the live site: 32 of 52
+  // pages had none, every error and deploy guide in both languages, because
+  // the index pages write their h1 into the layout's slot and the detail
+  // templates opened on the summary instead. The error code sat in a <p>, so
+  // the string a reader searches for was never the page's heading.
+  const h1s = $('h1').length;
+  if (h1s !== 1) problems.push(at(`has ${h1s} h1 elements; a page names itself exactly once`));
 
   const canonical = $('link[rel="canonical"]').attr('href');
   if (!canonical) {

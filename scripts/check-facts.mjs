@@ -33,7 +33,10 @@ const SOURCE_OF_TRUTH = join(SRC, 'data', 'site.ts');
 const HARDCODED_COUNT =
   /\b\d{1,3}\+?\s*(?:altri\s+|other\s+|weitere\s+|otros\s+|autres\s+)?(?:DNS[- ]?)?(?:providers?|fornitori|proveedores?|Anbieter|fournisseurs?)\b/gi;
 
-const EXTENSIONS = ['.astro', '.mdx', '.md', '.ts', '.tsx'];
+// .html is the documentation in src/docs, which src/pages/docs/[slug].html.ts
+// builds by substituting {{PROVIDER_COUNT}}. It was left out, so those ten
+// pages were the only prose on the site this gate did not read.
+const EXTENSIONS = ['.astro', '.mdx', '.md', '.ts', '.tsx', '.html'];
 
 function walk(dir) {
   const out = [];
@@ -65,7 +68,9 @@ for (const file of walk(SRC)) {
     if (match) {
       problems.push(
         `${relative(ROOT, file)}:${i + 1}  "${match[0].trim()}" — ` +
-          `use \`import { PROVIDER_COUNT } from '~/data/site'\`, or drop the number.`
+          (file.endsWith('.html')
+            ? 'write {{PROVIDER_COUNT}}, or drop the number.'
+            : `use \`import { PROVIDER_COUNT } from '~/data/site'\`, or drop the number.`)
       );
     }
   });

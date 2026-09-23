@@ -52,6 +52,11 @@ export const ui = {
     errorsTitle: 'SSL / TLS error reference',
     errorsIntro:
       'Plain-English explanations and copy-paste fixes for the SSL/TLS errors browsers and clients throw — plus how to stop them recurring with automated certificate management.',
+    // The intro above is page copy and can run long; the meta description is
+    // what a result snippet shows, and Google cuts it past about 160
+    // characters.
+    errorsDescription:
+      'Plain-English explanations and copy-paste fixes for the SSL/TLS errors browsers throw, and how to stop them recurring with automated certificate management.',
     deploy: 'Deploy Guides',
     deployTitle: 'Deploy TLS certificates',
     deployIntro:
@@ -70,6 +75,10 @@ export const ui = {
       `CertMate issues, renews and deploys TLS certificates automatically across ${PROVIDER_COUNT} DNS providers — open source, self-hosted, with a REST API.`,
     automateBtn: 'Get CertMate (open source)',
     docsBtn: 'Read the docs',
+    // Follows the error code in the page's h1. The code alone is the same
+    // string in every language; this is the part that says, in the reader's
+    // language, what the page will do for them.
+    errorHeadingTail: ': what it means and how to fix it',
   },
   it: {
     locale: 'it',
@@ -78,6 +87,8 @@ export const ui = {
     errorsTitle: 'Riferimento errori SSL / TLS',
     errorsIntro:
       'Spiegazioni chiare e soluzioni pronte da copiare per gli errori SSL/TLS che browser e client restituiscono — e come evitarli per sempre con la gestione automatica dei certificati.',
+    errorsDescription:
+      'Spiegazioni chiare e soluzioni pronte per gli errori SSL/TLS che browser e client restituiscono, e come evitarli con la gestione automatica dei certificati.',
     deploy: 'Guide al deploy',
     deployTitle: 'Deploy dei certificati TLS',
     deployIntro:
@@ -96,5 +107,10 @@ export const ui = {
       `CertMate emette, rinnova e fa il deploy dei certificati TLS in automatico su ${PROVIDER_COUNT} provider DNS — open source, self-hosted, con API REST.`,
     automateBtn: 'Scarica CertMate (open source)',
     docsBtn: 'Leggi la documentazione',
+    errorHeadingTail: ': cosa significa e come risolverlo',
+    // Only the Italian pages extend the <title>. The code alone is the same
+    // string in both languages, so the Italian result carried no Italian
+    // word; the English one already matches what an English searcher types.
+    errorTitleTail: ': come risolverlo',
   },
 } as const;

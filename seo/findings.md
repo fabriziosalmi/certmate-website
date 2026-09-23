@@ -436,3 +436,42 @@ quando qualcuno condivide il link.
 toccato.** `/docs/index.html` continua a rispondere 200 all'indirizzo che ha
 sempre avuto: e' l'intera ragione per cui quelle dieci pagine sono costruite da
 un endpoint e non da una rotta.
+
+---
+
+## Aggiornamento 2026-09-23: misurato sul sito pubblicato
+
+Rimisurato su `https://www.certmate.org`, leggendo le 52 URL della sitemap
+pubblicata, non `dist/`. Tre difetti, tutti ora dentro il gate.
+
+| | prima (live) | dopo (`dist/`) |
+| :--- | ---: | ---: |
+| pagine senza `h1` | **32 / 52** | **0 / 53** |
+| parole della home che sono note di versione | **5.267 / 7.508** | 0 / 2.496 |
+| `meta description` oltre 160 caratteri | **18 / 52** | **0 / 53** |
+
+**Nessun `h1` su 32 pagine.** Tutte le pagine d'errore e tutte le guide al
+deploy, in entrambe le lingue: le pagine indice scrivono il proprio `h1` nello
+slot del layout, i template di dettaglio no, e il codice d'errore stava in un
+`<p>`. Ora l'`h1` e' il codice seguito da una coda nella lingua della pagina,
+che porta l'italiano nel titolo visibile senza toccare il `<title>` indicizzato
+(la decisione sul `<title>` resta quella scritta sopra). Il gate richiede
+esattamente un `h1` per pagina; togliendo i template fallisce su quelle 32.
+
+**La cronologia delle release era il 70% della home.** Tenuta nel DOM dietro un
+`<details>` perche' fosse indicizzata. Ora e' `/changelog/`, con le stesse card
+di `src/data/whats-new.ts`; la home tiene l'ultima release e un link.
+
+**Le descrizioni lunghe.** Sopra le avevo lasciate perche' il guadagno non si
+misura. Resta vero; il costo pero' e' una frase per pagina, e il troncamento
+taglia proprio la parte che dice cosa la pagina risolve. Accorciate senza
+cambiarne il contenuto; il gate ora fallisce sopra 160, e sul testo di prima
+trova esattamente le 18.
+
+**I titoli italiani delle pagine d'errore (decisione rivista).** Sopra erano
+lasciati uguali all'inglese per il rischio su pagine indicizzate. Rivisto: il
+titolo italiano non conteneva nessuna parola italiana, quindi per una ricerca
+in italiano portava solo il codice. Ora e' `<codice>: come risolverlo · CertMate`
+sulle sole pagine italiane; l'inglese resta il codice, che e' gia' quello che
+cerca chi scrive in inglese. Il codice resta in testa, quindi il troncamento
+oltre ~60 caratteri (3 pagine su 14) taglia `· CertMate`, non il codice.

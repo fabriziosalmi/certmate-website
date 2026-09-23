@@ -126,54 +126,100 @@
         <section class="docs-hero" style="padding: 100px 0 60px;">
             <div class="container">
                 <h1 class="docs-title"><i class="fas fa-wrench"></i> Troubleshooting</h1>
-                <p class="docs-subtitle">Common issues and solutions for CertMate</p>
+                <p class="docs-subtitle">From the symptom you see to the cause and the fix</p>
             </div>
         </section>
 
         <section class="doc-content">
-            <h2>Common Issues</h2>
-        
-            <h3>DNS validation failed</h3>
-        <pre><code># Check DNS propagation
-dig TXT _acme-challenge.example.com @8.8.8.8
+            <h2>Where to Look First</h2>
+            <p>The container logs to stdout, as JSON unless <code>CERTMATE_LOG_JSON=false</code>. No application log file is written unless you set <code>CERTMATE_LOG_FILE</code> (for example <code>/app/logs/certmate.log</code>). The audit log is always at <code>logs/audit/certificate_audit.log</code>.</p>
+            <pre><code>docker logs certmate
+docker exec certmate tail -n 50 /app/logs/audit/certificate_audit.log</code></pre>
+            <p><code>/health</code> always answers 200 while the process serves requests. Its <code>status</code> field is <code>healthy</code> or <code>degraded</code>, and <code>checks</code> covers the scheduler, certbot, the certificate directory and free disk space. <code>/health/ready</code> answers 503 when the renewal scheduler is not running or certbot failed its probe.</p>
+            <pre><code>curl -s http://localhost:8000/health
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8000/health/ready</code></pre>
 
-# Verify DNS provider credentials
-curl -H "Authorization: Bearer token" \
-  "https://api.cloudflare.com/client/v4/user/tokens/verify"</code></pre>
+            <h2>Debug Logging</h2>
+            <p>In the container, set <code>CERTMATE_LOG_LEVEL=DEBUG</code> and restart. <code>LOG_LEVEL</code> is not read. When you run <code>python app.py</code> directly, use the flag instead: <code>--log-level</code> defaults to <code>INFO</code> and overrides the variable.</p>
+            <pre><code>python app.py --log-level DEBUG</code></pre>
+            <p><code>--debug</code> exits with <code>ERROR: Debug mode cannot be enabled in production</code> when <code>FLASK_ENV=production</code>, which the image sets. <code>FLASK_DEBUG</code> has no effect.</p>
 
-        <h3>Rate limit exceeded</h3>
-        <p>Let's Encrypt limits: 50 certificates per domain per week, 5 duplicate certificates per week</p>
-        <pre><code># Check rate limit status
-curl "https://crt.sh/?q=example.com&output=json" | jq length</code></pre>
+            <h2>The Container Exits at Startup</h2>
+            <h3>"Required directories are not writable by the CertMate process"</h3>
+            <p>CertMate refuses to start unless <code>certificates</code>, <code>data</code>, <code>backups</code> and <code>logs</code> are writable, and the message lists each failing directory. The usual cause is a bind mount, which keeps the host directory's ownership. The image runs as UID/GID 1000, or under rootless podman and OpenShift as an arbitrary UID in group 0. Make the host directories writable by group 0 once:</p>
+            <pre><code>mkdir -p ./{certificates,data,logs,backups}
+chgrp -R 0 ./{certificates,data,logs,backups}
+chmod -R g+rwX ./{certificates,data,logs,backups}</code></pre>
+            <p>Named volumes need no preparation. With podman you can instead add the <code>:U</code> option to each bind mount.</p>
 
-        <h3>Permission denied</h3>
-        <pre><code># Fix file permissions
-sudo chown -R certmate:certmate /opt/certmate/certificates
-sudo chmod -R 700 /opt/certmate/certificates
-sudo chmod 600 /opt/certmate/certificates/*/privkey.pem</code></pre>
+            <h3>"Failed to initialize CertMate app: ..."</h3>
+            <p>CertMate logs this and exits with status 1 rather than start without a secret it was told to use. The text after the colon names the cause:</p>
+            <ul>
+                <li><code>SECRET_KEY_FILE is set to ... but cannot be used</code>: the file is unreadable or empty. Fix the mount or its permissions, or unset <code>SECRET_KEY_FILE</code>.</li>
+                <li><code>API_BEARER_TOKEN is set but not usable</code>, or the same for <code>API_BEARER_TOKEN_FILE</code>: the token must be 32 to 512 characters, and the message names the rule it broke.</li>
+                <li><code>settings.json</code> exists but cannot be read, and no backup can replace it.</li>
+            </ul>
 
-        <h3>Container won't start</h3>
-        <pre><code># Check logs
-docker-compose logs certmate
+            <h2>Certificate Creation Fails</h2>
+            <p>A failed certbot run returns HTTP 422 with code <code>CERTIFICATE_CREATION_FAILED</code>, certbot's output with credentials removed, and a <code>hint</code>. The full stderr is logged on a line starting <code>Certbot failed for &lt;domain&gt;:</code>. If a CAA record forbids the CA, the error says so.</p>
+            <h3>Provider account not configured</h3>
+            <p><code>DNS provider '&lt;provider&gt;' account '&lt;id&gt;' not configured</code> returns HTTP 400 before certbot runs. Add the account, or fix its credentials, in Settings, then try again.</p>
+            <h3>The TXT record is not visible in time</h3>
+            <p>For DNS-01, certbot waits a fixed time after creating the record, then asks the CA to validate. Each provider has a default wait, which the <code>dns_propagation_seconds</code> setting overrides per provider (1 to 3600 seconds). Check what a public resolver sees during an issuance:</p>
+            <pre><code>dig TXT _acme-challenge.example.com @8.8.8.8 +short</code></pre>
+            <p>With a domain alias, first check that <code>_acme-challenge</code> resolves as a CNAME to the validation domain.</p>
+            <p>With the <code>custom-script</code> provider, certbot validates as soon as the auth hook returns, so the script must do the waiting; the configured time is passed to it as <code>CERTMATE_DNS_PROPAGATION_SECONDS</code>. For <code>example.com</code> plus <code>*.example.com</code> both challenges share one name, so the hook must add to the TXT record set, not replace it.</p>
 
-# Verify environment variables
-docker-compose config
+            <h2>Rate Limits and HTTP 429</h2>
+            <p>Check which limit answered before you retry.</p>
+            <ul>
+                <li><strong>The certificate authority's limit.</strong> A renewal the CA refused returns HTTP 422 with code <code>ACME_RATE_LIMITED</code>. Retrying makes it worse: wait, or use a different ACME account. The CA's own text in the log names the limit and when it resets. Hits are counted in <code>certmate_acme_rate_limit_hits_total</code>. Test against the "Let's Encrypt (Staging)" CA entry.</li>
+                <li><strong><code>ISSUANCE_QUEUE_FULL</code></strong> (429): more jobs are queued or running than <code>CERTMATE_ISSUANCE_QUEUE_LIMIT</code> (default 20).</li>
+                <li><strong><code>Rate limit exceeded</code></strong> (429, <code>retry_after: 60</code>) is CertMate's own per-client API limit.</li>
+                <li><strong><code>Too many attempts. Please try again later.</code></strong> (429, with a <code>Retry-After</code> header) is the login limit.</li>
+            </ul>
+            <p>A 409 <code>DOMAIN_OPERATION_IN_PROGRESS</code> means another operation holds that domain's lock.</p>
 
-# Check port conflicts
-netstat -tulpn | grep :8000</code></pre>
+            <h2>API Requests Return 401</h2>
+            <p>The <code>code</code> field says why: <code>AUTH_HEADER_MISSING</code>, <code>INVALID_AUTH_SCHEME</code> (the scheme is not <code>Bearer</code>), <code>INVALID_AUTH_FORMAT</code>, or <code>INVALID_TOKEN</code>. A token set in <code>API_BEARER_TOKEN</code> or <code>API_BEARER_TOKEN_FILE</code> replaces the stored one at startup, and the old token stops working.</p>
 
-        <h2>Debug Mode</h2>
-        <pre><code># Enable debug logging
-FLASK_DEBUG=true
-FLASK_ENV=development</code></pre>
+            <h2>Locked Out of the Web UI</h2>
+            <p>A login answered with 403 <code>Local auth disabled</code>, or a lost admin password, can be fixed from a shell in the container:</p>
+            <pre><code>docker exec -it certmate python scripts/reset_admin_password.py</code></pre>
+            <p>It prompts for a password, creates the <code>admin</code> user if missing, and turns local authentication on.</p>
 
-            <p><strong>Need more help?</strong> Open an issue on <a href="https://github.com/fabriziosalmi/certmate/issues" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+            <h2>Certificates Are Not Renewing</h2>
+            <p>The renewal sweep runs daily around 02:00, with up to an hour of random offset, and renews certificates within <code>renewal_threshold_days</code> of expiry (default 30). Each sweep ends with a <code>Renewal check complete in ...</code> log line with its counts. If that line is missing, check <code>/health/ready</code>. Other lines that explain a missing renewal:</p>
+            <ul>
+                <li><code>Automatic renewal is globally disabled; skipping renewal check</code>: <code>auto_renew</code> is off.</li>
+                <li><code>Skipping renewal for &lt;domain&gt;: auto_renew disabled for this certificate</code>: turn it back on with <code>PUT /api/certificates/&lt;domain&gt;/auto-renew</code>.</li>
+                <li><code>Renewal check skipped N malformed domain entries</code>: fix those entries in <code>settings.json</code>.</li>
+                <li>A critical line <code>CertMate is running with N gunicorn workers</code>: each worker runs its own scheduler and renews every certificate again. Run <code>--workers 1</code> and raise <code>--threads</code>.</li>
+            </ul>
+            <p>A manual renewal (<code>POST /api/certificates/&lt;domain&gt;/renew</code>) failing with <code>RENEWAL_CONFIG_BROKEN</code> means certbot's renewal configuration points at paths that no longer exist, usually after the data directory moved: use Edit &amp; Reissue. <code>DNS_ACCOUNT_NOT_CONFIGURED</code> means the certificate's DNS account was removed: add it again in Settings.</p>
+            <p>If the certificate has already expired, browsers show <a href="/errors/net-err-cert-date-invalid/">NET::ERR_CERT_DATE_INVALID</a>.</p>
+
+            <h2>A Deploy Hook Failed</h2>
+            <p>A failing hook never blocks the certificate operation; it raises <code>deploy_hook_failed</code>. <code>GET /api/deploy/history?limit=50</code> (admin) and the Activity tab show each run's exit code, duration and output. The error reads:</p>
+            <ul>
+                <li><code>exit code N: ...</code>: 127 means the command was not found in the container; use absolute paths.</li>
+                <li><code>timeout after Ns</code>: raise the hook's <code>timeout</code> (default 30, maximum 300).</li>
+                <li><code>Command blocked at runtime: ...</code>: move the logic into a script file.</li>
+                <li><code>Deploy hooks are disabled. Enable them in Settings → Deploy.</code></li>
+            </ul>
+            <p>A hook held for a deploy window leaves no history until it runs; <code>GET /api/deploy/pending</code> lists held deploys.</p>
+
+            <h2>The Browser Does Not Trust a New Certificate</h2>
+            <p>If it came from "Let's Encrypt (Staging)", it is an untrusted test certificate, and browsers report errors such as <a href="/errors/net-err-cert-authority-invalid/">NET::ERR_CERT_AUTHORITY_INVALID</a>. Select the production "Let's Encrypt" entry and reissue.</p>
+
+            <p><strong>Need more help?</strong> Open an issue on <a href="https://github.com/fabriziosalmi/certmate/issues" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
 
             <h2>Next Steps</h2>
             <ul>
-                <li><a href="dns-providers.html">DNS Providers</a> - DNS configuration help</li>
-                <li><a href="docker-deployment.html">Docker Deployment</a> - Container issues</li>
-                <li><a href="security.html">Security</a> - Permission problems</li>
+                <li><a href="dns-providers.html">DNS Providers</a>: provider credentials and propagation</li>
+                <li><a href="docker-deployment.html">Docker Deployment</a>: volumes, environment and health checks</li>
+                <li><a href="backup-recovery.html">Backup &amp; Recovery</a>: restoring settings and certificates</li>
+                <li><a href="api-reference.html">API Reference</a>: endpoints and error codes</li>
             </ul>
         </section>
     </main>

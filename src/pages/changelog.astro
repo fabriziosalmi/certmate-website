@@ -1,0 +1,37 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import Navbar from '~/components/Navbar.astro';
+import Footer from '~/components/Footer.astro';
+import UpdateRow from '~/components/UpdateRow.astro';
+import { updates } from '~/data/whats-new';
+
+// The release history, moved off the home page, where it was 5,267 of 7,508
+// words. Same cards as src/data/whats-new.ts; nothing written for this page
+// beyond the heading and the description.
+const title = 'Changelog — CertMate release history';
+const description =
+  'Every CertMate release, newest first: what each version added, fixed or hardened, with links to the full release notes on GitHub.';
+const canonical = 'https://www.certmate.org/changelog/';
+---
+
+<BaseLayout title={title} description={description} canonical={canonical}>
+  <Navbar />
+  <main id="main-content" class="flex-1">
+    <section class="container-x py-16">
+      <div class="mx-auto max-w-5xl">
+        <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+          CertMate changelog
+        </h1>
+        <p class="mt-3 max-w-2xl text-gray-600 dark:text-gray-300 leading-relaxed">
+          Every release, newest first. Each entry summarises what changed; where
+          a release has published notes, the entry links to them on GitHub.
+        </p>
+
+        <ul class="mt-10 divide-y divide-gray-200 dark:divide-gray-800 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden bg-white dark:bg-gray-900" role="list">
+          {updates.map((u) => <UpdateRow u={u} level={2} />)}
+        </ul>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>
