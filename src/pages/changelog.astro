@@ -5,17 +5,9 @@ import Footer from '~/components/Footer.astro';
 import UpdateRow from '~/components/UpdateRow.astro';
 import { updates } from '~/data/whats-new';
 
-// The release history, on a page of its own.
-//
-// It used to live on the home page, collapsed behind a <details> and kept in
-// the DOM so it would still be indexed. Measured on the live site, that made
-// it 5,267 of the home page's 7,508 words: seventy per cent of the page that
-// is supposed to say what CertMate is was version notes. Here it is the whole
-// subject of the page, which is what someone looking for the changelog wants,
-// and the home page keeps the latest release and a link.
-//
-// Same data, same rows, no text written for this page beyond the heading and
-// the description: every card is still the one src/data/whats-new.ts holds.
+// The release history, moved off the home page, where it was 5,267 of 7,508
+// words. Same cards as src/data/whats-new.ts; nothing written for this page
+// beyond the heading and the description.
 const title = 'Changelog — CertMate release history';
 const description =
   'Every CertMate release, newest first: what each version added, fixed or hardened, with links to the full release notes on GitHub.';
