@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deploy Hooks - CertMate Documentation</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="preload" href="vendor/font-awesome/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/font-awesome/all.min.css"></noscript>
+    <link rel="preload" as="style" href="vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/fonts/fonts.css"></noscript>
+    <style>
+        .doc-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h1 {
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-6);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content p, .doc-content li {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+        .doc-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin: var(--spacing-6) 0;
+        }
+        .doc-content pre code {
+            background: none;
+            padding: 0;
+            color: white;
+        }
+        .doc-content ul, .doc-content ol {
+            margin: var(--spacing-4) 0;
+            padding-left: var(--spacing-8);
+        }
+        .doc-content li {
+            margin: var(--spacing-2) 0;
+        }
+    
+    /* In-page TOC, injected by toc.js. Sticky right column on lg+
+       viewports; collapsed to a top disclosure on smaller screens. */
+    .doc-toc {
+      display: none;
+    }
+    /* Shown only when it fits in the right margin: this page's content
+       column is 900px wide, the TOC 220px plus 24px of gap, so the viewport
+       must be at least 900 + 2 * 244 = 1388px. Below that the old rule
+       placed the TOC over the text (#588). */
+    @media (min-width: 1388px) {
+      .doc-toc {
+        display: block;
+        position: fixed;
+        top: 100px;
+        right: max(24px, calc((100vw - 900px) / 2 - 244px));
+        width: 220px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+      }
+    }
+    .doc-toc-inner {
+      border-left: 2px solid var(--gray-200);
+      padding-left: 16px;
+    }
+    .doc-toc-list { list-style: none; padding: 0; margin: 0; }
+    .doc-toc-item { margin: 4px 0; line-height: 1.4; }
+    .doc-toc-item-h3 { padding-left: 12px; }
+    .doc-toc-link {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: block;
+      padding: 2px 0;
+      transition: color 120ms ease;
+    }
+    .doc-toc-link:hover { color: var(--gray-900); }
+    .doc-toc-link.is-active {
+      color: var(--blue-600, #2563eb);
+      font-weight: 600;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="../assets/certmate_logo.png" alt="CertMate Logo" class="brand-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html#features" class="nav-link">Features</a>
+                <a href="../index.html#providers" class="nav-link">DNS Providers</a>
+                <a href="index.html" class="nav-link active">Documentation</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-terminal"></i> Deploy Hooks</h1>
+                <p class="docs-subtitle">Shell commands CertMate runs after a certificate is issued or renewed: configuration, environment, maintenance windows, validation and history.</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <h2>What a Deploy Hook Is</h2>
+            <p>A deploy hook is a shell command CertMate runs after a certificate is created or renewed, such as a web server reload. The command is passed to <code>sh -c</code> with a timeout; exit code 0 is success, anything else a failure.</p>
+            <p>Hooks fire automatically on two events only: <code>created</code> and <code>renewed</code>. Revoking a certificate does not run any hook.</p>
+            <p>A failed hook does not block the certificate operation. It is recorded in the history and audit log, and CertMate publishes <code>deploy_hook_failed</code>, which the notifier delivers whatever event filter is set (see <a href="webhooks.html">Webhooks</a>).</p>
+
+            <h2>Hook Fields</h2>
+            <p>A hook is a JSON object. The validator applies these rules when you save:</p>
+            <ul>
+                <li><code>id</code> (required): a stable identifier; the UI generates a UUID.</li>
+                <li><code>name</code> (required): a label.</li>
+                <li><code>command</code> (required): one shell command, at most 1024 characters, subject to <a href="#command-validation">Command Validation</a>.</li>
+                <li><code>enabled</code>: defaults to <code>true</code> if absent or not a boolean.</li>
+                <li><code>timeout</code>: seconds. Defaults to 30 and is clamped to between 1 and 300.</li>
+                <li><code>on_events</code>: a list containing <code>created</code>, <code>renewed</code> or both. If it is absent or not a list, it is set to <code>["created", "renewed"]</code>.</li>
+                <li><code>window</code>: an optional maintenance window, described below.</li>
+            </ul>
+            <p>Hooks live under the <code>deploy_hooks</code> settings key. <code>global_hooks</code> run for every domain; <code>domain_hooks</code> maps an exact domain name to hooks for that domain only, which run after the global ones. The top-level <code>enabled</code> flag is the master switch: when it is <code>false</code> or missing, no hook runs on certificate events.</p>
+            <pre><code>{
+  "enabled": true,
+  "global_hooks": [
+    {
+      "id": "reload-nginx",
+      "name": "Reload nginx",
+      "command": "/usr/sbin/nginx -s reload",
+      "enabled": true,
+      "timeout": 30,
+      "on_events": ["created", "renewed"]
+    }
+  ],
+  "domain_hooks": {
+    "api.example.com": [
+      {
+        "id": "push-lb",
+        "name": "Push to load balancer",
+        "command": "/opt/scripts/push-cert.sh \"$CERTMATE_DOMAIN\"",
+        "timeout": 120,
+        "on_events": ["renewed"]
+      }
+    ]
+  }
+}</code></pre>
+
+            <h2>Configuring Hooks</h2>
+            <h3>In the web UI</h3>
+            <p>Open <strong>Settings</strong>, then the <strong>Deploy</strong> tab. Turn on <strong>Enable Deploy Hooks</strong>, then use <strong>Add Global Hook</strong>, or add a domain under <strong>Domain-Specific Hooks</strong> and add hooks to it. New hooks start enabled, with a 30-second timeout and both <strong>Created</strong> and <strong>Renewed</strong> ticked. Nothing is stored until you press <strong>Save Deploy Settings</strong>; a rejected hook fails the save with an error naming the hook and the reason.</p>
+            <h3>Through the API</h3>
+            <p>Both endpoints require the <code>admin</code> role.</p>
+            <pre><code># Read the current configuration
+curl -H "Authorization: Bearer $TOKEN" https://certmate.example.com/api/deploy/config
+
+# Save a configuration
+curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d @hooks.json https://certmate.example.com/api/deploy/config</code></pre>
+            <p>Each top-level key you send replaces the stored value, so sending <code>global_hooks</code> replaces the whole list; keys you leave out, such as <code>targets</code>, are kept. A rejected save returns HTTP 400 with the reason in <code>error</code>. <code>POST /api/settings</code> does not accept <code>deploy_hooks</code>.</p>
+
+            <h2>Environment Variables</h2>
+            <p>The hook inherits the CertMate process environment, plus these variables:</p>
+            <ul>
+                <li><code>CERTMATE_DOMAIN</code>: the domain name.</li>
+                <li><code>CERTMATE_CERT_PATH</code>: <code>&lt;cert_dir&gt;/&lt;domain&gt;/cert.pem</code>.</li>
+                <li><code>CERTMATE_KEY_PATH</code>: <code>&lt;cert_dir&gt;/&lt;domain&gt;/privkey.pem</code>. Not set when that file does not exist, as for a certificate issued from a <a href="csr-certificates.html">CSR</a>.</li>
+                <li><code>CERTMATE_FULLCHAIN_PATH</code>: <code>&lt;cert_dir&gt;/&lt;domain&gt;/fullchain.pem</code>.</li>
+                <li><code>CERTMATE_CHAIN_PATH</code>: <code>&lt;cert_dir&gt;/&lt;domain&gt;/chain.pem</code>, the intermediates without the leaf.</li>
+                <li><code>CERTMATE_EVENT</code>: <code>created</code>, <code>renewed</code>, <code>manual</code> or <code>test</code>.</li>
+                <li><code>CERTMATE_DRY_RUN</code>: set to <code>1</code> only for a test run.</li>
+            </ul>
+            <p><code>&lt;cert_dir&gt;</code> is the certificate directory, <code>certificates</code> under the install root unless <code>CERTMATE_CERT_DIR</code> moves it. The command runs as the CertMate process user, <code>certmate</code> in the Docker image, which includes <code>bash</code>.</p>
+
+            <h2>Maintenance Windows</h2>
+            <p>A certificate renews when it is due. A <code>window</code> on a hook does not change that. It only holds the deploy until the window is next open.</p>
+            <pre><code>"window": {
+  "start": "02:00",
+  "end": "04:00",
+  "days": ["sat", "sun"],
+  "timezone": "Europe/Rome"
+}</code></pre>
+            <ul>
+                <li><code>start</code> and <code>end</code> are required, in 24-hour <code>HH:MM</code>. <code>end</code> is exclusive.</li>
+                <li><code>start</code> and <code>end</code> may not be equal. For a whole day, use <code>00:00</code> to <code>23:59</code>.</li>
+                <li><code>days</code> is optional. Use <code>mon</code> to <code>sun</code>. Only the first three letters are read, and case does not matter. If the list is absent or empty, the window is open every day.</li>
+                <li><code>timezone</code> is optional and defaults to <code>UTC</code>. It must be an IANA name such as <code>Europe/Rome</code>. An unknown name is refused when you save.</li>
+                <li>A window that crosses midnight belongs to the day it starts on. With <code>22:00</code> to <code>04:00</code> on <code>fri</code>, the window is open at 02:00 on Saturday.</li>
+            </ul>
+            <p>In the UI, tick <strong>Only deploy during a maintenance window</strong> on a hook. The window starts as 02:00 to 04:00 on every day, in your browser's timezone.</p>
+
+            <h3>Held deploys</h3>
+            <p>When a hook's window is closed, its deploy goes into a queue stored in <code>pending_deploys.json</code> in the data directory, so it survives a restart. A scheduler job checks the queue every minute and runs each held deploy once its window is open.</p>
+            <ul>
+                <li>The queue holds one entry per hook and domain. A second renewal before the window opens does not add a second deploy. The hook reads the certificate from disk when it runs, so it deploys the newest one.</li>
+                <li>A held deploy is dropped if its hook has been deleted or disabled, or if the master switch has been turned off.</li>
+                <li>A held deploy that fails is not queued again.</li>
+                <li>A deploy waiting more than 7 days logs a warning but stays queued.</li>
+            </ul>
+            <p>A held deploy does not appear in the history until it runs. To list the queue:</p>
+            <pre><code>curl -H "Authorization: Bearer $TOKEN" https://certmate.example.com/api/deploy/pending</code></pre>
+            <p>Each entry includes the hook <code>id</code>, <code>domain</code>, <code>event</code>, <code>queued_at</code>, a readable <code>window</code>, <code>next_run</code>, and <code>orphaned</code> (the hook no longer exists).</p>
+
+            <h2>Running Hooks by Hand</h2>
+            <h3>Testing one hook</h3>
+            <pre><code>curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"domain": "test.example.com"}' \
+  https://certmate.example.com/api/deploy/test/&lt;hook_id&gt;</code></pre>
+            <p>This runs the saved hook with that id, with <code>CERTMATE_EVENT=test</code> and <code>CERTMATE_DRY_RUN=1</code>. The domain defaults to <code>test.example.com</code>, as sent by the UI's <strong>Test</strong> button. The command really executes; <code>CERTMATE_DRY_RUN</code> only tells your script it is a test. The test ignores <code>on_events</code>, the window, the hook's <code>enabled</code> flag and the master switch. The hook must already be saved, or the endpoint returns 404 with <code>reason: hook_missing_from_config</code>.</p>
+            <h3>Running every hook for a domain</h3>
+            <pre><code>curl -X POST -H "Authorization: Bearer $TOKEN" \
+  https://certmate.example.com/api/certificates/api.example.com/deploy</code></pre>
+            <p>Admin only. Runs every enabled global and domain hook for the domain, plus applicable typed deploy targets, with <code>CERTMATE_EVENT=manual</code>, ignoring <code>on_events</code> and windows. It returns HTTP 200 with <code>{ok, total, succeeded, failed, results}</code> even when <code>ok</code> is false; if the master switch is off or nothing applies, <code>error</code> says so. The dashboard's <strong>Run deploy hooks now</strong> action calls it.</p>
+
+            <h2 id="command-validation">Command Validation</h2>
+            <p>The command is checked on save, on restore from backup, and again just before it runs. A command is rejected if it is longer than 1024 characters or contains any of these:</p>
+            <ul>
+                <li>backticks, <code>$(</code>, or <code>${</code>. <code>${CERTMATE_NAME}</code> is allowed, but only with the closing brace directly after the name.</li>
+                <li><code>&amp;&amp;</code>, <code>||</code>, <code>;</code>, a carriage return or a newline</li>
+                <li><code>&gt;</code> followed by an absolute path, or <code>&lt;&lt;</code></li>
+                <li>the words <code>eval</code> or <code>source</code></li>
+                <li>the strings <code>settings.json</code>, <code>api_bearer_token</code>, <code>client_secret</code> or <code>vault_token</code>, or <code>.env</code> not followed by a letter or digit, in any case</li>
+            </ul>
+            <p><code>$CERTMATE_NAME</code> references are allowed. A rejected save reads like <code>Global hook rejected: hook 'Reload nginx' command contains dangerous shell metacharacters</code>. When you need chaining or conditionals, put the logic in a script inside the container and call the script:</p>
+            <pre><code>#!/bin/sh
+set -eu
+[ -n "${CERTMATE_DRY_RUN:-}" ] &amp;&amp; exit 0
+/usr/sbin/nginx -t &amp;&amp; /usr/sbin/nginx -s reload</code></pre>
+            <p>Only the <code>command</code> field is validated, not the script's contents.</p>
+
+            <h2>History and Audit</h2>
+            <p>Every run is appended to <code>deploy_history.jsonl</code> in the data directory, which keeps the last 500 records. A run that was in progress when CertMate stopped is reported as <code>interrupted</code>. Captured stdout and stderr have secret patterns redacted and are cut to 4096 characters each.</p>
+            <pre><code>curl -H "Authorization: Bearer $TOKEN" \
+  "https://certmate.example.com/api/deploy/history?limit=50&amp;domain=api.example.com"</code></pre>
+            <p><code>limit</code> defaults to 50 and is capped at 200. <code>domain</code> is optional. The Deploy tab shows the same under <strong>Recent Executions</strong>. Each run also writes an audit entry with operation <code>deploy_hook</code>.</p>
+            <p>Error messages you may see in the history:</p>
+            <ul>
+                <li><code>exit code N: ...</code>: non-zero exit, followed by up to 200 characters of stderr.</li>
+                <li><code>timeout after Ns</code>: the command ran past its <code>timeout</code>.</li>
+                <li><code>Command blocked at runtime: ...</code>: the stored command fails validation.</li>
+            </ul>
+            <p>If the history stays empty, check that the data volume is writable by the CertMate user.</p>
+
+            <h2>Next Steps</h2>
+            <ul>
+                <li><a href="webhooks.html">Webhooks</a>: delivering deploy failure notifications</li>
+                <li><a href="api-reference.html">API Reference</a>: authentication and the rest of the API</li>
+                <li><a href="docker-deployment.html">Docker Deployment</a>: volumes and the container user</li>
+                <li><a href="security.html">Security</a>: roles and hardening</li>
+                <li><a href="troubleshooting.html">Troubleshooting</a>: diagnosing failed renewals and deploys</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributors</a></p>
+        </div>
+    </footer>
+
+    <script src="../assets/script.js"></script>
+    <script src="toc.js" defer></script>
+</body>
+</html>

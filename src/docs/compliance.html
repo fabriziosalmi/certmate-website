@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compliance Evidence - CertMate Documentation</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="preload" href="vendor/font-awesome/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/font-awesome/all.min.css"></noscript>
+    <link rel="preload" as="style" href="vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/fonts/fonts.css"></noscript>
+    <style>
+        .doc-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h1 {
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-6);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content p, .doc-content li {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+        .doc-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin: var(--spacing-6) 0;
+        }
+        .doc-content pre code {
+            background: none;
+            padding: 0;
+            color: white;
+        }
+        .doc-content ul, .doc-content ol {
+            margin: var(--spacing-4) 0;
+            padding-left: var(--spacing-8);
+        }
+        .doc-content li {
+            margin: var(--spacing-2) 0;
+        }
+    
+    /* In-page TOC, injected by toc.js. Sticky right column on lg+
+       viewports; collapsed to a top disclosure on smaller screens. */
+    .doc-toc {
+      display: none;
+    }
+    /* Shown only when it fits in the right margin: this page's content
+       column is 900px wide, the TOC 220px plus 24px of gap, so the viewport
+       must be at least 900 + 2 * 244 = 1388px. Below that the old rule
+       placed the TOC over the text (#588). */
+    @media (min-width: 1388px) {
+      .doc-toc {
+        display: block;
+        position: fixed;
+        top: 100px;
+        right: max(24px, calc((100vw - 900px) / 2 - 244px));
+        width: 220px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+      }
+    }
+    .doc-toc-inner {
+      border-left: 2px solid var(--gray-200);
+      padding-left: 16px;
+    }
+    .doc-toc-list { list-style: none; padding: 0; margin: 0; }
+    .doc-toc-item { margin: 4px 0; line-height: 1.4; }
+    .doc-toc-item-h3 { padding-left: 12px; }
+    .doc-toc-link {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: block;
+      padding: 2px 0;
+      transition: color 120ms ease;
+    }
+    .doc-toc-link:hover { color: var(--gray-900); }
+    .doc-toc-link.is-active {
+      color: var(--blue-600, #2563eb);
+      font-weight: 600;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="../assets/certmate_logo.png" alt="CertMate Logo" class="brand-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html#features" class="nav-link">Features</a>
+                <a href="../index.html#providers" class="nav-link">DNS Providers</a>
+                <a href="index.html" class="nav-link active">Documentation</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-scale-balanced"></i> Compliance Evidence</h1>
+                <p class="docs-subtitle">How the audit trail records, signs and exports certificate actions, how that maps to NIS2, the EU AI Act and ISO/IEC 42001, and where the evidence stops.</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <h2>Scope: What This Page Does and Does Not Claim</h2>
+            <p>CertMate is a single-instance, self-hosted MIT tool. It is not an AI system, not a high-risk AI system, and not a regulated entity. It does not comply with or certify anything. Compliance obligations fall on the operator running it.</p>
+            <p>CertMate provides evidence artifacts the operator can use toward their own obligations. Each mapping below states what the operator can evidence and where that stops.</p>
+
+            <h2>What the Audit Trail Records</h2>
+            <h3>Attribution</h3>
+            <p>Certificate lifecycle actions, including create, renew, reissue, deploy, the auto-renew toggle and unattended scheduled renewals, are recorded with two structured fields:</p>
+            <ul>
+                <li><code>actor</code>: who or what acted. <code>kind</code> is one of <code>user</code> (a session or OIDC login), <code>api_token</code>, <code>agent</code>, <code>scheduler</code> or <code>system</code>. For a scoped API key the record also carries the key <code>id</code> and <code>token_prefix</code>.</li>
+                <li><code>trigger</code>: why. <code>cause</code> is <code>manual</code>, <code>api</code>, <code>agent</code>, <code>scheduled_renewal</code> (with the scheduler <code>job_id</code>) or <code>event</code>.</li>
+            </ul>
+            <p><code>actor.kind</code> is derived only from the authenticated identity. An action is recorded as <code>agent</code> only when it is made with a scoped API key created with <code>is_agent</code> set. A request with the legacy global bearer token is recorded as <code>api_token</code>, because it has no key id and cannot be shown to be an agent.</p>
+            <p>To make an agent's actions distinguishable from a human's, give the agent its own key:</p>
+            <pre><code>curl -X POST https://certmate.example.com/api/keys \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "renewal-agent", "role": "operator", "is_agent": true}'</code></pre>
+            <p>An agent may also send <code>X-CertMate-Agent-Session</code> and <code>X-CertMate-Agent-Id</code>. These are recorded as <code>actor.agent_session</code> and <code>actor.agent_id</code>, truncated to 128 characters, for correlation. They are client-supplied and unauthenticated, so they are a claim and never change <code>actor.kind</code>. The trustworthy identity is the API key.</p>
+
+            <h3>Tamper-evidence</h3>
+            <p>Each audit entry is also appended to a SHA-256 hash chain, <code>data/audit/certificate_audit.chain.jsonl</code>. Each line holds a gap-free <code>seq</code>, the entry, the previous line's hash and its own hash. A modification, deletion or reorder by someone who cannot recompute the chain is detectable, and the verifier reports the <code>seq</code> where the chain breaks. The human-readable <code>certificate_audit.log</code> carries no integrity property.</p>
+            <p>The chain is on by default. <code>CERTMATE_AUDIT_CHAIN=0</code> turns it off.</p>
+
+            <h3>Signing</h3>
+            <p>The instance holds an Ed25519 key. On first run it is generated and stored as <code>data/.audit_signing_key</code> with mode 0600; <code>AUDIT_SIGNING_KEY_FILE</code> points CertMate at a key kept elsewhere. If that variable is set but the file cannot be read, or the stored key is corrupt, signing is disabled rather than a new key being generated, and the unsigned chain keeps working.</p>
+            <p>Every 100 chain entries, the chain head is signed and appended to <code>data/audit/certificate_audit.checkpoints.jsonl</code>.</p>
+
+            <h2>Verifying the Chain</h2>
+            <h3>On the instance</h3>
+            <p><code>GET /api/audit/verify</code> (admin) recomputes the chain. It returns HTTP 200 when intact and 409 when broken. When a signing key is present it also cross-checks the chain against the newest signed checkpoint that verifies under the instance key; the result carries <code>checkpoint_verified</code>, <code>checkpoint_seq</code> and <code>checkpoint_reason</code>. A new instance with no chain file and no checkpoints returns 200 with <code>state</code> set to <code>absent</code>. A missing chain file when checkpoints exist, or an unreadable checkpoint file, returns 409.</p>
+
+            <h3>Off the instance</h3>
+            <p>The standalone verifier needs the Python standard library for a chain file, plus <code>cryptography</code> for a signed bundle, and does not require running or trusting CertMate:</p>
+            <pre><code># Verify a raw chain file
+python -m modules.core.audit_verify data/audit/certificate_audit.chain.jsonl
+
+# Verify a signed export bundle, pinning the instance key
+python -m modules.core.audit_verify --bundle bundle.json --pubkey instance.pem</code></pre>
+            <p><code>--json</code> prints the result as JSON. Exit codes: 0 intact, 1 broken (with the <code>seq</code> and reason), 2 usage or I/O error.</p>
+
+            <h3>Signed export for an auditor</h3>
+            <ol>
+                <li>Fetch the instance's public key with <code>GET /api/audit/public-key</code> (admin). It returns <code>algorithm</code>, <code>public_key_pem</code> and <code>fingerprint</code>, or 404 when the instance has no signing key. Give the PEM to the auditor out of band.</li>
+                <li>Export the chain with <code>GET /api/audit/export</code> (admin). Optional <code>from_seq</code> and <code>to_seq</code> bound the slice; a slice that starts mid-chain carries its anchor and verifies on its own.</li>
+                <li>The auditor runs the verifier with <code>--pubkey</code>. Without it, the verifier prints a note that the fingerprint is self-asserted by the bundle.</li>
+            </ol>
+            <p>A passing check shows that the entries were not edited after they were written and which instance produced them, to anyone who does not hold the signing key.</p>
+
+            <h2>Streaming to a SIEM</h2>
+            <p>Each audit entry can also be pushed to an external collector, configured under the <code>audit_sink</code> settings key (admin, <code>POST /api/settings</code>). It is off by default. Fields and defaults:</p>
+            <pre><code>{
+  "audit_sink": {
+    "enabled": false,
+    "format": "syslog",
+    "protocol": "udp",
+    "host": "",
+    "port": 514,
+    "url": "",
+    "timeout": 3.0,
+    "facility": 16,
+    "app_name": "certmate"
+  }
+}</code></pre>
+            <ul>
+                <li><code>format</code>: <code>syslog</code> (RFC 5424, the entry as JSON in the message), <code>cef</code>, or <code>json</code> (HTTP POST of the entry to <code>url</code>).</li>
+                <li><code>protocol</code>: <code>udp</code> or <code>tcp</code>, for <code>syslog</code> and <code>cef</code>, sent to <code>host</code>:<code>port</code>.</li>
+            </ul>
+            <p>Entries pass through the credential sanitizer before they leave the process. A send error is logged as a warning and never breaks audit logging or the certificate operation.</p>
+
+            <h2>Regime Mapping</h2>
+            <h3>NIS2 (Directive (EU) 2022/2555)</h3>
+            <p>What it helps with: certificate operations are security-relevant events. CertMate produces a tamper-evident, attributed, time-stamped record of each one, plus an independent check, which the operator can use in their logging (Art. 21) and incident-evidence (Art. 23) practices.</p>
+            <p>Limit: NIS2 binds essential and important entities, not software tools. CertMate does not assess, monitor or report incidents. Being an in-scope entity, and meeting NIS2 in full, is the operator's responsibility.</p>
+
+            <h3>EU AI Act, Article 50 (transparency, in spirit only)</h3>
+            <p>What it helps with: when an AI agent operates certificates, the record carries <code>actor.kind</code> set to <code>agent</code> and the claimed agent session, so the operator can show after the fact which changes an AI agent made versus a human, under which key, and what triggered them.</p>
+            <p>Limit: Art. 50 duties fall on providers and deployers of AI systems and concern disclosure to natural persons interacting with AI. An agent renewing TLS certificates is not a textbook Art. 50 case, and CertMate is a tool, not an AI system. This maps to the transparency and human-oversight spirit only. CertMate does not satisfy Art. 50 on anyone's behalf.</p>
+
+            <h3>ISO/IEC 42001 (AI management system)</h3>
+            <p>What it helps with: the attributed, tamper-evident records are objective evidence that an AI agent took specific certificate actions, usable for the operational-records and traceability controls of the operator's own AIMS.</p>
+            <p>Limit: ISO/IEC 42001 certifies an organisation's management system, not a tool. CertMate is not certified to ISO/IEC 42001 and cannot certify the operator.</p>
+
+            <h2>Limits of the Evidence</h2>
+            <ul>
+                <li>The key does not bind the operator. Whoever holds the signing key can re-sign a rewritten chain, checkpoint or anchor. Constraining the operator needs signed checkpoints shipped to an external append-only sink; that is planned and not shipped.</li>
+                <li>Authenticity, not completeness. Audit writes are best-effort and never block a certificate operation. A missing interior <code>seq</code> proves a deletion, but a write that failed before it was recorded leaves nothing to verify.</li>
+                <li>Tail truncation is caught only down to the last checkpoint. Entries written after the newest signed checkpoint can be dropped undetected until the next checkpoint seals them. Keep successive signed exports if you need to close that gap.</li>
+                <li>The agent-session header is a claim. It is recorded for correlation; the authenticated API key is the identity.</li>
+                <li>History boundary. The chain starts when the feature is first enabled. Earlier <code>.log</code> history is not part of it.</li>
+                <li>A pruned chain proves less. After a prune, verification covers entries from the anchor forward, and both the API and the verifier report <code>anchored</code> and the anchor <code>seq</code> instead of a plain "intact".</li>
+            </ul>
+
+            <h2>Retention: Archiving a Prefix of the Chain</h2>
+            <p>There is no automatic pruning and no API endpoint for it. Pruning is one command, run with CertMate stopped, after the prefix has been exported and verified off the box:</p>
+            <pre><code># 1. Export the prefix to archive (admin token)
+curl -H "Authorization: Bearer $TOKEN" \
+     "https://certmate.example.com/api/audit/export?to_seq=1199" &gt; archive-0-1199.json
+
+# 2. Verify it off this box, pinning the instance key
+python -m modules.core.audit_verify --bundle archive-0-1199.json --pubkey instance.pem
+
+# 3. Store the archive, then, with CertMate stopped:
+python -m modules.core.audit_prune --bundle archive-0-1199.json --data-dir data/audit
+python -m modules.core.audit_prune --bundle archive-0-1199.json --data-dir data/audit --yes</code></pre>
+            <p>Without <code>--yes</code> the command prints the plan and changes nothing. It refuses, and removes nothing, if the bundle does not verify, is unsigned, is empty, does not start where the chain starts, disagrees with the chain at any <code>seq</code>, or would leave the chain empty. <code>--data-dir</code> defaults to <code>data/audit</code> and <code>--key-dir</code>, the directory holding <code>.audit_signing_key</code>, defaults to <code>data</code>. Point <code>--key-dir</code> at the instance's real key: if no key file is found there, a new one is generated and the anchor would be signed by a key other than the instance's.</p>
+            <p>A prune:</p>
+            <ul>
+                <li>appends an <code>archive</code> entry to the chain that survives, recording the archived seq range, the entry count, their head hash and the SHA-256 of the archive file;</li>
+                <li>writes <code>certificate_audit.anchor.json</code>, signed with the instance key, stating where the chain now starts and what it continues from, so a simply truncated chain cannot pass as a pruned one;</li>
+                <li>rewrites the chain without the archived entries.</li>
+            </ul>
+            <p>The anchor describes only the most recent archive. The complete history is the sequence of exported bundles, so keep all of them.</p>
+
+            <h2>Next Steps</h2>
+            <ul>
+                <li><a href="mcp-server.html">MCP Server</a>: running an AI agent against CertMate</li>
+                <li><a href="api-reference.html">API Reference</a>: authentication and endpoints</li>
+                <li><a href="security.html">Security</a>: authentication, roles and hardening</li>
+                <li><a href="backup-recovery.html">Backup and Recovery</a>: protecting the data directory</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributors</a></p>
+        </div>
+    </footer>
+
+    <script src="../assets/script.js"></script>
+    <script src="toc.js" defer></script>
+</body>
+</html>
