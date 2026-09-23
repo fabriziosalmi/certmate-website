@@ -188,7 +188,7 @@ private_ca           the URL you configure</code></pre>
             <h3>Private CA</h3>
             <p>Points CertMate at any ACME server you name: an internal CA such as step-ca or Boulder, or a public ACME CA that has no entry of its own. Fields:</p>
             <ul>
-                <li><strong>ACME Directory URL</strong> (required): must start with <code>http://</code> or <code>https://</code>.</li>
+                <li><strong>ACME Directory URL</strong> (required): the directory URL of your ACME server; use <code>https://</code>.</li>
                 <li><strong>CA Certificate (PEM format)</strong> (optional): the root that signed the ACME server's TLS certificate. Leave it empty when the server has a publicly trusted certificate.</li>
                 <li><strong>EAB Key ID</strong> and <strong>EAB HMAC Key</strong> (optional): sent only when both are set. If only one is set, CertMate logs a warning and registers without EAB.</li>
                 <li><strong>Email</strong> (required).</li>
