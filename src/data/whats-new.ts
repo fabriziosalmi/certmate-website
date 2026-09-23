@@ -30,6 +30,17 @@ export interface UpdateCard {
 
 export const updates: UpdateCard[] = [
   {
+    badge: 'milestone',
+    badgeLabel: 'v2.34.0',
+    icon: 'fa6-solid:heart-pulse',
+    title: 'v2.34.0 - CertMate watches the name, not only the certificate',
+    description:
+      'The largest surface change since 2.24, and one rule throughout: a check that cannot answer must say so. Domain registration expiry comes from RDAP, or WHOIS where a TLD has no RDAP, and a registry that does not publish a date gets none invented. Seven daily checks look at the name rather than the certificate: SPF, DMARC and MX, DNS blocklists, HSTS, the protective headers, and what a response discloses, with an opt-in eighth for hosts that still accept TLS 1.0 or 1.1. A blocklist that refuses the query is not read as clean: each list must prove it answers before it is trusted, and a check nobody could answer is unknown, never a pass. The TLS probe now verifies whether a served certificate was revoked, over OCSP or CRL, instead of assuming it was not; CAA records can be read before an order; certificate expiry warnings, which were never actually sent, now are; and a lapsing domain registration gets warnings of its own. API contract 2.11.',
+    date: 'September 2026',
+    highlight: true,
+    href: releaseTag('v2.34.0'),
+  },
+  {
     badge: 'feature',
     badgeLabel: 'v2.33.0',
     icon: 'fa6-solid:id-card',
@@ -37,7 +48,6 @@ export const updates: UpdateCard[] = [
     description:
       'One new capability and four fixes to answers the API gave with more confidence than it had. The private CA that signs client certificates now takes its subject from client_ca_subject in settings, validated before anything is generated, and POST /api/client-certs/ca/reset rebuilds it: the old CA is set aside, the client certificates it signed are deleted, server certificates are untouched, and the reset is audited. That endpoint moves the API contract to 2.3. The fixes: four resources answered a missing credential with a 401 whose body was a certificate object of nulls and no error or code; the storage health check reported healthy when it could not read the backend at all, and now says unknown; every remote storage backend answered "not there" to a timeout or an expired credential, the shape that gets a present certificate re-issued, and now distinguishes absent from could-not-tell; and an unreadable API_BEARER_TOKEN_FILE now says so instead of leaving every request at 401 in silence. Thirty-three undocumented endpoints are in docs/api.md, and release notes now have one file per version.',
     date: 'September 2026',
-    highlight: true,
     href: releaseTag('v2.33.0'),
   },
   {
