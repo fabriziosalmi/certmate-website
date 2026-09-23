@@ -1876,3 +1876,34 @@ section {
     text-decoration: underline;
 }
 
+
+/* Documentation pages at phone width. Measured at 390px, four of them
+   scrolled sideways: a settings table, code blocks on the pages whose own
+   <style> never gave <pre> an overflow rule, and long inline identifiers such
+   as API paths and file-name patterns. Tables and code blocks scroll inside
+   themselves and keep their lines intact; inline code breaks where it has to. */
+.doc-content table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+}
+.doc-content code {
+    overflow-wrap: anywhere;
+}
+.doc-content pre {
+    max-width: 100%;
+    overflow-x: auto;
+}
+.doc-content pre code {
+    overflow-wrap: normal;
+}
+/* The endpoint paths in the API reference are one unbroken token each. */
+.doc-content .api-path {
+    overflow-wrap: anywhere;
+}
+/* "Troubleshooting" at the hero size is wider than a phone. */
+@media (max-width: 480px) {
+    .docs-title {
+        font-size: var(--font-size-4xl);
+    }
+}

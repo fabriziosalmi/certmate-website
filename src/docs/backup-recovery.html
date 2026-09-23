@@ -133,28 +133,114 @@
         <section class="docs-hero" style="padding: 100px 0 60px;">
             <div class="container">
                 <h1 class="docs-title"><i class="fas fa-save"></i> Backup & Recovery</h1>
-                <p class="docs-subtitle">Unified backup system and disaster recovery procedures</p>
+                <p class="docs-subtitle">What a backup holds, when it can restore, and how to bring it back</p>
             </div>
         </section>
 
         <section class="doc-content">
-            <h2>Unified Backup System</h2>
-            <p>CertMate creates atomic backups of both settings and certificates ensuring data consistency.</p>
-            <h3>Create Backup</h3>
-        <pre><code>curl -X POST "http://localhost:8000/api/backups/create" \
-  -H "Authorization: Bearer your_token" \
-  -d '{"reason": "manual_backup"}'</code></pre>
-        <h3>Restore from Backup</h3>
-        <pre><code>curl -X POST "http://localhost:8000/api/backups/restore/unified" \
-  -H "Authorization: Bearer your_token" \
-  -d '{"filename": "unified_backup_20260111_120000.zip"}'</code></pre>
-            <p><a href="api-reference.html">→ See API Reference for complete backup endpoints</a></p>
+            <h2>What a Backup Contains</h2>
+            <p>A CertMate backup (a unified backup) is one archive holding settings and certificate state together:</p>
+            <ul>
+                <li><code>settings.json</code> and <code>backup_metadata.json</code>, the manifest.</li>
+                <li><code>certificates/</code>: every domain directory under the certificate directory, including certbot's <code>accounts/</code> and <code>archive/</code>, but not certbot's <code>logs/</code> and <code>work/</code>.</li>
+                <li><code>data/</code>: the <code>certs</code>, <code>audit</code> and <code>inventory</code> subtrees of the data directory: the private CA, client certificates, the CRL and the audit chain.</li>
+            </ul>
+            <p>Archives are named <code>backup_&lt;YYYYMMDD_HHMMSS_microseconds&gt;_&lt;reason&gt;.zip</code>, or <code>.zip.enc</code> when encrypted, and are written with mode <code>0600</code>.</p>
+
+            <h3>Share-safe and disaster-recovery archives</h3>
+            <p>Every backup is one of two kinds, recorded in the manifest as <code>secrets_masked</code> and <code>key_material_excluded</code>:</p>
+            <ul>
+                <li><strong>Share-safe</strong> (the default): every credential in the settings is replaced with a mask, and no private key is included: no <code>privkey*</code> files, no ACME account <code>private_key.json</code>, no <code>.key</code>, <code>.pfx</code> or <code>.p12</code> files, and nothing under a <code>keys/</code> directory. It cannot restore an instance on its own.</li>
+                <li><strong>Disaster recovery</strong> (<code>include_secrets: true</code>): plaintext settings and every key. This is the archive that can rebuild an instance.</li>
+            </ul>
+
+            <h2>The Backup Passphrase</h2>
+            <p>Set <code>CERTMATE_BACKUP_PASSPHRASE</code> in the environment. When it is set, every backup is encrypted before it is written: the key is derived from the passphrase with PBKDF2-SHA256 (600,000 iterations) and the archive is encrypted with Fernet. The file gets the <code>.zip.enc</code> suffix. The passphrase is read only from the environment, never from <code>settings.json</code>, and the same passphrase must be present to inspect or restore the archive.</p>
+            <p>The passphrase also decides what automatic backups contain:</p>
+            <ul>
+                <li><strong>With a passphrase</strong>, automatic backups are disaster-recovery archives, encrypted at rest. They can restore the instance.</li>
+                <li><strong>Without a passphrase</strong>, automatic backups are share-safe: credentials are masked and private keys are left out, so they cannot restore the instance. CertMate logs a warning to this effect once per process, the first time it takes one.</li>
+            </ul>
+
+            <h2>Automatic and Manual Backups</h2>
+            <p>An automatic backup is taken before each settings save, when a settings file already exists. A failed automatic backup is logged and does not block the save.</p>
+            <p>A manual backup is taken on request from the web UI or the API. Without <code>include_secrets</code> it is share-safe, whether or not a passphrase is set. With <code>"include_secrets": true</code> it is a disaster-recovery archive; without a passphrase that file is unencrypted and holds every credential and private key. The opt-in is recorded in the audit log.</p>
+
+            <h2>Storage and Retention</h2>
+            <p>Backups are written to <code>&lt;backup dir&gt;/unified/</code>. The backup directory defaults to <code>backups</code> under the install root, is <code>/app/backups</code> in the container image, and can be moved with <code>CERTMATE_BACKUP_DIR</code>. Mount it as a volume in Docker:</p>
+            <pre><code>-v certmate_backups:/app/backups</code></pre>
+            <p>Pruning runs after every backup and applies two rules: at most the 50 most recent archives are kept, and any archive older than 30 days is deleted however few there are. Both limits are constants in the code, not settings. A disaster-recovery archive left only in the backup directory is deleted after 30 days, so keep a copy off the host.</p>
+            <p>If the settings include a <code>backup_storage</code> block with <code>backend: s3_compatible</code> and a complete endpoint, bucket and key pair, each new backup is also copied to that S3-compatible store. The copy is skipped, with an error in the log, when the backup is not encrypted.</p>
+
+            <h2>Using the Web UI</h2>
+            <p>Go to Settings, section <em>Backup &amp; Restore</em>:</p>
+            <ul>
+                <li><strong>Create Unified Backup</strong> takes a manual backup. It does not send <code>include_secrets</code>, so the result is share-safe.</li>
+                <li><strong>Restore From Elsewhere</strong> uploads an archive you kept off the host. Uploading only stores it.</li>
+                <li><strong>Existing Backups</strong> lists each archive with download, restore and delete buttons. An archive that cannot restore is marked <em>cannot restore</em> with the reason, and its restore button is disabled.</li>
+            </ul>
+
+            <h2>Using the API</h2>
+            <p>All endpoints take <code>Authorization: Bearer &lt;token&gt;</code>. Listing needs the <code>viewer</code> role; creating, downloading, uploading, restoring and deleting need <code>admin</code>. Boolean fields must be JSON booleans: a string such as <code>"true"</code> is refused with <code>400</code>.</p>
+
+            <h3>List backups</h3>
+            <pre><code>curl -H "Authorization: Bearer $API_TOKEN" \
+  http://localhost:8000/api/backups</code></pre>
+            <p>The response is <code>{"unified": [...]}</code>. Each entry has <code>filename</code>, <code>can_restore</code>, <code>restore_blocked_reason</code>, <code>contains_key_material</code>, <code>key_file_count</code> and <code>metadata</code>. An encrypted archive on an instance without the passphrase is reported as <code>can_restore: false</code>.</p>
+
+            <h3>Create a backup</h3>
+            <pre><code>curl -X POST http://localhost:8000/api/backups/create \
+  -H "Authorization: Bearer $API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"type": "unified", "reason": "before_upgrade", "include_secrets": true}'</code></pre>
+            <p><code>reason</code> defaults to <code>manual</code> and becomes part of the filename. <code>include_secrets</code> defaults to <code>false</code>. The <code>201</code> response lists the created file under <code>backups[].filename</code> and states <code>secrets_masked</code>.</p>
+
+            <h3>Download a backup</h3>
+            <pre><code>curl -H "Authorization: Bearer $API_TOKEN" \
+  -o backup.zip.enc \
+  http://localhost:8000/api/backups/download/unified/&lt;filename&gt;</code></pre>
+
+            <h3>Restore a backup</h3>
+            <pre><code>curl -X POST http://localhost:8000/api/backups/restore/unified \
+  -H "Authorization: Bearer $API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"filename": "&lt;filename&gt;", "create_backup_before_restore": true}'</code></pre>
+            <p>The filename must be an archive in <code>&lt;backup dir&gt;/unified/</code> ending in <code>.zip</code> or <code>.zip.enc</code>. <code>create_backup_before_restore</code> defaults to <code>true</code>.</p>
+
+            <h3>Delete a backup</h3>
+            <pre><code>curl -X DELETE -H "Authorization: Bearer $API_TOKEN" \
+  http://localhost:8000/api/backups/delete/unified/&lt;filename&gt;</code></pre>
+
+            <h2>What a Restore Does</h2>
+            <ul>
+                <li><strong>Pre-restore backup.</strong> When requested, the current state is saved first as a disaster-recovery archive with reason <code>pre_restore</code>. It is encrypted only if a passphrase is set. If it cannot be written, the restore is refused with <code>500</code> and nothing is changed.</li>
+                <li><strong>Decryption.</strong> A <code>.zip.enc</code> archive is decrypted with <code>CERTMATE_BACKUP_PASSPHRASE</code>. A missing or wrong passphrase fails the restore.</li>
+                <li><strong>Share-safe archive over existing certificates.</strong> Refused with <code>409</code>, because it would leave certificates next to private keys that do not match them.</li>
+                <li><strong>Deploy hooks.</strong> The restored <code>deploy_hooks</code> are checked with the same validator used when saving settings. If they fail, the restore is aborted before anything is written.</li>
+                <li><strong>Settings.</strong> <code>settings.json</code> is replaced. For a masked archive restored where a settings file already exists, the credentials already on disk are kept. On a fresh install they stay masked and must be re-entered before the next renewal.</li>
+                <li><strong>Files.</strong> Files under <code>certificates/</code> and <code>data/</code> are extracted one by one, each replacing its target only once fully written. Private keys and everything under <code>data/</code> are written <code>0600</code>, public certificate files <code>0644</code>. Only the <code>certs</code>, <code>audit</code> and <code>inventory</code> subtrees of <code>data/</code> are accepted. Certbot's <code>live/</code> symlinks are rebuilt for each restored domain.</li>
+                <li><strong>Partial failure.</strong> If any file cannot be extracted, the response is <code>500</code> and names the failed files in <code>failed</code>. Those files keep their previous content. Roll back with the pre-restore backup.</li>
+            </ul>
+            <p>A restore does not bring back anything outside the archive: logs, certbot <code>logs/</code> and <code>work/</code>, files in the data directory other than <code>settings.json</code> and the <code>certs</code>, <code>audit</code> and <code>inventory</code> subtrees, and the backup passphrase, which CertMate never stores.</p>
+
+            <h2>Restoring onto a New Host</h2>
+            <p>Restore only reads archives already in the backup directory. After losing the volume, bring a copy back first:</p>
+            <ol>
+                <li>Start the new instance with the same <code>CERTMATE_BACKUP_PASSPHRASE</code> the archive was encrypted with.</li>
+                <li>Upload the archive, from <em>Restore From Elsewhere</em> or with the API:
+            <pre><code>curl -X POST http://localhost:8000/api/backups/upload \
+  -H "Authorization: Bearer $API_TOKEN" \
+  -F "file=@backup.zip.enc"</code></pre>
+                </li>
+                <li>Read the <code>filename</code> in the response. CertMate stores the upload as <code>backup_&lt;timestamp&gt;_uploaded</code> and discards the name you sent. It decides between <code>.zip</code> and <code>.zip.enc</code> from the file's content. Uploads over 40 MB, and files that are neither an encrypted CertMate backup nor a ZIP containing <code>settings.json</code>, are rejected.</li>
+                <li>Check that the list reports <code>can_restore: true</code> for it, then restore it by that filename.</li>
+            </ol>
 
             <h2>Next Steps</h2>
             <ul>
-                <li><a href="api-reference.html">API Reference</a> - Backup API endpoints</li>
-                <li><a href="getting-started.html">Getting Started</a> - Initial setup</li>
-                <li><a href="security.html">Security</a> - Backup encryption</li>
+                <li><a href="api-reference.html">API Reference</a> - Authentication and the other endpoints</li>
+                <li><a href="docker-deployment.html">Docker Deployment</a> - Volumes and environment variables</li>
+                <li><a href="security.html">Security</a> - Protecting credentials and keys</li>
             </ul>
         </section>
     </main>

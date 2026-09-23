@@ -55,6 +55,15 @@
         .doc-content li {
             margin: var(--spacing-2) 0;
         }
+        .doc-content table {
+            border-collapse: collapse;
+        }
+        .doc-content th, .doc-content td {
+            padding: var(--spacing-2) var(--spacing-3);
+            border-bottom: 1px solid var(--gray-200);
+            text-align: left;
+            vertical-align: top;
+        }
     
     /* In-page TOC, injected by toc.js. Sticky right column on lg+
        viewports; collapsed to a top disclosure on smaller screens. */
@@ -120,28 +129,129 @@
         <section class="docs-hero" style="padding: 100px 0 60px;">
             <div class="container">
                 <h1 class="docs-title"><i class="fas fa-database"></i> Storage Backends</h1>
-                <p class="docs-subtitle">Enterprise-grade storage options for certificates and secrets</p>
+                <p class="docs-subtitle">Where certificates and keys are kept, locally or in a secrets manager</p>
             </div>
         </section>
 
         <section class="doc-content">
+            <h2>What Is Stored</h2>
+            <p>For each domain, CertMate stores four PEM files, <code>cert.pem</code>, <code>chain.pem</code>, <code>fullchain.pem</code> and <code>privkey.pem</code>, together with a JSON metadata record for the certificate.</p>
+            <p>CertMate issues certificates into its local certificate directory. When a backend other than the local filesystem is configured, the bundle is then pushed to that backend on issuance and on renewal, as a copy that survives the loss of the local directory. If that push fails, the certificate is still issued, and its metadata carries a <code>storage_warning</code> that <code>GET /api/certificates/&lt;domain&gt;</code> returns. A later renewal check pushes the bundle again while the warning is set, and clears the warning once the push succeeds.</p>
+            <p>Settings, metadata, backups and runtime state stay on local disk even when certificates also live in a remote backend.</p>
+
+            <h2>Default: Local Filesystem</h2>
+            <p>The default backend is <code>local_filesystem</code>. Certificates are written under the directory named by <code>cert_dir</code>, which defaults to <code>certificates</code>:</p>
+            <pre><code>certificates/
+  example.com/
+    cert.pem
+    chain.pem
+    fullchain.pem
+    privkey.pem       # mode 0600
+    metadata.json     # mode 0600</code></pre>
+            <p>Private keys and <code>metadata.json</code> are written with mode 0600, the other PEM files with 0644. Each file is written to a temporary file with its final mode already set, then renamed over the destination, so a crash mid-write does not leave a truncated key or certificate, and the key is never readable under a looser mode.</p>
+
             <h2>Supported Backends</h2>
-        <ul>
-            <li><strong>Local Filesystem</strong> - Default, zero configuration</li>
-            <li><strong>Azure Key Vault</strong> - Enterprise-grade Azure integration</li>
-            <li><strong>AWS Secrets Manager</strong> - Scalable AWS secret storage</li>
-            <li><strong>HashiCorp Vault</strong> - Industry-standard secret management</li>
-            <li><strong>Infisical</strong> - Open-source secret management</li>
-            <li><strong>S3-compatible</strong> - Any S3 API endpoint, including EU-sovereign object storage</li>
-        </ul>
-            <p>Configure via Settings → Storage Backend or API endpoint <code>/api/storage/config</code></p>
-            <p><a href="api-reference.html">→ See API Reference for configuration details</a></p>
+            <p>The backend is chosen by the <code>certificate_storage.backend</code> key in <code>settings.json</code>. Each remote backend reads its settings from a sub-object with the same name.</p>
+            <table>
+                <thead>
+                    <tr><th>Backend value</th><th>Required fields</th><th>Optional fields (default)</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>local_filesystem</code></td><td>none</td><td><code>cert_dir</code> (<code>certificates</code>)</td></tr>
+                    <tr><td><code>azure_keyvault</code></td><td><code>vault_url</code>, <code>tenant_id</code>, <code>client_id</code>, <code>client_secret</code></td><td><code>storage_mode</code> (<code>secrets</code>)</td></tr>
+                    <tr><td><code>aws_secrets_manager</code></td><td><code>access_key_id</code>, <code>secret_access_key</code></td><td><code>region</code> (<code>us-east-1</code>)</td></tr>
+                    <tr><td><code>hashicorp_vault</code></td><td><code>vault_url</code>, <code>vault_token</code></td><td><code>mount_point</code> (<code>secret</code>), <code>engine_version</code> (<code>v2</code>)</td></tr>
+                    <tr><td><code>infisical</code></td><td><code>client_id</code>, <code>client_secret</code>, <code>project_id</code></td><td><code>site_url</code> (<code>https://app.infisical.com</code>), <code>environment</code> (<code>prod</code>)</td></tr>
+                    <tr><td><code>s3_compatible</code></td><td><code>endpoint_url</code>, <code>bucket</code>, <code>access_key_id</code>, <code>secret_access_key</code></td><td><code>region</code> (<code>us-east-1</code>), <code>prefix</code> (<code>certmate/certificates</code>)</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Azure Key Vault</h3>
+            <p><code>storage_mode</code> takes one of three values:</p>
+            <ul>
+                <li><code>secrets</code> (default): each PEM file and the metadata are stored as separate Key Vault Secrets. Names derive from <code>cert-&lt;domain&gt;-&lt;file&gt;</code>, with characters other than letters, digits and hyphens replaced by hyphens and an 8-hex-digit CRC32 suffix appended to prevent collisions.</li>
+                <li><code>certificate</code>: certificate, chain and private key are imported as one PKCS12 Certificate object, which App Service, Application Gateway, Front Door, API Management and AKS Ingress can bind to directly. It is imported with <code>issuer_name="Unknown"</code> so Key Vault does not try to renew it.</li>
+                <li><code>both</code>: writes both. Reads prefer the Secrets.</li>
+            </ul>
+            <p>Service Principal permissions: <code>secrets</code> mode needs Secrets <code>Get/Set/List/Delete</code>. <code>certificate</code> and <code>both</code> add Certificates <code>Get/List/Import/Delete</code> and keep Secrets <code>Get/List</code>.</p>
+            <p>When Key Vault imports a Certificate object, it also creates a Secret with the same name whose value is the full PFX, private key included. Any principal with <code>Secrets/Get</code> on the vault can therefore download the private key, so scope that permission carefully in <code>certificate</code> and <code>both</code> modes.</p>
+            <p>For a vault that already holds certificates as Secrets, <code>POST /api/storage/azure-keyvault/backfill-certificates</code> (admin, also a button in the Storage settings) imports a Certificate object for every domain that lacks one and skips the rest. It is refused unless the active mode is <code>both</code>. An optional <code>?limit=N</code> caps how many domains one call processes; call it again until the response reports <code>remaining: 0</code>.</p>
+
+            <h3>AWS Secrets Manager</h3>
+            <p>Each domain is one secret named <code>certmate/certificates/&lt;domain&gt;</code>, whose value is a JSON object holding the PEM files and the metadata.</p>
+
+            <h3>HashiCorp Vault</h3>
+            <p>Each domain is written to the path <code>certmate/certificates/&lt;domain&gt;</code> in the KV engine at <code>mount_point</code>, using KV v2 or v1 according to <code>engine_version</code>. CertMate renews its Vault token every 6 hours and re-authenticates if the renewal fails.</p>
+
+            <h3>Infisical</h3>
+            <p>Each PEM file is one secret named <code>certmate-&lt;domain&gt;-&lt;file&gt;</code>, with the dot in the file name replaced by a hyphen (for example <code>certmate-example.com-cert-pem</code>), plus a <code>certmate-&lt;domain&gt;-metadata</code> secret. All are written to the given <code>project_id</code> and <code>environment</code>.</p>
+
+            <h3>S3-Compatible Object Storage</h3>
+            <p>One backend covers any S3 API through <code>endpoint_url</code>: Hetzner, Contabo, OVHcloud, Scaleway, Exoscale, Wasabi, self-hosted MinIO or Ceph, and AWS S3. Each domain is one JSON object at <code>&lt;prefix&gt;/&lt;domain&gt;.json</code> holding the PEM files and the metadata.</p>
+
+            <h3>Python dependencies</h3>
+            <p><code>boto3</code> is part of the base <code>requirements.txt</code>, so AWS Secrets Manager and S3-compatible storage need nothing extra. The other backends need their packages installed:</p>
+            <pre><code>pip install -r requirements-azure-storage.txt      # Azure Key Vault
+pip install -r requirements-vault-storage.txt      # HashiCorp Vault
+pip install -r requirements-infisical-storage.txt  # Infisical
+pip install -r requirements-storage-all.txt        # all of the above</code></pre>
+            <p>When building the Docker image, pass these files through the <code>EXTRA_REQUIREMENTS</code> build argument, for example <code>--build-arg EXTRA_REQUIREMENTS=requirements-storage-all.txt</code>.</p>
+
+            <h2>Selecting and Configuring a Backend</h2>
+            <p>In the web interface, open Settings, then the Storage tab. Choose a value under <strong>Storage Backend Type</strong>, fill in its fields, press <strong>Test Connection</strong>, then save. A saved change takes effect without restarting CertMate.</p>
+            <p>The same operations are available over the API:</p>
+            <ul>
+                <li><code>GET /api/storage/info</code> (viewer): the active backend, the list of accepted backend values, and <code>backend</code> and <code>cert_dir</code> from settings.</li>
+                <li><code>POST /api/storage/test</code> (operator): builds the backend from <code>{"backend": ..., "config": {...}}</code> and lists its certificates. For Azure in <code>certificate</code> or <code>both</code> mode it also checks access to the Certificate API.</li>
+                <li><code>POST /api/storage/config</code> (admin): saves the backend. The backend's fields go under a key named after the backend, not under <code>config</code>.</li>
+            </ul>
+            <pre><code>curl -X POST https://certmate.example.com/api/storage/config \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "backend": "hashicorp_vault",
+    "hashicorp_vault": {
+      "vault_url": "https://vault.example.com:8200",
+      "vault_token": "hvs.example",
+      "mount_point": "secret",
+      "engine_version": "v2"
+    }
+  }'</code></pre>
+            <p>A masked secret value sent back unchanged (<code>********</code>) does not overwrite the stored credential.</p>
+
+            <h3>When a backend fails to start</h3>
+            <p>If the configured backend cannot be built (for example, a required field is empty or the backend value is unknown), CertMate logs the error and falls back to the local filesystem. <code>GET /api/health</code> then reports <code>"storage": "fallback_to_local (configured backend: azure_keyvault)"</code> (with the name of your backend) and an overall status of <code>degraded</code>.</p>
+
+            <h2>Migrating Between Backends</h2>
+            <p><code>POST /api/storage/migrate</code> (admin), also the <strong>Migrate Certificates</strong> button in the Storage settings, copies certificates from one backend to another. It lists every domain in the source, reads each one, and stores it in the target. It does not delete anything from the source, and it does not change the saved backend.</p>
+            <ul>
+                <li><code>source_backend</code> and <code>source_config</code> default to the currently saved <code>certificate_storage</code>.</li>
+                <li><code>target_config</code> is required. The target backend comes from <code>target_backend</code>, or from <code>target_config.backend</code>.</li>
+            </ul>
+            <pre><code>curl -X POST https://certmate.example.com/api/storage/migrate \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "target_backend": "s3_compatible",
+    "target_config": {
+      "endpoint_url": "https://s3.example.com",
+      "bucket": "certmate",
+      "access_key_id": "...",
+      "secret_access_key": "..."
+    }
+  }'</code></pre>
+            <p>The response reports <code>migrated_count</code>, <code>failed_count</code>, <code>total</code>, and a per-domain <code>migration_results</code> map. A domain that fails is recorded as <code>false</code> and the rest continue. If the source cannot be listed at all, the call returns HTTP 500 with <code>success: false</code> and does not report an empty migration as a success. Because the source defaults to the saved backend, migrate before you save the new one; then save the new backend with <code>POST /api/storage/config</code> or the Settings form.</p>
+
+            <h2>Choosing a Backend</h2>
+            <p>CertMate runs as a single instance. For availability, keep the data directory on storage that can be reattached, and configure a remote backend so certificate material also lives somewhere independent of the node.</p>
 
             <h2>Next Steps</h2>
             <ul>
-                <li><a href="api-reference.html">API Reference</a> - Storage configuration API</li>
-                <li><a href="getting-started.html">Getting Started</a> - Initial setup</li>
-                <li><a href="backup-recovery.html">Backup & Recovery</a> - Backup procedures</li>
+                <li><a href="api-reference.html">API Reference</a>: storage and health endpoints</li>
+                <li><a href="backup-recovery.html">Backup &amp; Recovery</a>: backup procedures</li>
+                <li><a href="docker-deployment.html">Docker Deployment</a>: running CertMate in Docker</li>
+                <li><a href="security.html">Security</a>: security practices</li>
+                <li><a href="troubleshooting.html">Troubleshooting</a>: common problems</li>
             </ul>
         </section>
     </main>

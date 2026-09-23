@@ -20,9 +20,11 @@
  *
  * `description` is written by hand, per page, and describes what the page
  * actually contains rather than what a documentation page of that name would
- * ideally contain. Several of these pages are very short -- storage-backends
- * holds 79 words -- and a description that promises more than the page
- * delivers earns a visit that bounces, which is worse than no description.
+ * ideally contain. When this was written several pages were very short --
+ * storage-backends held 79 words -- and a description that promises more than
+ * the page delivers earns a visit that bounces, which is worse than no
+ * description. When a page's body is rewritten, its description is rewritten
+ * with it.
  */
 export type DocPage = {
   /** File name without the extension, and the published URL: /docs/<slug>.html */
@@ -62,19 +64,19 @@ export const DOC_PAGES: DocPage[] = [
     slug: 'docker-deployment',
     title: 'Docker Deployment - CertMate Documentation',
     description:
-      'Run CertMate as a container: docker run and docker compose, the environment file, and the amd64, arm64 and armv7 images.',
+      "Run CertMate in Docker: image tags, docker run and Compose, env vars that work and don't, localhost binding, volumes, backups, upgrades, health checks.",
   },
   {
     slug: 'backup-recovery',
     title: 'Backup & Recovery - CertMate Documentation',
     description:
-      'CertMate takes atomic backups of settings and certificates together. The two API calls that create a backup and restore one.',
+      'CertMate backups: archive contents, CERTMATE_BACKUP_PASSPHRASE, 30-day retention, and create, list, upload and restore via the settings UI and API.',
   },
   {
     slug: 'storage-backends',
     title: 'Storage Backends - CertMate Documentation',
     description:
-      'Where CertMate keeps certificates and secrets: the local filesystem by default, or Azure Key Vault, AWS Secrets Manager, HashiCorp Vault or Infisical.',
+      'Where CertMate stores certificates and keys: local layout, the settings each remote backend needs, Azure Key Vault modes, fallback, and API migration.',
   },
   {
     slug: 'security',
@@ -86,7 +88,7 @@ export const DOC_PAGES: DocPage[] = [
     slug: 'troubleshooting',
     title: 'Troubleshooting - CertMate Documentation',
     description:
-      "What to check when a DNS validation fails, a Let's Encrypt rate limit is hit, or the certificate directory has the wrong permissions.",
+      'Diagnose CertMate by symptom: startup failures, DNS-01 errors, CA and API rate limits, 401s, lockouts, missed renewals, deploy hooks.',
   },
   {
     slug: 'contributing',
