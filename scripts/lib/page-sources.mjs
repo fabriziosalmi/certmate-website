@@ -34,6 +34,13 @@ export function sourceCandidates(url) {
     return [`src/docs/${slug}.html`, 'src/data/docs.ts'];
   }
 
+  // The changelog is the release cards in src/data/whats-new.ts rendered in
+  // full, so a new release is a change to this page even when the route
+  // file is untouched.
+  if (clean === 'changelog') {
+    return ['src/pages/changelog.astro', 'src/data/whats-new.ts'];
+  }
+
   const locale = segments[0] === 'it' ? 'it' : 'en';
   const local = segments[0] === 'it' ? segments.slice(1) : segments;
 

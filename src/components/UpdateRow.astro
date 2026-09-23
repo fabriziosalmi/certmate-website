@@ -4,8 +4,11 @@ import type { UpdateCard } from '~/data/whats-new';
 
 interface Props {
   u: UpdateCard;
+  /** 3 under the home page's h2; 2 on /changelog/, where the list sits under the h1. */
+  level?: 2 | 3;
 }
-const { u } = Astro.props;
+const { u, level = 3 } = Astro.props;
+const Heading = `h${level}` as 'h2' | 'h3';
 
 // Badge → Tailwind class mapping. Kept here so WhatsNew and the collapsed
 // "earlier releases" list render identical rows.
@@ -23,7 +26,7 @@ const wrap = u.href ? { href: u.href, target: '_blank', rel: 'noopener noreferre
 <li role="listitem">
   <CardTag
     {...wrap}
-    class={`group flex items-start gap-4 px-5 py-4 transition-colors ${u.href ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50' : ''} ${u.highlight ? 'border-l-4 border-primary bg-blue-50/40 dark:bg-blue-900/10' : ''}`}
+    class={`group flex flex-col items-start gap-2 px-5 py-4 sm:flex-row sm:gap-4 transition-colors ${u.href ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50' : ''} ${u.highlight ? 'border-l-4 border-primary bg-blue-50/40 dark:bg-blue-900/10' : ''}`}
   >
     <span class={`badge ring-1 ring-inset shrink-0 ${badgeClasses[u.badge]}`}>
       <Icon name={u.icon} aria-hidden="true" />
@@ -31,9 +34,9 @@ const wrap = u.href ? { href: u.href, target: '_blank', rel: 'noopener noreferre
     </span>
 
     <div class="min-w-0 flex-1">
-      <h3 class="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
+      <Heading class="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
         {u.title}
-      </h3>
+      </Heading>
       <p class="mt-1 text-xs text-gray-600 dark:text-gray-300 sm:text-sm">
         {u.description}
       </p>
