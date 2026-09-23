@@ -154,7 +154,7 @@
                 <li>Through a forwarder, such as a corporate resolver, a caching proxy or Tailscale's MagicDNS, the refusal can arrive as a plain NXDOMAIN, which at the DNS level is identical to "not listed".</li>
                 <li>So CertMate first asks each list about its own test points: every DNSBL keeps <code>127.0.0.2</code> permanently listed and <code>127.0.0.1</code> permanently unlisted. A list that does not report <code>127.0.0.2</code> as listed is not asked about your domains and is named in <code>unanswered</code>. A list that reports <code>127.0.0.1</code> is answering everything (a hijacked or wildcarding resolver) and is dropped too.</li>
             </ul>
-            <p>What to do: the app's documentation says the fix is almost always to point CertMate at a resolver of your own rather than a public one.</p>
+            <p>What to do: point CertMate at a resolver of your own rather than a public one. From vNEXT that is a setting, <code>dns_resolver</code>, described under <a href="#choosing-the-resolver">Choosing the resolver</a>; the <code>unknown</code> detail names it. In v2.34.0 the only lever is the DNS of the host or container CertMate runs in.</p>
             <p>The rule holds for every check: a timed-out TXT lookup is <code>unknown</code>, not "no SPF record"; an unreachable host is <code>unknown</code>, not "no HSTS". And <code>weak_tls</code> is <code>unknown</code> when the CertMate runtime cannot offer TLS 1.0 or 1.1 at all, so the host was never asked; it is never reported as "refuses old TLS". Same trap, different cause.</p>
 
             <h2>Domain Registration Expiry</h2>
@@ -256,6 +256,19 @@
   }'</code></pre>
             <p><code>check_mail</code> covers SPF, DMARC and MX; <code>check_headers</code> covers the three header checks. An extra name that is not a domain, or for registration not under a public suffix, returns 400.</p>
             <p>Domain health runs daily at 06:30, between the 06:00 registration check and the 07:00 expiry warnings. A name is checked again only after 20 hours, and one run checks at most 200 names. <code>POST /api/inventory/scan</code> (Scan now) also runs both checks, after discovery and the CT poll, when they are enabled.</p>
+
+            <h3 id="choosing-the-resolver">Choosing the resolver</h3>
+            <p>From vNEXT, CertMate can be told which nameservers to ask, for these checks and for the CAA lookup before an issuance. Without it, CertMate uses the system's resolver: <code>/etc/resolv.conf</code>, Docker's <code>--dns</code>, or the pod's <code>dnsConfig</code>, exactly as in v2.34.0.</p>
+            <pre><code>curl -X POST https://certmate.example.com/api/inventory/config \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"dns_resolver": {"nameservers": ["10.0.0.53", "10.0.0.54:5353"]}}'</code></pre>
+            <p>Or in the environment: <code>CERTMATE_DNS_RESOLVERS=10.0.0.53,10.0.0.54</code>. When both are set, the stored setting wins, so what the interface shows is what CertMate uses.</p>
+            <ul>
+                <li>Addresses only, not hostnames: resolving a nameserver's name would need the resolver being replaced.</li>
+                <li>A port may follow the address: <code>10.0.0.53:5353</code>, or <code>[2001:db8::1]:5353</code> for IPv6.</li>
+                <li>Leaving it empty keeps the system resolver.</li>
+            </ul>
 
             <h2>API</h2>
             <table>

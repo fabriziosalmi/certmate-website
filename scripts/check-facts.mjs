@@ -76,6 +76,18 @@ for (const file of walk(SRC)) {
   });
 }
 
+// A page written ahead of a release names it vNEXT until the tag exists.
+// The version is not known when the page is written, and guessing one
+// would publish a release number the app may never use; the placeholder
+// can only reach the site through a build that refuses it.
+for (const file of walk(SRC)) {
+  readFileSync(file, 'utf8').split('\n').forEach((line, i) => {
+    if (line.includes('vNEXT') && !line.trim().startsWith('//')) {
+      problems.push(`${relative(ROOT, file)}:${i + 1}  "vNEXT" is a placeholder for an unreleased version; replace it with the tag.`);
+    }
+  });
+}
+
 // The declared count must not overstate what the page actually renders: the
 // docstring in site.ts promises it is the number of provider cards on the
 // page, which is what makes it verifiable by a reader.
