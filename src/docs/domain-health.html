@@ -215,6 +215,12 @@
                 <li><code>warning</code>: not listed where it could be checked, but some lookups went unanswered; <code>unanswered</code> names them.</li>
                 <li><code>unknown</code>: no list answered usefully, or the domain's addresses could not be resolved.</li>
             </ul>
+            <p><strong>IPv6 addresses are not checked against the lists, and the result says so.</strong> The test points that prove a list is answering, <code>127.0.0.2</code> and <code>127.0.0.1</code>, only prove it answers about IPv4. Many lists do not serve IPv6, or serve it from a separate zone, so an empty answer about an IPv6 address cannot be told apart from a list that never looked. Each IPv6 address is named in <code>unanswered</code> instead of being asked about. In practice:</p>
+            <ul>
+                <li>an IPv4-only domain that no list names is <code>ok</code>;</li>
+                <li>a dual-stack domain that no list names is <code>warning</code>: its IPv4 address was checked, its IPv6 address was not, and <code>unanswered</code> says which;</li>
+                <li>an IPv6-only domain is <code>unknown</code>: nothing that could be checked was checked.</li>
+            </ul>
 
             <h3>Response Headers</h3>
             <p><code>hsts</code>, <code>security_headers</code> and <code>disclosure</code> share one <code>HEAD</code> request per host. It verifies the certificate, because a browser ignores these policies on a connection it does not trust.</p>
