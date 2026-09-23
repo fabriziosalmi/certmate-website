@@ -215,11 +215,11 @@
                 <li><code>warning</code>: not listed where it could be checked, but some lookups went unanswered; <code>unanswered</code> names them.</li>
                 <li><code>unknown</code>: no list answered usefully, or the domain's addresses could not be resolved.</li>
             </ul>
-            <p><strong>IPv6 addresses are not checked against the lists, and the result says so.</strong> The test points that prove a list is answering, <code>127.0.0.2</code> and <code>127.0.0.1</code>, only prove it answers about IPv4. Many lists do not serve IPv6, or serve it from a separate zone, so an empty answer about an IPv6 address cannot be told apart from a list that never looked. Each IPv6 address is named in <code>unanswered</code> instead of being asked about. In practice:</p>
+            <p><strong>IPv6 addresses are not checked against the lists, and the result says so.</strong> The test points that prove a list is answering, <code>127.0.0.2</code> and <code>127.0.0.1</code>, only prove it answers about IPv4. Many lists do not serve IPv6, or serve it from a separate zone, so an empty answer about an IPv6 address cannot be told apart from a list that never looked. IPv6 addresses go in a separate <code>not_covered</code> field instead of being asked about. That is a limit of what the lists cover, not a lookup that failed, so it does not change the verdict:</p>
             <ul>
-                <li>an IPv4-only domain that no list names is <code>ok</code>;</li>
-                <li>a dual-stack domain that no list names is <code>warning</code>: its IPv4 address was checked, its IPv6 address was not, and <code>unanswered</code> says which;</li>
-                <li>an IPv6-only domain is <code>unknown</code>: nothing that could be checked was checked.</li>
+                <li>a domain that no list names is <code>ok</code> whether it is IPv4-only or dual-stack; for a dual-stack domain the detail adds how many IPv6 addresses the lists do not cover;</li>
+                <li>an IPv6-only domain is <code>unknown</code>, and the detail says it is because nothing it resolves to could be asked about;</li>
+                <li>a list that refused, or a lookup that failed, still goes in <code>unanswered</code> and still makes the result <code>warning</code>, IPv6 present or not.</li>
             </ul>
 
             <h3>Response Headers</h3>
