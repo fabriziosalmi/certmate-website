@@ -40,7 +40,7 @@ export const DOC_PAGES: DocPage[] = [
     slug: 'index',
     title: 'CertMate Documentation',
     description:
-      'CertMate documentation: installation, DNS providers and CAs, the API, Docker, deploy hooks, webhooks, backups, storage, discovery, MCP and troubleshooting.',
+      'CertMate documentation: installation, DNS providers and CAs, the API, Docker, deploy hooks, webhooks, backups, discovery, domain health, MCP, troubleshooting.',
   },
   {
     slug: 'getting-started',
@@ -137,6 +137,12 @@ export const DOC_PAGES: DocPage[] = [
     title: 'Compliance Evidence - CertMate Documentation',
     description:
       'Audit trail as evidence: actor attribution, SHA-256 hash chain, Ed25519 signed export, SIEM sink, prune, and the limits for NIS2, AI Act, ISO 42001.',
+  },
+  {
+    slug: 'domain-health',
+    title: 'Domain Health - CertMate Documentation',
+    description:
+      'CertMate v2.34.0 checks domain registration expiry, SPF, DMARC, MX, blocklists, HTTP headers and old TLS, and reports unknown when nobody answered.',
   },
 ];
 
