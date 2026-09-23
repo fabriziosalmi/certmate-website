@@ -467,3 +467,11 @@ misura. Resta vero; il costo pero' e' una frase per pagina, e il troncamento
 taglia proprio la parte che dice cosa la pagina risolve. Accorciate senza
 cambiarne il contenuto; il gate ora fallisce sopra 160, e sul testo di prima
 trova esattamente le 18.
+
+**I titoli italiani delle pagine d'errore (decisione rivista).** Sopra erano
+lasciati uguali all'inglese per il rischio su pagine indicizzate. Rivisto: il
+titolo italiano non conteneva nessuna parola italiana, quindi per una ricerca
+in italiano portava solo il codice. Ora e' `<codice>: come risolverlo · CertMate`
+sulle sole pagine italiane; l'inglese resta il codice, che e' gia' quello che
+cerca chi scrive in inglese. Il codice resta in testa, quindi il troncamento
+oltre ~60 caratteri (3 pagine su 14) taglia `· CertMate`, non il codice.

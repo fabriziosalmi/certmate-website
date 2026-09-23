@@ -108,5 +108,9 @@ export const ui = {
     automateBtn: 'Scarica CertMate (open source)',
     docsBtn: 'Leggi la documentazione',
     errorHeadingTail: ': cosa significa e come risolverlo',
+    // Only the Italian pages extend the <title>. The code alone is the same
+    // string in both languages, so the Italian result carried no Italian
+    // word; the English one already matches what an English searcher types.
+    errorTitleTail: ': come risolverlo',
   },
 } as const;

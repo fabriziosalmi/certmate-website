@@ -18,19 +18,21 @@ interface Props {
   /** Declared by the page's frontmatter; see src/lib/media-schema.ts. */
   media?: MediaItem[];
   title: string;
+  /** The <title> text, when it should say more than the breadcrumb label. */
+  headTitle?: string;
   description: string;
   breadcrumbs?: Crumb[];
   /** True only where the page describes CertMate itself; see BaseLayout. */
   product?: boolean;
 }
 
-const { lang, path, title, description, breadcrumbs = [], media = [], product = false } = Astro.props;
+const { lang, path, title, headTitle, description, breadcrumbs = [], media = [], product = false } = Astro.props;
 const t = ui[lang];
 const canonical = SITE + localizedPath(lang, path);
 const alternates = alternatesFor(path);
 const otherLocale: Locale = lang === 'en' ? 'it' : 'en';
 
-const fullTitle = `${title} · CertMate`;
+const fullTitle = `${headTitle ?? title} · CertMate`;
 
 // BreadcrumbList structured data.
 const crumbLd = {
