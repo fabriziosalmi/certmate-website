@@ -111,6 +111,14 @@ for (const file of files) {
   const description = $('meta[name="description"]').attr('content');
   if (!description) problems.push(at('no meta description'));
 
+  // One h1, and it is the page's own. Measured on the live site: 32 of 52
+  // pages had none, every error and deploy guide in both languages, because
+  // the index pages write their h1 into the layout's slot and the detail
+  // templates opened on the summary instead. The error code sat in a <p>, so
+  // the string a reader searches for was never the page's heading.
+  const h1s = $('h1').length;
+  if (h1s !== 1) problems.push(at(`has ${h1s} h1 elements; a page names itself exactly once`));
+
   const canonical = $('link[rel="canonical"]').attr('href');
   if (!canonical) {
     problems.push(at('no rel=canonical'));

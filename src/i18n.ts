@@ -70,6 +70,10 @@ export const ui = {
       `CertMate issues, renews and deploys TLS certificates automatically across ${PROVIDER_COUNT} DNS providers — open source, self-hosted, with a REST API.`,
     automateBtn: 'Get CertMate (open source)',
     docsBtn: 'Read the docs',
+    // Follows the error code in the page's h1. The code alone is the same
+    // string in every language; this is the part that says, in the reader's
+    // language, what the page will do for them.
+    errorHeadingTail: ': what it means and how to fix it',
   },
   it: {
     locale: 'it',
@@ -96,5 +100,6 @@ export const ui = {
       `CertMate emette, rinnova e fa il deploy dei certificati TLS in automatico su ${PROVIDER_COUNT} provider DNS — open source, self-hosted, con API REST.`,
     automateBtn: 'Scarica CertMate (open source)',
     docsBtn: 'Leggi la documentazione',
+    errorHeadingTail: ': cosa significa e come risolverlo',
   },
 } as const;

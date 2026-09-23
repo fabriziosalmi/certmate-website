@@ -27,6 +27,7 @@ const d = entry.data;
   breadcrumbs={[{ label: t.deploy, path: '/deploy' }]}
 >
   <p class="not-prose mb-4 inline-block rounded bg-primary-50 px-3 py-1 text-sm font-medium text-primary dark:bg-primary-900/20 dark:text-primary-100">{d.platform}</p>
+  <h1>{d.title}</h1>
   <p class="lead">{d.summary}</p>
   {d.updated && <p class="not-prose mb-6 text-xs text-gray-500 dark:text-gray-400">{t.updated} {d.updated}</p>}
   <Content />
