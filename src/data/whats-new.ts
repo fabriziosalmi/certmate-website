@@ -30,6 +30,17 @@ export interface UpdateCard {
 
 export const updates: UpdateCard[] = [
   {
+    badge: 'feature',
+    badgeLabel: 'v2.33.0',
+    icon: 'fa6-solid:id-card',
+    title: 'v2.33.0 - the client CA is yours, and four answers stop being reassuring',
+    description:
+      'One new capability and four fixes to answers the API gave with more confidence than it had. The private CA that signs client certificates now takes its subject from client_ca_subject in settings, validated before anything is generated, and POST /api/client-certs/ca/reset rebuilds it: the old CA is set aside, the client certificates it signed are deleted, server certificates are untouched, and the reset is audited. That endpoint moves the API contract to 2.3. The fixes: four resources answered a missing credential with a 401 whose body was a certificate object of nulls and no error or code; the storage health check reported healthy when it could not read the backend at all, and now says unknown; every remote storage backend answered "not there" to a timeout or an expired credential, the shape that gets a present certificate re-issued, and now distinguishes absent from could-not-tell; and an unreadable API_BEARER_TOKEN_FILE now says so instead of leaving every request at 401 in silence. Thirty-three undocumented endpoints are in docs/api.md, and release notes now have one file per version.',
+    date: 'September 2026',
+    highlight: true,
+    href: releaseTag('v2.33.0'),
+  },
+  {
     badge: 'fix',
     badgeLabel: 'v2.32.0 - v2.32.2',
     icon: 'fa6-solid:key',
@@ -37,7 +48,6 @@ export const updates: UpdateCard[] = [
     description:
       'A minor release and two patches, all from the same audit, and all one shape: a mechanism that existed, reviewed well, and had no effect. v2.32.0 fixed eleven of them, including shutdown handlers nobody called, a lock that excluded nobody, a status nothing ever assigned, a webhook that will never work being retried three times anyway, and an activity page that read 827 KiB to show 100 lines; async issuance now refuses work it will not reach rather than accepting it, and the four state directories are configurable. v2.32.1 is the one to read if you manage several domains: normalising a domain entry was filling in the DNS provider from the global default and two callers were persisting it, so changing the global provider had stopped reaching any existing domain. v2.32.2 corrects two things CertMate reported about a certificate already in place. A certificate whose private key was missing was reported as healthy, because the only code that inspected the key ran on a path no real installation takes; and a certificate with under a day of life left was shown as Expired, because the remaining life was a whole number of days that rounds down, which on a private CA issuing 24-hour certificates was every certificate it had.',
     date: 'September 2026',
-    highlight: true,
     href: releaseTag('v2.32.2'),
   },
   {
