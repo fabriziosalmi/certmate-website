@@ -1,7 +1,7 @@
 ---
 title: "SEC_ERROR_EXPIRED_CERTIFICATE"
 errorCode: "SEC_ERROR_EXPIRED_CERTIFICATE"
-description: "Fix Firefox's SEC_ERROR_EXPIRED_CERTIFICATE: the certificate's notAfter date has passed. Renewal that never ran, renewal that ran without a reload, and clock skew."
+description: "Fix Firefox's SEC_ERROR_EXPIRED_CERTIFICATE: the notAfter date has passed. Renewal that never ran, renewal that ran without a reload, and clock skew."
 summary: "Firefox read the certificate, found its notAfter date in the past, and stopped. Usually a renewal that never ran, or one that ran and was never reloaded into the running server."
 browsers: ["Firefox"]
 order: 7

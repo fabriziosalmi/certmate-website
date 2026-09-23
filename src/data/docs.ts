@@ -38,7 +38,7 @@ export const DOC_PAGES: DocPage[] = [
     slug: 'index',
     title: 'CertMate Documentation',
     description:
-      'The CertMate documentation: installing and issuing a first certificate, configuring DNS providers, the REST API, Docker deployment, backups, storage backends, security and troubleshooting.',
+      'CertMate documentation: installation and a first certificate, DNS providers, the REST API, Docker, backups, storage backends, security and troubleshooting.',
   },
   {
     slug: 'getting-started',

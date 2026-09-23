@@ -9,7 +9,7 @@ const entries = (await getCollection('errors'))
   .sort((a, b) => a.data.order - b.data.order);
 ---
 
-<DocLayout lang="en" path="/errors" title={t.errorsTitle} description={t.errorsIntro}>
+<DocLayout lang="en" path="/errors" title={t.errorsTitle} description={t.errorsDescription}>
   <h1>{t.errorsTitle}</h1>
   <p class="lead">{t.errorsIntro}</p>
 

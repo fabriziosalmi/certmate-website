@@ -1,7 +1,7 @@
 ---
 title: "MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT"
 errorCode: "MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT"
-description: "Fix Firefox's MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT: the certificate signed itself, so no authority vouches for it. Public CA, internal CA, and when self-signed is the right answer."
+description: "Fix Firefox's MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT: the certificate signed itself, so nothing vouches for it. Public CA, internal CA, or keep it self-signed."
 summary: "The certificate's issuer is itself. Nothing outside the server asserts that it belongs to this host, so Firefox has nothing to verify against."
 browsers: ["Firefox"]
 order: 9

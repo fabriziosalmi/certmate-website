@@ -52,6 +52,11 @@ export const ui = {
     errorsTitle: 'SSL / TLS error reference',
     errorsIntro:
       'Plain-English explanations and copy-paste fixes for the SSL/TLS errors browsers and clients throw — plus how to stop them recurring with automated certificate management.',
+    // The intro above is page copy and can run long; the meta description is
+    // what a result snippet shows, and Google cuts it past about 160
+    // characters.
+    errorsDescription:
+      'Plain-English explanations and copy-paste fixes for the SSL/TLS errors browsers throw, and how to stop them recurring with automated certificate management.',
     deploy: 'Deploy Guides',
     deployTitle: 'Deploy TLS certificates',
     deployIntro:
@@ -82,6 +87,8 @@ export const ui = {
     errorsTitle: 'Riferimento errori SSL / TLS',
     errorsIntro:
       'Spiegazioni chiare e soluzioni pronte da copiare per gli errori SSL/TLS che browser e client restituiscono — e come evitarli per sempre con la gestione automatica dei certificati.',
+    errorsDescription:
+      'Spiegazioni chiare e soluzioni pronte per gli errori SSL/TLS che browser e client restituiscono, e come evitarli con la gestione automatica dei certificati.',
     deploy: 'Guide al deploy',
     deployTitle: 'Deploy dei certificati TLS',
     deployIntro:

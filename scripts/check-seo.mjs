@@ -110,6 +110,12 @@ for (const file of files) {
 
   const description = $('meta[name="description"]').attr('content');
   if (!description) problems.push(at('no meta description'));
+  // Google cuts the snippet at roughly 160 characters. It does not rank on
+  // the description, so this is not a penalty; it is the sentence a searcher
+  // reads before deciding to click, losing its end. 18 of 52 were over.
+  else if (description.length > 160) {
+    problems.push(at(`meta description is ${description.length} characters; results cut it at about 160`));
+  }
 
   // One h1, and it is the page's own. Measured on the live site: 32 of 52
   // pages had none, every error and deploy guide in both languages, because
