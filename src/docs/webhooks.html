@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webhooks - CertMate Documentation</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="preload" href="vendor/font-awesome/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/font-awesome/all.min.css"></noscript>
+    <link rel="preload" as="style" href="vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/fonts/fonts.css"></noscript>
+    <style>
+        .doc-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h1 {
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-6);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content p, .doc-content li {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+        .doc-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin: var(--spacing-6) 0;
+        }
+        .doc-content pre code {
+            background: none;
+            padding: 0;
+            color: white;
+        }
+        .doc-content ul, .doc-content ol {
+            margin: var(--spacing-4) 0;
+            padding-left: var(--spacing-8);
+        }
+        .doc-content li {
+            margin: var(--spacing-2) 0;
+        }
+    
+    /* In-page TOC, injected by toc.js. Sticky right column on lg+
+       viewports; collapsed to a top disclosure on smaller screens. */
+    .doc-toc {
+      display: none;
+    }
+    /* Shown only when it fits in the right margin: this page's content
+       column is 900px wide, the TOC 220px plus 24px of gap, so the viewport
+       must be at least 900 + 2 * 244 = 1388px. Below that the old rule
+       placed the TOC over the text (#588). */
+    @media (min-width: 1388px) {
+      .doc-toc {
+        display: block;
+        position: fixed;
+        top: 100px;
+        right: max(24px, calc((100vw - 900px) / 2 - 244px));
+        width: 220px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+      }
+    }
+    .doc-toc-inner {
+      border-left: 2px solid var(--gray-200);
+      padding-left: 16px;
+    }
+    .doc-toc-list { list-style: none; padding: 0; margin: 0; }
+    .doc-toc-item { margin: 4px 0; line-height: 1.4; }
+    .doc-toc-item-h3 { padding-left: 12px; }
+    .doc-toc-link {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: block;
+      padding: 2px 0;
+      transition: color 120ms ease;
+    }
+    .doc-toc-link:hover { color: var(--gray-900); }
+    .doc-toc-link.is-active {
+      color: var(--blue-600, #2563eb);
+      font-weight: 600;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="../assets/certmate_logo.png" alt="CertMate Logo" class="brand-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html#features" class="nav-link">Features</a>
+                <a href="../index.html#providers" class="nav-link">DNS Providers</a>
+                <a href="index.html" class="nav-link active">Documentation</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-plug"></i> Webhooks</h1>
+                <p class="docs-subtitle">How CertMate sends certificate events to an HTTP endpoint: events, request body, templates, authentication, signatures, retries and the API.</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <h2>What a Generic Webhook Is</h2>
+            <p>A webhook is a notification channel: on a certificate event, CertMate sends an HTTP request to a URL you configure. Slack, Discord, Telegram, ntfy and Gotify each have their own channel type with a fixed request format. The <strong>generic</strong> type is for any other receiver, and it is the only type that supports a payload template, a method, authentication settings, custom headers and an HMAC signature.</p>
+            <p>Two switches must be on before anything is sent: <strong>Enable Notifications</strong> at the top of Settings &rarr; Notifications, and the checkbox next to the webhook's name.</p>
+
+            <h2>Adding a Webhook in the UI</h2>
+            <ol>
+                <li>Open Settings &rarr; Notifications, turn on <strong>Enable Notifications</strong>, and expand <strong>Webhooks</strong>.</li>
+                <li>Click <strong>Add webhook</strong>. A new entry starts enabled, with type Generic, method <code>POST</code>, authentication None, no events selected and an empty payload template.</li>
+                <li>Give it a name and enter the URL. The name identifies the webhook in the delivery log and in save errors.</li>
+                <li>Use <strong>Preview</strong> to see the request without sending it, and <strong>Test</strong> to send one.</li>
+                <li>Click <strong>Save Notification Settings</strong>.</li>
+            </ol>
+
+            <h2>Events</h2>
+            <p>Events and their titles:</p>
+            <ul>
+                <li><code>certificate_created</code>: Certificate Created. An adopted certificate uses the same event with the title Certificate Adopted.</li>
+                <li><code>certificate_renewed</code>: Certificate Renewed</li>
+                <li><code>certificate_failed</code>: Certificate Failed</li>
+                <li><code>certificate_revoked</code>: Certificate Revoked</li>
+                <li><code>certificate_deployed</code>: Certificate Deployed</li>
+                <li><code>certificate_expiring</code>: Certificate Expiring</li>
+                <li><code>domain_expiring</code>: Domain Registration Expiring</li>
+                <li><code>deploy_hook_failed</code>: Deploy Hook Failed</li>
+                <li><code>certificate_deploy_incomplete</code>: Certificate Not Deployed</li>
+            </ul>
+            <p>The message is <code>&lt;title&gt;: &lt;domain&gt;</code>. CertMate appends <code>(hook: &lt;name&gt;)</code> when the event names a deploy hook, the days left or "expired" for the two expiry events, and <code> — &lt;error&gt;</code> when the event carries an error.</p>
+
+            <h3>Filtering</h3>
+            <p>There are two filters, and an event must pass both. <strong>Notify on Events</strong> at the top of the page applies to every channel; <strong>Events (leave empty for all)</strong> on each webhook applies to that webhook. An empty list means all events.</p>
+            <p>The UI offers six events to filter on: created, renewed, expiring, revoked, failed and domain expiring. <code>deploy_hook_failed</code> and <code>certificate_deploy_incomplete</code> are delivered whatever either filter says, so a filter cannot silence a failed deployment. <code>certificate_deployed</code> has no checkbox, so a non-empty filter set in the UI drops it; to receive it with a filter in place, add it to the <code>events</code> list through the API.</p>
+
+            <h3>Expiry warnings</h3>
+            <ul>
+                <li><code>certificate_expiring</code> is sent when a certificate reaches 14, 7, 3 or 1 days left, or has expired. With auto-renew off for that certificate, the first warning comes at the renewal threshold instead, if that is later than 14 days.</li>
+                <li><code>domain_expiring</code> is sent when a tracked domain registration reaches 60, 30, 14, 7 or 1 days left, or has expired.</li>
+            </ul>
+            <p>Each threshold is announced once per expiry date. A renewed certificate has a new expiry date and starts again from the first threshold. Both events carry <code>days_left</code>, <code>days_until_expiry</code>, <code>expires_at</code>, <code>expired</code> and <code>threshold_days</code> in <code>details</code>; <code>certificate_expiring</code> adds <code>auto_renew</code>, and <code>domain_expiring</code> adds <code>registrar</code> and <code>source</code>.</p>
+
+            <h2>The Default Request</h2>
+            <p>With no payload template, a generic webhook sends this JSON body, with <code>Content-Type: application/json</code> and <code>User-Agent: CertMate-Webhook/2.0</code>:</p>
+            <pre><code>{
+  "event": "certificate_renewed",
+  "title": "Certificate Renewed",
+  "message": "Certificate Renewed: shop.example.com",
+  "details": {"domain": "shop.example.com"},
+  "timestamp": "2026-08-21T07:00:00Z"
+}</code></pre>
+            <p><code>details</code> is the event's own data, so its fields depend on the event: for example <code>hook_name</code>, <code>exit_code</code> and <code>error</code> on <code>deploy_hook_failed</code>, or <code>failed</code> and <code>total</code> on <code>certificate_deploy_incomplete</code>. <code>timestamp</code> is UTC.</p>
+
+            <h2>Payload Templates</h2>
+            <p>A payload template is JSON text with <code>{{placeholders}}</code>, rendered for each event. It replaces the default body.</p>
+            <pre><code>{"text": "{{title}}: {{domain}} ({{event}})", "days_left": {{details.days_until_expiry}}}</code></pre>
+            <ul>
+                <li><code>{{event}}</code>: the event name</li>
+                <li><code>{{title}}</code>: the title, for example Certificate Renewed</li>
+                <li><code>{{message}}</code>: the one-line message</li>
+                <li><code>{{timestamp}}</code>: ISO-8601 UTC</li>
+                <li><code>{{domain}}</code>: shortcut for <code>details.domain</code></li>
+                <li><code>{{details}}</code>: the whole event data as a JSON object</li>
+                <li><code>{{details.&lt;field&gt;}}</code>: one field of it, such as <code>details.error</code> or <code>details.expires_at</code></li>
+            </ul>
+            <p>A placeholder inside a JSON string is inserted as an escaped string fragment, so quotes, newlines or backslashes in a value cannot break out of the string. A placeholder outside a string is inserted as a JSON literal: a number, boolean, object or quoted string. An unknown placeholder becomes an empty fragment inside a string and <code>null</code> outside one.</p>
+            <p>The template is checked when you save, by rendering it for a sample <code>certificate_renewed</code> event. If the result is not valid JSON, the save fails with HTTP 400 and a message of the form <code>webhook &lt;name&gt;: payload_template does not render to valid JSON: ...</code>.</p>
+
+            <h3>Preview and Test</h3>
+            <p><strong>Preview</strong> renders the request for a sample event without sending it and shows the method, URL, headers and body. Header values whose names contain <code>authorization</code>, <code>key</code>, <code>token</code>, <code>secret</code> or <code>cookie</code> are shown as <code>********</code>, and the signature appears as a placeholder. Preview works for generic webhooks only.</p>
+            <p><strong>Test</strong> sends one real request for the event <code>test</code> using the settings in the form, saved or not. It makes a single attempt and does not write to the delivery log.</p>
+
+            <h2>Method, Authentication, Timeout and Attempts</h2>
+            <ul>
+                <li><strong>Method</strong>: <code>POST</code> (default), <code>PUT</code> or <code>PATCH</code>.</li>
+                <li><strong>Authentication</strong>: None (default); <strong>Bearer token</strong>, sent as <code>Authorization: Bearer &lt;token&gt;</code>; <strong>Basic</strong>, with a username and password; or <strong>Header</strong>, a header name (default <code>X-API-Key</code>, letters, digits and hyphens only) and its value.</li>
+                <li><strong>Timeout</strong>: 1 to 60 seconds, default 10.</li>
+                <li><strong>Attempts</strong>: total deliveries, 1 to 5, default 3. The API also accepts 0, which is treated as 1.</li>
+            </ul>
+            <p><strong>Custom Headers</strong> are added to every request. The authentication header is applied after them, so it replaces a custom header of the same name. Saving a Bearer or Header webhook without a token, or a Basic webhook without both username and password, fails with a message naming the missing field.</p>
+
+            <h2>Retries</h2>
+            <p>After a failed attempt CertMate waits 1 second, then 2, then 4, doubling each time, until the attempts are used up. It does not retry when a retry cannot change the result:</p>
+            <ul>
+                <li>configuration errors, such as a missing URL, a non-HTTP scheme, a blocked internal target or a template that does not render;</li>
+                <li>HTTP 4xx responses, except 408, 425 and 429.</li>
+            </ul>
+            <p>5xx responses and connection errors are retried.</p>
+
+            <h2>Signature</h2>
+            <p>When a generic webhook has an HMAC secret, every request carries:</p>
+            <pre><code>X-CertMate-Signature: t=&lt;unix-timestamp&gt;,v1=&lt;hex&gt;</code></pre>
+            <p><code>v1</code> is the hex HMAC-SHA256 of <code>&lt;t&gt;.</code> followed by the request body, keyed with the secret. Compute it over the exact raw body you received, which is the rendered template if you use one. Reject old timestamps to stop replays. In Python, with <code>body</code> as bytes:</p>
+            <pre><code>import hmac, hashlib, time
+
+def verify(secret, header, body, max_age=300):
+    parts = dict(p.split('=', 1) for p in header.split(','))
+    if abs(time.time() - int(parts['t'])) &gt; max_age:
+        return False
+    expected = hmac.new(secret.encode(), f"{parts['t']}.".encode() + body,
+                        hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, parts['v1'])</code></pre>
+
+            <h2>Outbound Restrictions</h2>
+            <p>The URL must start with <code>http://</code> or <code>https://</code>. CertMate resolves the host and refuses the request if any resolved address is private, loopback, link-local, reserved, multicast or unspecified. The error is: "Webhook target resolves to an internal/loopback address; refused (SSRF guard). Set CERTMATE_ALLOW_INTERNAL_WEBHOOKS=true to permit internal targets." A host that does not resolve is not treated as internal.</p>
+            <p>If your receiver is on an internal network, set <code>CERTMATE_ALLOW_INTERNAL_WEBHOOKS</code> to <code>true</code>, <code>1</code> or <code>yes</code> in CertMate's environment.</p>
+            <p>Redirects are followed, and each redirect target is checked the same way. When a redirect changes scheme, host or port, CertMate removes the <code>Authorization</code>, <code>Proxy-Authorization</code> and <code>X-CertMate-Signature</code> headers before following it. Other headers, including a Header-type authentication header, are not removed.</p>
+
+            <h2>Stored Credentials</h2>
+            <p>When the configuration is read back, credential fields are returned as <code>********</code>: fields whose names contain token, secret, password, key, credential, hmac or authorization, the webhook URL, and every custom header value. Saving a form that still holds <code>********</code> keeps the stored value.</p>
+
+            <h2>Delivery Log</h2>
+            <p>Each delivery, after its retries, is appended to <code>webhook_deliveries.jsonl</code> in CertMate's data directory, which keeps the most recent 1,000 entries. An entry records the time, webhook name and type, event, URL, HTTP status, success, number of attempts, error and duration in milliseconds. Email deliveries are logged in the same file.</p>
+            <p>In the UI, <strong>Recent Deliveries</strong> below the webhook list shows the latest 50 entries.</p>
+
+            <h2>API</h2>
+            <p>All of these endpoints require the admin role.</p>
+            <ul>
+                <li><code>GET /api/notifications/config</code> returns the notifications block, with credentials masked. Webhooks are under <code>channels.webhooks</code>.</li>
+                <li><code>POST /api/notifications/config</code> saves it. The body is merged into the stored block, and the <code>webhooks</code> list replaces the stored list, with masked values restored from it. The response on success is <code>{"message": "Notification settings saved"}</code>.</li>
+                <li><code>POST /api/notifications/test</code> with <code>{"channel_type": "webhook", "config": {...}}</code> sends a test request through one webhook without saving it, and returns <code>success</code> with the status or the error.</li>
+                <li><code>POST /api/notifications/webhook/preview</code> with <code>{"config": {...}, "event": "certificate_renewed"}</code> renders the request without sending it. <code>event</code> defaults to <code>certificate_renewed</code> and must be lowercase letters and underscores. An invalid configuration or template returns 400 with the reason.</li>
+                <li><code>GET /api/webhooks/deliveries?limit=50</code> returns recent deliveries, newest first. <code>limit</code> defaults to 50 and is clamped to 1&ndash;500.</li>
+            </ul>
+            <p>A generic webhook entry uses these fields:</p>
+            <pre><code>{
+  "enabled": true,
+  "name": "itsm",
+  "type": "generic",
+  "url": "https://itsm.example.com/hooks/certmate",
+  "secret": "",
+  "events": [],
+  "headers": {},
+  "method": "POST",
+  "auth_type": "bearer",
+  "auth_token": "...",
+  "auth_username": "",
+  "auth_password": "",
+  "auth_header": "",
+  "timeout": 10,
+  "max_retries": 3,
+  "payload_template": ""
+}</code></pre>
+
+            <h2>Next Steps</h2>
+            <ul>
+                <li><a href="deploy-hooks.html">Deploy Hooks</a>: the hooks behind <code>deploy_hook_failed</code> and <code>certificate_deploy_incomplete</code></li>
+                <li><a href="api-reference.html">API Reference</a>: authentication and the rest of the API</li>
+                <li><a href="security.html">Security</a>: roles and hardening</li>
+                <li><a href="troubleshooting.html">Troubleshooting</a>: diagnosing failed requests</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributors</a></p>
+        </div>
+    </footer>
+
+    <script src="../assets/script.js"></script>
+    <script src="toc.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate Discovery - CertMate Documentation</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="preload" href="vendor/font-awesome/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/font-awesome/all.min.css"></noscript>
+    <link rel="preload" as="style" href="vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/fonts/fonts.css"></noscript>
+    <style>
+        .doc-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h1 {
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-6);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content p, .doc-content li {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+        .doc-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin: var(--spacing-6) 0;
+        }
+        .doc-content pre code {
+            background: none;
+            padding: 0;
+            color: white;
+        }
+        .doc-content ul, .doc-content ol {
+            margin: var(--spacing-4) 0;
+            padding-left: var(--spacing-8);
+        }
+        .doc-content li {
+            margin: var(--spacing-2) 0;
+        }
+    
+    /* In-page TOC, injected by toc.js. Sticky right column on lg+
+       viewports; collapsed to a top disclosure on smaller screens. */
+    .doc-toc {
+      display: none;
+    }
+    /* Shown only when it fits in the right margin: this page's content
+       column is 900px wide, the TOC 220px plus 24px of gap, so the viewport
+       must be at least 900 + 2 * 244 = 1388px. Below that the old rule
+       placed the TOC over the text (#588). */
+    @media (min-width: 1388px) {
+      .doc-toc {
+        display: block;
+        position: fixed;
+        top: 100px;
+        right: max(24px, calc((100vw - 900px) / 2 - 244px));
+        width: 220px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+      }
+    }
+    .doc-toc-inner {
+      border-left: 2px solid var(--gray-200);
+      padding-left: 16px;
+    }
+    .doc-toc-list { list-style: none; padding: 0; margin: 0; }
+    .doc-toc-item { margin: 4px 0; line-height: 1.4; }
+    .doc-toc-item-h3 { padding-left: 12px; }
+    .doc-toc-link {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: block;
+      padding: 2px 0;
+      transition: color 120ms ease;
+    }
+    .doc-toc-link:hover { color: var(--gray-900); }
+    .doc-toc-link.is-active {
+      color: var(--blue-600, #2563eb);
+      font-weight: 600;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="../assets/certmate_logo.png" alt="CertMate Logo" class="brand-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html#features" class="nav-link">Features</a>
+                <a href="../index.html#providers" class="nav-link">DNS Providers</a>
+                <a href="index.html" class="nav-link active">Documentation</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-magnifying-glass"></i> Certificate Discovery</h1>
+                <p class="docs-subtitle">How CertMate records certificates it observes on hosts and in Certificate Transparency logs, what each inventory record holds, and the inventory API.</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <h2>Issued and Observed Certificates</h2>
+            <p>Without discovery, CertMate knows only the certificates it issued. Discovery also records certificates it observes, served on a <code>host:port</code> or logged in Certificate Transparency. All of them go into one inventory keyed by SHA-256 fingerprint, so one certificate served on many hosts is one record with many endpoints.</p>
+            <p>Each record carries a <code>source</code>:</p>
+            <ul>
+                <li><code>issued</code>: the certificate was observed on the host of a domain CertMate manages.</li>
+                <li><code>probed</code>: the certificate was read from a monitored endpoint that is not a managed domain.</li>
+                <li><code>ct-log</code>: the certificate was found in Certificate Transparency through crt.sh.</li>
+                <li><code>imported</code>: accepted by the schema, but nothing writes it yet.</li>
+            </ul>
+            <p>An issued certificate enters the inventory when a sweep probes its managed domain, not at issuance. Records are grouped as <code>issued</code> when <code>managed</code> is true and <code>discovered</code> otherwise.</p>
+
+            <h2>Turning Discovery On</h2>
+            <p>Discovery is opt-in. <code>monitored_endpoints</code> (endpoint probing) and <code>ct_monitoring</code> (CT-log polling) both default to <code>enabled: false</code>. Their daily jobs do nothing until a section is enabled and has something to check.</p>
+            <p>An admin configures both in the <strong>Discovery configuration</strong> panel on <code>/inventory</code>, or with <code>POST /api/inventory/config</code>. In the request body the endpoint section is named <code>discovery</code>; the settings file stores it as <code>monitored_endpoints</code>.</p>
+            <pre><code>curl -X POST https://certmate.example.com/api/inventory/config \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "discovery": {
+      "enabled": true,
+      "endpoints": ["example.com", "api.example.com:8443", "[2001:db8::1]:443"],
+      "include_managed": true,
+      "allow_private": false,
+      "check_revocation": true
+    },
+    "ct_monitoring": {
+      "enabled": true,
+      "domains": ["example.com"],
+      "include_managed": true,
+      "only_valid": true,
+      "max_new_per_run": 100,
+      "min_request_interval": 2.0
+    }
+  }'</code></pre>
+            <p>Endpoints are parsed on save; a malformed one returns 400. The response is the effective configuration.</p>
+
+            <h2>Endpoint Discovery</h2>
+            <p>The sweep runs daily at 04:00. It probes each configured endpoint and records every certificate it reads. The <code>monitored_endpoints</code> keys and their defaults:</p>
+            <ul>
+                <li><code>enabled</code> (<code>false</code>): run the sweep at all.</li>
+                <li><code>endpoints</code> (<code>[]</code>): hosts to probe.</li>
+                <li><code>include_managed</code> (<code>true</code>): also probe the host of every managed domain. Wildcard domains are skipped, because <code>*.example.com</code> has no host of its own to probe.</li>
+                <li><code>allow_private</code> (<code>false</code>): allow private and loopback targets (see the SSRF guard below).</li>
+                <li><code>check_revocation</code> (<code>true</code>): ask OCSP, then the CRL, whether each served certificate is revoked.</li>
+            </ul>
+            <p>An endpoint can be <code>host</code>, <code>host:port</code>, a bare IPv4 address, a bare IPv6 literal, or a bracketed <code>[v6]</code> or <code>[v6]:port</code>. The port defaults to 443 and must be between 1 and 65535.</p>
+            <p>Probing managed domains lets you compare what CertMate issued with what the host serves: a renewed certificate that was never deployed shows up as a different served fingerprint.</p>
+            <p>Each endpoint gets its own status: <code>ok</code>, <code>blocked</code>, <code>unreachable</code>, <code>invalid</code> (the endpoint could not be parsed) or <code>record_failed</code> (the host answered, but the inventory write failed). A failure on one endpoint never stops the sweep.</p>
+
+            <h2>The Deep TLS Probe</h2>
+            <p>The probe connects to <code>host:port</code> and returns the served certificate's subject and issuer (CN and full DN), serial (decimal and hex), SHA-256 fingerprint, validity dates and days to expiry, SAN DNS names and IPs, public key type (RSA, ECDSA, Ed25519, Ed448 or DSA) with size and curve, signature algorithm, and the served chain (the leaf alone where the runtime cannot expose the chain).</p>
+            <p>The probe does not validate PKI trust, so it can still describe an expired, self-signed or mismatched certificate. A <code>validation</code> block reports <code>is_expired</code>, <code>not_yet_valid</code>, <code>is_self_signed</code> and <code>hostname_match</code>. The probe requires TLS 1.2 or later. The connect and handshake timeout defaults to 5 seconds. <code>CERTMATE_PROBE_TIMEOUT_SECONDS</code> changes it, and the value is clamped to between 1 and 30 seconds.</p>
+            <p>A failed probe has <code>status</code> <code>blocked</code> or <code>unreachable</code>, with an <code>error_class</code> such as <code>dns_error</code>, <code>timeout</code> or <code>tls_error</code>.</p>
+            <h3>SSRF Guard</h3>
+            <p>The probe resolves the target and refuses the whole host if any address is not globally routable: loopback, private, link-local, reserved, multicast, CGNAT (<code>100.64.0.0/10</code>), including IPv4-mapped IPv6. It then connects to the validated IP with SNI set to the hostname, so a DNS rebind cannot redirect it. A sweep follows its <code>allow_private</code> setting; <code>POST /api/probe</code> follows the <code>CERTMATE_PROBE_ALLOW_PRIVATE</code> environment variable (<code>1</code>, <code>true</code>, <code>yes</code> or <code>on</code>).</p>
+            <h3>Revocation</h3>
+            <p>With <code>check_revocation</code> on, the probe asks the OCSP responder in the certificate's AIA extension, then falls back to up to two CRL distribution points. The issuer certificate comes from the served chain or the AIA <code>caIssuers</code> URL, and must have signed the certificate.</p>
+            <p>An answer counts only when verified: an OCSP response signed by the issuer or its delegated OCSP-signing responder and current, or a CRL signed by the issuer and not past its <code>nextUpdate</code>. The statuses are:</p>
+            <ul>
+                <li><code>good</code>: a verified OCSP or CRL answer says the certificate is not revoked.</li>
+                <li><code>revoked</code>: a verified answer says it is; <code>revoked_at</code> and <code>reason</code> carry what the issuer published.</li>
+                <li><code>unknown</code>: OCSP does not know the certificate and no CRL settled it.</li>
+                <li><code>unavailable</code>: no verified answer; <code>error</code> says why.</li>
+                <li><code>not_applicable</code>: the certificate is self-signed.</li>
+                <li><code>null</code>: never checked.</li>
+            </ul>
+            <p>A stored <code>revoked</code> is never overwritten. OCSP, CRL and issuer URLs go through the same SSRF guard; only plain <code>http</code> is fetched, redirects are not followed, and bodies are capped.</p>
+
+            <h2>Certificate Transparency Discovery</h2>
+            <p>Probing finds certificates only on hosts you list. The CT poll queries crt.sh for your domains daily at 05:00 and adds unseen certificates as <code>ct-log</code>, unmanaged, with no endpoints. A certificate in CT that CertMate does not manage is one to investigate. The <code>ct_monitoring</code> keys and defaults:</p>
+            <ul>
+                <li><code>enabled</code> (<code>false</code>).</li>
+                <li><code>domains</code> (<code>[]</code>).</li>
+                <li><code>include_managed</code> (<code>true</code>): also poll every managed domain that is not a wildcard.</li>
+                <li><code>only_valid</code> (<code>true</code>): skip CT entries whose <code>not_after</code> has passed.</li>
+                <li><code>max_new_per_run</code> (<code>100</code>): the maximum number of new certificates ingested per poll.</li>
+                <li><code>min_request_interval</code> (<code>2.0</code>): seconds between crt.sh requests.</li>
+            </ul>
+            <p>crt.sh returns a serial but no fingerprint, so the poll matches serials against the inventory and downloads a certificate only when its serial is new. When the per-run cap is reached, the poll logs a warning and stops; remaining domains wait for the next run. Errors are recorded per domain and per entry.</p>
+
+            <h2>What the Inventory Records</h2>
+            <p>A record holds <code>fingerprint</code>, <code>subject_cn</code>, <code>subject</code>, <code>issuer_cn</code>, <code>issuer</code>, <code>serial</code>, <code>not_before</code>, <code>not_after</code>, <code>key</code> (<code>{type, size, curve}</code>), <code>signature_algorithm</code>, <code>san_dns</code>, <code>source</code>, <code>managed</code>, <code>managed_domain</code>, <code>first_seen</code>, <code>last_seen</code>, <code>revocation</code> (<code>{status, method, reason, revoked_at, error, checked_at}</code> or <code>null</code>) and <code>endpoints</code>, each endpoint with its own <code>host</code>, <code>port</code>, <code>first_seen</code> and <code>last_seen</code>.</p>
+            <p>Writes are idempotent. Seeing a known certificate again refreshes <code>last_seen</code> and the endpoint; metadata and <code>source</code> keep their first values, and <code>managed</code> never goes from true back to false. Only the revocation answer is rewritten.</p>
+            <p>The inventory is a SQLite database at <code>&lt;data_dir&gt;/inventory/inventory.db</code>. The <code>inventory</code> directory is one of the data subtrees the unified backup includes. See <a href="backup-recovery.html">Backup and Recovery</a>.</p>
+
+            <h2>The Inventory Page</h2>
+            <p><code>/inventory</code> lists records as <strong>Issued by CertMate</strong> and <strong>Discovered / unmanaged</strong>. The summary counts expired certificates, those expiring within 7, 30 and 90 days, and each revocation status, across every record. Admins also get <strong>Scan now</strong>, which runs <code>POST /api/inventory/scan</code>.</p>
+            <p><strong>Adopt</strong> appears on unmanaged records. It builds a plan from the observed certificate: the subject CN (or first SAN) as the domain, the other SANs, and the key type where the create flow accepts it. Adoption is refused, with a <code>reason</code>, when no DNS provider with credentials is configured for the domain or no ACME account email is set. After you confirm, CertMate issues the certificate, marks the record managed and publishes <code>certificate_created</code> with <code>adopted: true</code>, which runs the deploy hooks.</p>
+            <p><strong>Forget</strong> (<code>DELETE /api/inventory/&lt;fingerprint&gt;</code>) removes a record and its endpoints. The certificate itself is not touched. If the domain is still in the discovery configuration, the next scan records the certificate again, so remove the domain from the configuration first.</p>
+            <p><code>/inventory/crypto-report</code> classifies each certificate's algorithms as <code>weak</code>, <code>acceptable</code>, <code>modern</code>, <code>pqc</code> or <code>unknown</code>. It is informational and does not change issuance.</p>
+
+            <h2>API</h2>
+            <p>All paths are under <code>/api</code>. A scoped API key sees only records whose subject CN or a SAN falls within its <code>allowed_domains</code>. An out-of-scope record returns 404, the same as a missing one.</p>
+            <table>
+                <thead>
+                    <tr><th>Method and path</th><th>Role</th><th>Purpose</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>GET /api/inventory</code></td><td>viewer</td><td>Records and summary. Filters: <code>?managed=true|false</code>, <code>?source=</code>.</td></tr>
+                    <tr><td><code>GET /api/inventory/config</code></td><td>viewer</td><td>Effective discovery and CT configuration.</td></tr>
+                    <tr><td><code>POST /api/inventory/config</code></td><td>admin</td><td>Update configuration; 400 on a bad endpoint.</td></tr>
+                    <tr><td><code>POST /api/inventory/scan</code></td><td>admin</td><td>Run a sweep and a CT poll now.</td></tr>
+                    <tr><td><code>GET /api/inventory/crypto-report</code></td><td>viewer</td><td>Readiness report as JSON, or CSV with <code>?format=csv</code>.</td></tr>
+                    <tr><td><code>GET /api/inventory/&lt;fingerprint&gt;/adopt</code></td><td>viewer</td><td>Adoption plan.</td></tr>
+                    <tr><td><code>POST /api/inventory/&lt;fingerprint&gt;/adopt</code></td><td>operator</td><td>Adopt: 201 on success, 400 <code>ADOPTION_UNAVAILABLE</code>, 409 if an operation is in progress for the domain.</td></tr>
+                    <tr><td><code>DELETE /api/inventory/&lt;fingerprint&gt;</code></td><td>operator</td><td>Forget a record.</td></tr>
+                    <tr><td><code>POST /api/probe</code></td><td>viewer</td><td>Probe one host now; not stored in the inventory.</td></tr>
+                </tbody>
+            </table>
+            <p><code>POST /api/probe</code> takes <code>host</code> (required), <code>port</code> (default 443), optional <code>server_name</code> for SNI, and <code>check_revocation</code> (default true). A scoped key can probe only names in its scope, <code>server_name</code> included.</p>
+            <pre><code>curl -X POST https://certmate.example.com/api/probe \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"host": "example.com", "port": 443}'</code></pre>
+
+            <h2>Next Steps</h2>
+            <ul>
+                <li><a href="api-reference.html">API Reference</a>: authentication and the rest of the API</li>
+                <li><a href="dns-providers.html">DNS Providers</a>: the credentials that adoption requires</li>
+                <li><a href="deploy-hooks.html">Deploy Hooks</a>: what runs after an adopted certificate is issued</li>
+                <li><a href="compliance.html">Compliance</a>: the cryptographic readiness report in context</li>
+                <li><a href="backup-recovery.html">Backup and Recovery</a>: backing up the inventory database</li>
+                <li><a href="security.html">Security</a>: roles and scoped API keys</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributors</a></p>
+        </div>
+    </footer>
+
+    <script src="../assets/script.js"></script>
+    <script src="toc.js" defer></script>
+</body>
+</html>

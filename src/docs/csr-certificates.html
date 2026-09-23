@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSR-Only Certificates - CertMate Documentation</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="preload" href="vendor/font-awesome/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/font-awesome/all.min.css"></noscript>
+    <link rel="preload" as="style" href="vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/fonts/fonts.css"></noscript>
+    <style>
+        .doc-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h1 {
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-6);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content p, .doc-content li {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+        .doc-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin: var(--spacing-6) 0;
+        }
+        .doc-content pre code {
+            background: none;
+            padding: 0;
+            color: white;
+        }
+        .doc-content ul, .doc-content ol {
+            margin: var(--spacing-4) 0;
+            padding-left: var(--spacing-8);
+        }
+        .doc-content li {
+            margin: var(--spacing-2) 0;
+        }
+    
+    /* In-page TOC, injected by toc.js. Sticky right column on lg+
+       viewports; collapsed to a top disclosure on smaller screens. */
+    .doc-toc {
+      display: none;
+    }
+    /* Shown only when it fits in the right margin: this page's content
+       column is 900px wide, the TOC 220px plus 24px of gap, so the viewport
+       must be at least 900 + 2 * 244 = 1388px. Below that the old rule
+       placed the TOC over the text (#588). */
+    @media (min-width: 1388px) {
+      .doc-toc {
+        display: block;
+        position: fixed;
+        top: 100px;
+        right: max(24px, calc((100vw - 900px) / 2 - 244px));
+        width: 220px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+      }
+    }
+    .doc-toc-inner {
+      border-left: 2px solid var(--gray-200);
+      padding-left: 16px;
+    }
+    .doc-toc-list { list-style: none; padding: 0; margin: 0; }
+    .doc-toc-item { margin: 4px 0; line-height: 1.4; }
+    .doc-toc-item-h3 { padding-left: 12px; }
+    .doc-toc-link {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: block;
+      padding: 2px 0;
+      transition: color 120ms ease;
+    }
+    .doc-toc-link:hover { color: var(--gray-900); }
+    .doc-toc-link.is-active {
+      color: var(--blue-600, #2563eb);
+      font-weight: 600;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="../assets/certmate_logo.png" alt="CertMate Logo" class="brand-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html#features" class="nav-link">Features</a>
+                <a href="../index.html#providers" class="nav-link">DNS Providers</a>
+                <a href="index.html" class="nav-link active">Documentation</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-file-signature"></i> CSR-Only Certificates</h1>
+                <p class="docs-subtitle">Certificates for devices that keep their own private key: submitting a CSR, renewal, and what CertMate stores</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <h2>When to Use It</h2>
+            <p>Some appliances generate their private key on the device and cannot export it; all they can hand out is a Certificate Signing Request (CSR). CertMate can issue and renew certificates for them. You submit the CSR, CertMate obtains the certificate from the configured CA and manages the certificate and chain, and the private key is never sent to CertMate or stored by it.</p>
+
+            <h2>How It Works</h2>
+            <ol>
+                <li>Generate the key and the CSR on the device.</li>
+                <li>Submit the CSR to CertMate through the API or the web UI.</li>
+                <li>CertMate runs certbot in <code>--csr</code> mode against the same CA, DNS provider and credentials an ordinary request would use, and obtains the certificate.</li>
+                <li>CertMate stores the certificate, the chain and the CSR. It does not store a private key.</li>
+                <li>At renewal, CertMate submits the stored CSR to the CA again.</li>
+            </ol>
+
+            <h2>Submitting a CSR</h2>
+            <h3>Through the API</h3>
+            <p>Pass the PEM CSR as <code>csr</code> in the body of the ordinary create call, <code>POST /api/certificates/create</code>. The endpoint requires the <code>operator</code> role.</p>
+            <pre><code>curl -X POST https://certmate.local/api/certificates/create \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "$(jq -n --arg csr "$(cat device.csr)" \
+        '{domain: "api.example.com", dns_provider: "cloudflare", csr: $csr}')"</code></pre>
+            <p>The other create fields work as they do for any certificate: <code>dns_provider</code>, <code>account_id</code>, <code>ca_provider</code>, <code>challenge_type</code> and <code>domain_alias</code>. Setting <code>async</code> to <code>true</code> returns 202 with a job id to poll at <code>/api/certificates/jobs/&lt;job_id&gt;</code>.</p>
+
+            <h3>Through the web UI</h3>
+            <p>The create form has a collapsed section labelled "The private key stays on the device". Open it and paste the CSR. While it holds a CSR, the form disables the SAN editor and the key type, key size and curve selectors, and does not send them. The CSR is only sent when creating a certificate, not when editing an existing one.</p>
+
+            <h3>Fields the CSR decides</h3>
+            <ul>
+                <li><strong>Names.</strong> The certificate covers the names inside the CSR: the Common Name first, if there is one, then the DNS names in the subjectAltName extension, with duplicates removed. <code>san_domains</code> must be omitted.</li>
+                <li><strong>Key.</strong> The device generated the key, so <code>key_type</code>, <code>key_size</code> and <code>elliptic_curve</code> must be omitted.</li>
+                <li><strong><code>domain</code></strong> is still required and must be one of the names in the CSR. It names the certificate directory, and renewal, the health check and deploy hooks all find the certificate by it.</li>
+            </ul>
+
+            <h2>What Is Refused</h2>
+            <p>These are checked before anything is written, and return 400 with code <code>CERTIFICATE_CREATION_FAILED</code>:</p>
+            <ul>
+                <li><code>csr</code> is not a string: "Invalid CSR: expected PEM text".</li>
+                <li>The CSR is larger than 65536 bytes (64 KiB): "CSR too large".</li>
+                <li><code>san_domains</code> is also given: "san_domains cannot be combined with a CSR".</li>
+                <li>Any of <code>key_type</code>, <code>key_size</code> or <code>elliptic_curve</code> is also given: "key options cannot be combined with a CSR".</li>
+                <li>The text does not parse as a PEM CSR: "Not a valid PEM certificate signing request".</li>
+                <li>The CSR's signature does not verify against its own public key.</li>
+                <li>The CSR names no domains: it has neither a Common Name nor a subjectAltName extension.</li>
+            </ul>
+            <p>Each name in the CSR is checked against the API key's <code>allowed_domains</code> the same way SANs are. A name outside the scope returns 403 with code <code>DOMAIN_OUT_OF_SCOPE</code>.</p>
+            <p>These are checked when issuance starts. With <code>async</code> they appear as a failed job rather than in the create response:</p>
+            <ul>
+                <li><code>domain</code> already has a certificate: 409 with code <code>CERTIFICATE_ALREADY_EXISTS</code>.</li>
+                <li>The CSR does not cover <code>domain</code>: 422, with a message listing the names the CSR does request.</li>
+                <li>The domain directory already holds a <code>privkey.pem</code> managed by CertMate: 422. Converting it would leave the old key beside a certificate it cannot serve. Delete the certificate first if you are moving its key onto a device.</li>
+            </ul>
+
+            <h2>What CertMate Stores</h2>
+            <p>In the certificate's directory:</p>
+            <ul>
+                <li><code>csr.pem</code>: the CSR as submitted. Renewal reads it from here.</li>
+                <li><code>cert.pem</code>, <code>chain.pem</code> and <code>fullchain.pem</code>: what certbot writes in CSR mode. They are written to a <code>csr-out</code> staging directory and then copied beside it.</li>
+            </ul>
+            <p>There is no <code>privkey.pem</code>. In CSR mode certbot generates no key and creates no lineage: no <code>live/</code> tree and no <code>renewal/</code> configuration.</p>
+            <p>The certificate's metadata records the CA, DNS provider, account, challenge type and alias as for any certificate, plus:</p>
+            <ul>
+                <li><code>key_management</code>: <code>external</code>. This marks the certificate as CSR-only for the health check and for renewal.</li>
+                <li><code>csr_fingerprint</code>: a SHA-256 hash of the CSR's DER encoding, so the same CSR re-exported with different line wrapping has the same fingerprint.</li>
+                <li><code>san_domains</code>: the CSR's names other than <code>domain</code>.</li>
+            </ul>
+
+            <h2>Status Fields</h2>
+            <p><code>GET /api/certificates/&lt;domain&gt;</code> reports a CSR-only certificate as follows:</p>
+            <ul>
+                <li><code>private_key_state</code>: <code>external</code>. The other values are <code>present</code>, <code>missing</code>, <code>mismatched</code> and <code>unknown</code>.</li>
+                <li><code>private_key_present</code>: <code>false</code>.</li>
+                <li><code>usable</code>: <code>null</code>, not <code>false</code>. The certificate can be used on the device that holds the key, and CertMate cannot answer for a key it does not have.</li>
+                <li><code>needs_renewal</code>: driven by expiry only. <code>missing</code> and <code>mismatched</code> force <code>needs_renewal</code>; <code>external</code> does not, so a CSR-only certificate is not reissued on every renewal sweep.</li>
+            </ul>
+            <p>If a <code>privkey.pem</code> does turn up beside a CSR-only certificate, it is compared with the certificate like any other key rather than reported as <code>external</code>.</p>
+
+            <h2>Renewal</h2>
+            <p><code>certbot renew</code> never renews a certificate issued with <code>--csr</code>; certbot says so itself when it issues one. CertMate therefore renews it by running issuance again with the stored <code>csr.pem</code>, using the CA, DNS provider, account, challenge type and alias recorded in the metadata.</p>
+            <ul>
+                <li><strong>Scheduled renewal.</strong> The renewal sweep handles CSR-only certificates the same way as all others: it renews those whose <code>needs_renewal</code> is true, using the same threshold.</li>
+                <li><strong>Manual renewal.</strong> <code>POST /api/certificates/&lt;domain&gt;/renew</code> works as usual. For a CSR-only certificate it always sends the CSR to the CA, with or without <code>force</code>.</li>
+                <li><strong>Same certificate returned.</strong> If the CA returns the same certificate, for example on a repeat request within the CA's reuse window, the renewal is not counted: the response has <code>renewed: false</code> and deploy hooks do not run.</li>
+                <li><strong>Missing CSR.</strong> If <code>csr.pem</code> is gone, renewal fails with "Cannot renew &lt;domain&gt;: it was issued from a CSR this instance no longer has". Submit the CSR again from the device that holds the key.</li>
+            </ul>
+
+            <h2>Key Rotation</h2>
+            <p>If the device generates a new key, it needs a new CSR. The create call refuses a domain that already has a certificate (409), and the edit/reissue path does not accept a CSR. To switch to the new CSR, delete the certificate with <code>DELETE /api/certificates/&lt;domain&gt;</code> (admin role), then submit the new CSR with the create call. Deleting removes the files from disk; it does not revoke the certificate at the CA.</p>
+
+            <h2>Deploy Hooks</h2>
+            <p>A CSR-only certificate has no key to deploy.</p>
+            <ul>
+                <li><strong>Shell hooks</strong> run normally. <code>CERTMATE_CERT_PATH</code>, <code>CERTMATE_CHAIN_PATH</code> and <code>CERTMATE_FULLCHAIN_PATH</code> are set as usual. <code>CERTMATE_KEY_PATH</code> is not set, so a hook can test <code>[ -n "$CERTMATE_KEY_PATH" ]</code>.</li>
+                <li><strong>Typed deploy targets</strong> publish the key with the certificate, so they cannot serve a CSR-only certificate. They are skipped and recorded as a failure with a message saying the key stays on the device and that a shell hook should be used instead.</li>
+            </ul>
+            <p>To deliver the certificate to the appliance, use a shell hook that copies only the certificate and chain.</p>
+
+            <h2>Next Steps</h2>
+            <ul>
+                <li><a href="api-reference.html">API Reference</a>: the create, renew and delete endpoints</li>
+                <li><a href="deploy-hooks.html">Deploy Hooks</a>: writing the shell hook that delivers the certificate</li>
+                <li><a href="ca-providers.html">CA Providers</a>: choosing the CA the CSR is submitted to</li>
+                <li><a href="dns-providers.html">DNS Providers</a>: credentials for the DNS-01 challenge</li>
+                <li><a href="security.html">Security</a>: API key roles and <code>allowed_domains</code></li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributors</a></p>
+        </div>
+    </footer>
+
+    <script src="../assets/script.js"></script>
+    <script src="toc.js" defer></script>
+</body>
+</html>
