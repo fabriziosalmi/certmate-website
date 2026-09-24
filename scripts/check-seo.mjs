@@ -66,6 +66,21 @@ const sitemapLocs = new Set(
 );
 if (sitemapLocs.size === 0) problems.push('the sitemap has no <loc> entries');
 
+// A URL listed twice in the sitemap, or a documentation page carded twice on
+// the docs index, is a page entry duplicated upstream. Neither breaks the
+// build on its own, which is why it needs saying here.
+if (existsSync(sitemapPath)) {
+  const locs = [...readFileSync(sitemapPath, 'utf8').matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  const twice = locs.filter((loc, i) => locs.indexOf(loc) !== i);
+  for (const loc of new Set(twice)) problems.push(`the sitemap lists ${loc} more than once`);
+}
+const docsIndex = join(DIST, 'docs', 'index.html');
+if (existsSync(docsIndex)) {
+  const cards = [...readFileSync(docsIndex, 'utf8').matchAll(/<a href="([^"]+)" class="docs-card">/g)].map((m) => m[1]);
+  const twice = cards.filter((href, i) => cards.indexOf(href) !== i);
+  for (const href of new Set(twice)) problems.push(`docs/index.html has more than one card for ${href}`);
+}
+
 // Every URL whose source git knows about carries that source's date, and the
 // dates are not all the same one.
 //
