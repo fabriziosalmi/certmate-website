@@ -35,7 +35,10 @@ const disclosureRows = [
         aria-hidden="true"
       >
       </div>
+      {/* The hero sits in the same max-w-3xl column as the sections below, so
+         the page has one left edge; it used to start 180px further left. */}
       <div class="container-x py-16 sm:py-20">
+        <div class="mx-auto max-w-3xl">
         <div class="badge bg-blue-50 text-primary ring-1 ring-inset ring-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-800">
           <Icon name="fa6-solid:shield-halved" aria-hidden="true" />
           <span>Security &amp; trust</span>
@@ -49,6 +52,7 @@ const disclosureRows = [
           the audit trail proves (and what it does not), how a release is gated,
           and where our dependency risk sits &mdash; with the receipts.
         </p>
+        </div>
       </div>
     </section>
 
@@ -57,7 +61,6 @@ const disclosureRows = [
       <div class="container-x">
         <div class="mx-auto max-w-3xl">
           <h2 class="section-title">
-            <Icon name="fa6-solid:envelope-open-text" class="mr-2 text-primary" aria-hidden="true" />
             Coordinated disclosure
           </h2>
           <p class="section-description">
@@ -103,7 +106,6 @@ const disclosureRows = [
       <div class="container-x">
         <div class="mx-auto max-w-3xl">
           <h2 class="section-title">
-            <Icon name="fa6-solid:file-signature" class="mr-2 text-primary" aria-hidden="true" />
             An audit trail you can verify off the box
           </h2>
           <p class="section-description">
@@ -164,7 +166,6 @@ const disclosureRows = [
       <div class="container-x">
         <div class="mx-auto max-w-3xl">
           <h2 class="section-title">
-            <Icon name="fa6-solid:vials" class="mr-2 text-primary" aria-hidden="true" />
             Releases are gated on a real certificate
           </h2>
           <p class="section-description">
@@ -186,7 +187,6 @@ const disclosureRows = [
       <div class="container-x">
         <div class="mx-auto max-w-3xl">
           <h2 class="section-title">
-            <Icon name="fa6-solid:magnifying-glass" class="mr-2 text-primary" aria-hidden="true" />
             An open security posture
           </h2>
           <p class="section-description">
