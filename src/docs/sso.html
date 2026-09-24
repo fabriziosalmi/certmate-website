@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Single Sign-On (OIDC) - CertMate Documentation</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="preload" href="vendor/font-awesome/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/font-awesome/all.min.css"></noscript>
+    <link rel="preload" as="style" href="vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/fonts/fonts.css"></noscript>
+    <style>
+        .doc-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h1 {
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-6);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content p, .doc-content li {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+        .doc-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin: var(--spacing-6) 0;
+        }
+        .doc-content pre code {
+            background: none;
+            padding: 0;
+            color: white;
+        }
+        .doc-content ul, .doc-content ol {
+            margin: var(--spacing-4) 0;
+            padding-left: var(--spacing-8);
+        }
+        .doc-content li {
+            margin: var(--spacing-2) 0;
+        }
+    
+    /* In-page TOC, injected by toc.js. Sticky right column on lg+
+       viewports; collapsed to a top disclosure on smaller screens. */
+    .doc-toc {
+      display: none;
+    }
+    /* Shown only when it fits in the right margin: this page's content
+       column is 900px wide, the TOC 220px plus 24px of gap, so the viewport
+       must be at least 900 + 2 * 244 = 1388px. Below that the old rule
+       placed the TOC over the text (#588). */
+    @media (min-width: 1388px) {
+      .doc-toc {
+        display: block;
+        position: fixed;
+        top: 100px;
+        right: max(24px, calc((100vw - 900px) / 2 - 244px));
+        width: 220px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+      }
+    }
+    .doc-toc-inner {
+      border-left: 2px solid var(--gray-200);
+      padding-left: 16px;
+    }
+    .doc-toc-list { list-style: none; padding: 0; margin: 0; }
+    .doc-toc-item { margin: 4px 0; line-height: 1.4; }
+    .doc-toc-item-h3 { padding-left: 12px; }
+    .doc-toc-link {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: block;
+      padding: 2px 0;
+      transition: color 120ms ease;
+    }
+    .doc-toc-link:hover { color: var(--gray-900); }
+    .doc-toc-link.is-active {
+      color: var(--blue-600, #2563eb);
+      font-weight: 600;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="../assets/certmate_logo.png" alt="CertMate Logo" class="brand-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html#features" class="nav-link">Features</a>
+                <a href="../index.html#providers" class="nav-link">DNS Providers</a>
+                <a href="index.html" class="nav-link active">Documentation</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-right-to-bracket"></i> Single Sign-On (OIDC)</h1>
+                <p class="docs-subtitle">How to sign in to CertMate through an OpenID Connect identity provider, map its groups to CertMate roles, and control which accounts it creates or links.</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <h2>How SSO Fits In</h2>
+            <p>CertMate can authenticate users against an OpenID Connect identity provider such as Keycloak, Authentik, Okta, Google Workspace or Microsoft Entra. It uses the Authorization Code flow with PKCE. SSO is an additional way in: local username and password login and API keys keep working alongside it.</p>
+            <p>A successful SSO login ends in an ordinary CertMate session, the same one a local login creates. Roles and permissions apply to it exactly as they do to a local session. The session remembers that it came from SSO, and that matters in one place: logout.</p>
+            <p>A fully configured SSO block (enabled, with an issuer URL and a client ID) counts as an operator credential. An instance can therefore run with SSO only, with local authentication never enabled, and it does not stay in first-run setup mode.</p>
+
+            <h2>Registering CertMate at the IdP</h2>
+            <p>Create a client (application) for CertMate at the identity provider and register this redirect URI:</p>
+            <pre><code>https://certmate.example.com/api/auth/oidc/callback</code></pre>
+            <p>The SSO tab in CertMate shows the exact URI for the address you are browsing from. The IdP issues a client ID and a client secret; CertMate needs both.</p>
+            <p>If you set a post-logout redirect URI in CertMate (see <a href="#sessions-and-logout">Sessions and Logout</a>), register that exact URI at the IdP as well. In Keycloak it goes in the client's <em>Valid post logout redirect URIs</em>; otherwise the IdP rejects the logout with <code>invalid_redirect_uri</code>.</p>
+
+            <h2>Configuring CertMate</h2>
+            <p>As an admin, open <strong>Settings &rarr; SSO</strong>. The form reads and writes the <code>oidc</code> block of <code>settings.json</code>.</p>
+            <table>
+                <thead>
+                    <tr><th>Field</th><th>Key</th><th>Default</th><th>Notes</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Enable OIDC/SSO</td><td><code>enabled</code></td><td><code>false</code></td><td>The login page shows the SSO button only when this is on and both the issuer URL and client ID are set.</td></tr>
+                    <tr><td>Provider display name</td><td><code>provider_name</code></td><td><code>SSO</code></td><td>Label on the <strong>Sign in with &lt;name&gt;</strong> button.</td></tr>
+                    <tr><td>Issuer URL</td><td><code>issuer_url</code></td><td>empty</td><td>Required when enabled. Must be <code>https</code>; plain <code>http</code> is accepted only for <code>localhost</code> and <code>127.0.0.1</code>.</td></tr>
+                    <tr><td>Client ID</td><td><code>client_id</code></td><td>empty</td><td>Required when enabled.</td></tr>
+                    <tr><td>Client Secret</td><td><code>client_secret</code></td><td>empty</td><td>Shown as <code>********</code> once saved; leave the placeholder unchanged to keep the stored secret.</td></tr>
+                    <tr><td>Redirect URI override</td><td><code>redirect_uri_override</code></td><td>empty</td><td>Optional. See below.</td></tr>
+                    <tr><td>Scopes</td><td><code>scopes</code></td><td><code>openid email profile groups</code></td><td>Space- or comma-separated in the form. Must include <code>openid</code>.</td></tr>
+                    <tr><td>Username claim</td><td><code>username_claim</code></td><td><code>preferred_username</code></td><td>Name of the user created on first login.</td></tr>
+                    <tr><td>Email claim</td><td><code>email_claim</code></td><td><code>email</code></td><td>Used for email linking.</td></tr>
+                    <tr><td>Role claim</td><td><code>role_claim</code></td><td><code>groups</code></td><td>Claim that role mappings are matched against.</td></tr>
+                    <tr><td>Role mappings</td><td><code>role_mappings</code></td><td>none</td><td>See <a href="#role-mapping">Role Mapping</a>.</td></tr>
+                    <tr><td>Default role</td><td><code>default_role</code></td><td><code>viewer</code></td><td>Role when no mapping matches: <code>viewer</code>, <code>operator</code> or <code>admin</code>.</td></tr>
+                    <tr><td>Auto-create users on first login (JIT)</td><td><code>auto_create_users</code></td><td><code>true</code></td><td>See <a href="#provisioning-and-linking">Provisioning and Linking</a>.</td></tr>
+                    <tr><td>Link to existing local user by email</td><td><code>link_by_email</code></td><td><code>true</code></td><td>See <a href="#provisioning-and-linking">Provisioning and Linking</a>.</td></tr>
+                    <tr><td>Post-logout redirect URI</td><td><code>post_logout_redirect_uri</code></td><td>empty</td><td>Optional. Where the IdP sends the user after logout.</td></tr>
+                    <tr><td>(no form field)</td><td><code>sync_role_on_login</code></td><td><code>true</code></td><td>Re-derive the role at every login.</td></tr>
+                    <tr><td>(no form field)</td><td><code>require_verified_email</code></td><td><code>true</code></td><td>Gate on email linking.</td></tr>
+                </tbody>
+            </table>
+            <p>The last two keys have no control in the form, but the form keeps whatever value they already have when it saves. Change them through <code>POST /api/auth/oidc/settings</code>.</p>
+
+            <h3>Issuer URL and discovery</h3>
+            <p>The issuer URL is the part before <code>/.well-known/openid-configuration</code>. CertMate strips a trailing slash and fetches <code>{issuer}/.well-known/openid-configuration</code> to find the IdP's endpoints and signing keys. Examples:</p>
+            <ul>
+                <li>Keycloak: <code>https://idp.example.com/realms/main</code></li>
+                <li>Authentik: <code>https://idp.example.com/application/o/certmate/</code></li>
+                <li>Google: <code>https://accounts.google.com</code></li>
+            </ul>
+            <p>The discovery document is fetched on the first login attempt, not at startup, and then cached for the life of the process. Saving a change to the issuer URL, client ID, client secret or scopes drops the cache, so the next login uses the new values without a restart.</p>
+
+            <h3>Scopes</h3>
+            <p>The default scopes are <code>openid email profile groups</code>. <code>groups</code> is what Keycloak, Authentik and Okta use to put group membership in the token. A provider that does not support it drops it, and role mappings on <code>groups</code> then never match. Claims are read from the ID token and, when the IdP answers, from its userinfo endpoint; where both carry a claim, the ID token's value is used.</p>
+
+            <h3>Redirect URI behind a proxy</h3>
+            <p>CertMate builds the redirect URI from the incoming request: its scheme and host, followed by <code>/api/auth/oidc/callback</code>. Behind a reverse proxy, set <code>BEHIND_PROXY=true</code> so CertMate honours the proxy's <code>X-Forwarded-Proto</code>, <code>X-Forwarded-Host</code> and <code>X-Forwarded-Prefix</code> headers and builds the public address. Set <strong>Redirect URI override</strong> only when the IdP must see an absolute URL that differs from the host the request arrives on, for example behind a CDN. When set, it is sent as is.</p>
+
+            <h3>Keeping the client secret out of settings.json</h3>
+            <p>Instead of storing the secret, the <code>oidc</code> block can name where it lives: <code>client_secret_file</code> with a path, or <code>client_secret_env</code> with an environment variable name.</p>
+            <pre><code>"oidc": { "client_secret_env": "CERTMATE_OIDC_CLIENT_SECRET" }</code></pre>
+            <p>The value is read when the OIDC client is built and never written back to <code>settings.json</code>. A reference wins over a literal <code>client_secret</code> in the same block, and trailing whitespace is stripped. If the reference cannot be resolved, CertMate logs an error naming it and SSO logins fail until it resolves; local login is not affected.</p>
+
+            <h2 id="role-mapping">Role Mapping</h2>
+            <p>CertMate reads the claim named in <code>role_claim</code> and compares its values with the <code>claim_value</code> of each entry in <code>role_mappings</code>, in order. The first entry that matches sets the role. The claim can be a list (typical for <code>groups</code>) or a single value. Matching ignores case, so <code>certmate-admins</code> also matches <code>CertMate-Admins</code>. If the claim is missing or nothing matches, the user gets <code>default_role</code>.</p>
+            <p>For a Keycloak realm that puts a <code>groups</code> claim in the token, the block in <code>settings.json</code> looks like this:</p>
+            <pre><code>"oidc": {
+  "enabled": true,
+  "provider_name": "Keycloak",
+  "issuer_url": "https://idp.example.com/realms/main",
+  "client_id": "certmate",
+  "client_secret": "********",
+  "scopes": ["openid", "email", "profile", "groups"],
+  "role_claim": "groups",
+  "role_mappings": [
+    { "claim_value": "certmate-admins",    "role": "admin" },
+    { "claim_value": "certmate-operators", "role": "operator" }
+  ],
+  "default_role": "viewer",
+  "auto_create_users": true,
+  "link_by_email": true,
+  "sync_role_on_login": true
+}</code></pre>
+            <p>A member of <code>certmate-admins</code> becomes <code>admin</code>, a member of <code>certmate-operators</code> becomes <code>operator</code>, and everyone else who can sign in at the IdP becomes <code>viewer</code>. A member of both groups becomes <code>admin</code>, because that entry comes first. Each mapping's <code>role</code> must be <code>admin</code>, <code>operator</code> or <code>viewer</code>, and its <code>claim_value</code> must not be empty; otherwise the save is refused with a 400.</p>
+            <p>The default role applies to every account the IdP will authenticate for this client. <code>viewer</code> is the safe choice; restrict who can reach the client at the IdP if even that is too much.</p>
+
+            <h3>Role sync</h3>
+            <p>With <code>sync_role_on_login</code> at its default of <code>true</code>, the role is recomputed from the current claims at every SSO login. Removing someone from an admin group at the IdP demotes them in CertMate the next time they sign in. Each change is written to the audit log as <code>oidc_user_role_synced</code> with the old and new role.</p>
+            <p>Set it to <code>false</code> when the IdP should only authenticate and roles are managed in CertMate. The role is then set once, when the user is created, and a role an admin assigns by hand survives later logins.</p>
+
+            <h2 id="provisioning-and-linking">Provisioning and Linking</h2>
+            <p>After the IdP has authenticated someone, CertMate looks for a matching user in this order:</p>
+            <ol>
+                <li><strong>Subject.</strong> A user already linked to this identity, matched on the <code>sub</code> and <code>iss</code> claims. This always takes precedence, so a linked user whose email changes at the IdP is not re-matched by email.</li>
+                <li><strong>Email link.</strong> If <code>link_by_email</code> is on and an existing CertMate user has the same email (compared without regard to case), CertMate writes the IdP identity onto that user. The user keeps their role and their local password for this login; with role sync on, the role is recomputed from the claims at their next one.</li>
+                <li><strong>Just-in-time creation.</strong> If <code>auto_create_users</code> is on, CertMate creates a new user with the mapped role.</li>
+                <li>Otherwise the login is refused with <code>oidc_provisioning_disabled</code>.</li>
+            </ol>
+            <p>A disabled CertMate user is refused at the subject and email steps, exactly as at local login. Disabling the account in CertMate locks it out however it authenticates.</p>
+
+            <h3>The email_verified gate</h3>
+            <p>With <code>require_verified_email</code> at its default of <code>true</code>, an email link happens only when the IdP asserts <code>email_verified</code> as <code>true</code> (the boolean or the string <code>"true"</code>). A missing claim counts as not verified. If <code>email_claim</code> names a custom claim, its value must also equal the standard <code>email</code> claim, because <code>email_verified</code> covers only that one. When the gate refuses, the login fails with <code>oidc_email_not_verified</code> and the audit log records <code>oidc_user_link_refused</code>.</p>
+            <p>The gate applies only when an existing user would be linked, since linking hands over that user's role. A login that matches no existing email goes on to just-in-time creation. Turn the gate off only if your IdP verifies email ownership for every account it issues.</p>
+
+            <h3>Users created on first login</h3>
+            <p>The username comes from the configured username claim, falling back to <code>preferred_username</code>, then <code>email</code>, then <code>sub</code>. Characters other than letters, digits, <code>.</code>, <code>-</code>, <code>_</code> and <code>@</code> become <code>_</code>, and if the name is taken a suffix such as <code>_2</code> is added. A name containing control characters, or longer than 256 characters, is refused with <code>oidc_invalid_username</code>.</p>
+            <p>A user created this way has no local password, so the local login form cannot authenticate it, and CertMate refuses to set a password on any user linked to an IdP. In <strong>Settings &rarr; Users</strong> every account linked to an IdP carries an <strong>SSO</strong> badge, with the issuer in its tooltip, and has no password reset action.</p>
+
+            <h2>Local Authentication Alongside SSO</h2>
+            <p>With both enabled, the login page shows the username and password form and, below it, the <strong>Sign in with &lt;provider&gt;</strong> button. How a given account can sign in depends on how it came to exist:</p>
+            <ul>
+                <li>A local user who was never linked signs in with a password only.</li>
+                <li>A local user linked by email can sign in either way, because linking keeps the password. This is useful while moving a team to SSO. Turn <code>link_by_email</code> off if you want SSO accounts with no password fallback.</li>
+                <li>A user created on first SSO login signs in through the IdP only.</li>
+            </ul>
+            <p>On an instance where SSO is the only credential configured, CertMate refuses to save SSO as disabled. <code>POST /api/auth/oidc/settings</code> answers 409 with <code>Refusing to disable the last way in</code>. Enable local authentication with an admin user, or set <code>API_BEARER_TOKEN</code>, before turning SSO off.</p>
+
+            <h2 id="sessions-and-logout">Sessions and Logout</h2>
+            <p>The callback sets the same <code>certmate_session</code> cookie as local login: <code>HttpOnly</code>, <code>SameSite=Strict</code>, path <code>/</code>, <code>Secure</code> when the request arrived over HTTPS. It lasts <code>SESSION_TIMEOUT_HOURS</code>, which defaults to 8. The user is then sent to the page they asked for before logging in; only a path on the same site is accepted there, anything else sends them to <code>/</code>.</p>
+            <p>During the flow, <code>state</code>, <code>nonce</code>, the PKCE verifier and the return path are kept in Flask's signed session cookie. That cookie is <code>SameSite=Lax</code>, because the IdP's redirect back is a cross-site navigation, and <code>Secure</code> when <code>PREFERRED_URL_SCHEME=https</code> or <code>CERTMATE_ENABLE_HSTS=true</code>.</p>
+            <p>Logging out of an SSO session invalidates the CertMate session and, when the IdP's discovery document lists an <code>end_session_endpoint</code>, sends the browser there with <code>id_token_hint</code>, <code>client_id</code> and, if configured, <code>post_logout_redirect_uri</code>. This ends the IdP session too, so the next <strong>Sign in with</strong> does not log the user straight back in. If the IdP has no end-session endpoint, the browser goes to <code>/login</code>.</p>
+            <p>Disabling a user, or changing their role, in <strong>Settings &rarr; Users</strong> ends that user's open sessions at once.</p>
+
+            <h2>Login Errors</h2>
+            <p>A failed SSO login returns to <code>/login?error=oidc_&lt;code&gt;</code>, and the page shows <em>Single sign-on failed:</em> followed by the code.</p>
+            <table>
+                <thead>
+                    <tr><th>Code</th><th>Meaning</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>oidc_disabled</code></td><td>SSO is off, or the issuer URL or client ID is missing.</td></tr>
+                    <tr><td><code>oidc_init</code></td><td>The flow could not start; the server log has the cause. An unreachable discovery document fails here.</td></tr>
+                    <tr><td><code>oidc_denied</code></td><td>The IdP returned an error, for example because the user cancelled.</td></tr>
+                    <tr><td><code>oidc_token_exchange</code></td><td>Exchanging the code for tokens or validating the ID token failed.</td></tr>
+                    <tr><td><code>oidc_token_exchange_algorithm</code></td><td>The ID token was signed with an algorithm the cached discovery document does not list. CertMate drops the cached document, so retry; if it persists, check <code>id_token_signing_alg_values_supported</code> at the IdP. The server log names both the algorithm and the advertised list.</td></tr>
+                    <tr><td><code>oidc_no_claims</code></td><td>The IdP returned no claims.</td></tr>
+                    <tr><td><code>oidc_missing_sub</code></td><td>The claims have no <code>sub</code>.</td></tr>
+                    <tr><td><code>oidc_invalid_username</code></td><td>The username claim contains control characters or is over 256 characters.</td></tr>
+                    <tr><td><code>oidc_email_not_verified</code></td><td>An email link was refused by the <code>email_verified</code> gate.</td></tr>
+                    <tr><td><code>oidc_user_disabled</code></td><td>The matching CertMate user is disabled.</td></tr>
+                    <tr><td><code>oidc_provisioning_disabled</code></td><td>No matching user, and just-in-time creation is off.</td></tr>
+                    <tr><td><code>oidc_session</code></td><td>The session could not be created.</td></tr>
+                </tbody>
+            </table>
+
+            <h2>Security Notes</h2>
+            <ul>
+                <li>PKCE with <code>S256</code> is used on every login, for confidential and public clients alike.</li>
+                <li>The ID token's signature, audience, issuer, expiry and nonce are checked server-side by Authlib against the keys in the IdP's published JWKS.</li>
+                <li>The client secret is returned as <code>********</code> in every read of the settings, and a save that sends <code>********</code> back keeps the stored secret.</li>
+                <li>The <code>oidc</code> block cannot be changed through the general <code>POST /api/settings</code>; only <code>POST /api/auth/oidc/settings</code> changes it, and it validates and audits the change.</li>
+                <li><code>/api/auth/oidc/login</code> shares the per-IP rate limit of local login (5 attempts a minute), and failed callbacks count against it.</li>
+                <li>The audit log records <code>oidc_login_success</code>, <code>oidc_login_failure</code>, <code>oidc_user_provisioned</code>, <code>oidc_user_linked</code>, <code>oidc_user_link_refused</code>, <code>oidc_login_refused</code>, <code>oidc_user_role_synced</code> and <code>oidc_config_changed</code>. The config entry lists which keys changed and flags a new client secret, without recording values.</li>
+            </ul>
+
+            <h2>API</h2>
+            <table>
+                <thead>
+                    <tr><th>Endpoint</th><th>Access</th><th>Purpose</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>GET /api/auth/oidc/config</code></td><td>public</td><td>Whether SSO is enabled, the provider name, the login URL and the post-logout redirect URI. No secrets, claim names or mappings.</td></tr>
+                    <tr><td><code>GET /api/auth/oidc/login</code></td><td>public, rate-limited</td><td>Starts the flow; optional <code>?next=</code> path to return to.</td></tr>
+                    <tr><td><code>GET /api/auth/oidc/callback</code></td><td>public</td><td>Where the IdP sends the browser back.</td></tr>
+                    <tr><td><code>GET /api/auth/oidc/settings</code></td><td>admin</td><td>Full configuration, client secret masked.</td></tr>
+                    <tr><td><code>POST /api/auth/oidc/settings</code></td><td>admin</td><td>Update the configuration; keys left out keep their current values. 400 on a validation error, 409 when turning SSO off would leave no way in.</td></tr>
+                </tbody>
+            </table>
+            <p>For example, to stop re-deriving roles at login and manage them in CertMate instead:</p>
+            <pre><code>curl -X POST https://certmate.example.com/api/auth/oidc/settings \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"sync_role_on_login": false}'</code></pre>
+
+            <h2>Next Steps</h2>
+            <ul>
+                <li><a href="security.html">Security</a>: roles, local users and scoped API keys</li>
+                <li><a href="api-reference.html">API Reference</a>: authentication and the rest of the API</li>
+                <li><a href="docker-deployment.html">Docker Deployment</a>: environment variables such as <code>BEHIND_PROXY</code> and <code>SESSION_TIMEOUT_HOURS</code></li>
+                <li><a href="troubleshooting.html">Troubleshooting</a>: common problems and their fixes</li>
+                <li><a href="backup-recovery.html">Backup and Recovery</a>: what <code>settings.json</code> holds and how to back it up</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributors</a></p>
+        </div>
+    </footer>
+    <script src="toc.js" defer></script>
+</body>
+</html>
