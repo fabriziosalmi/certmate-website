@@ -29,6 +29,12 @@ export function sourceCandidates(url) {
   // The documentation is built by src/pages/docs/[slug].html.ts from the
   // bodies in src/docs plus the titles and descriptions in src/data/docs.ts,
   // so a change to either one changes the page.
+  // The Italian documentation mirrors the English, from src/docs/it.
+  if (segments[0] === 'it' && segments[1] === 'docs') {
+    const slug = segments[2] ? segments[2].replace(/\.html$/, '') : 'index';
+    return [`src/docs/it/${slug}.html`, 'src/data/docs.ts'];
+  }
+
   if (segments[0] === 'docs') {
     const slug = segments[1] ? segments[1].replace(/\.html$/, '') : 'index';
     return [`src/docs/${slug}.html`, 'src/data/docs.ts'];

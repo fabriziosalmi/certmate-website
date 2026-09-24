@@ -33,7 +33,9 @@
   // Skip the "Next Steps" tail link list — it is in the same .doc-content
   // but is conventionally the last block on every doc page, and putting
   // it in the TOC duplicates the cross-references at the foot.
-  const filtered = headings.filter((h) => h.textContent.trim() !== 'Next Steps');
+  // The Italian pages end the same way, under their own heading.
+  const TAIL = new Set(['Next Steps', 'Prossimi passi']);
+  const filtered = headings.filter((h) => !TAIL.has(h.textContent.trim()));
 
   // Only render TOC if there are at least 2 H2s — short single-section
   // pages do not benefit.
@@ -72,7 +74,7 @@
   // Build the TOC markup.
   const nav = document.createElement('nav');
   nav.setAttribute('role', 'doc-toc');
-  nav.setAttribute('aria-label', 'On this page');
+  nav.setAttribute('aria-label', document.documentElement.lang === 'it' ? 'In questa pagina' : 'On this page');
   nav.className = 'doc-toc';
 
   const inner = document.createElement('div');

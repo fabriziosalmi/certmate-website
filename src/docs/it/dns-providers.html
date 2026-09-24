@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DNS Providers - CertMate Documentation</title>
-    <link rel="stylesheet" href="../assets/styles.css">
-    <link rel="preload" href="vendor/font-awesome/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/font-awesome/all.min.css"></noscript>
-    <link rel="preload" as="style" href="vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/fonts/fonts.css"></noscript>
+    <title>Provider DNS - Documentazione CertMate</title>
+    <link rel="stylesheet" href="../../assets/styles.css">
+    <link rel="preload" href="../../docs/vendor/font-awesome/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="../../docs/vendor/font-awesome/all.min.css"></noscript>
+    <link rel="preload" as="style" href="../../docs/vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="../../docs/vendor/fonts/fonts.css"></noscript>
     <style>
         .doc-content {
             max-width: 1100px;
@@ -165,13 +165,13 @@
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">
-                <img src="../assets/certmate_logo.png" alt="CertMate Logo" class="brand-logo">
-                <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+                <img src="../../assets/certmate_logo.png" alt="Logo CertMate" class="brand-logo">
+                <a href="../../it/" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
             </div>
             <div class="nav-menu">
-                <a href="../index.html#features" class="nav-link">Features</a>
-                <a href="../index.html#providers" class="nav-link">DNS Providers</a>
-                <a href="index.html" class="nav-link active">Documentation</a>
+                <a href="../../it/#features" class="nav-link">Funzionalità</a>
+                <a href="../../it/#providers" class="nav-link">Provider DNS</a>
+                <a href="../../docs/index.html" class="nav-link active">Documentazione</a>
                 <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
                     <i class="fab fa-github"></i> GitHub
                 </a>
@@ -182,232 +182,232 @@
     <main id="main-content">
         <section class="docs-hero" style="padding: 100px 0 60px;">
             <div class="container">
-                <h1 class="docs-title"><i class="fas fa-cloud"></i> DNS Providers</h1>
-                <p class="docs-subtitle">Configure any of {{PROVIDER_COUNT}} supported DNS providers with multi-account support</p>
+                <h1 class="docs-title"><i class="fas fa-cloud"></i> Provider DNS</h1>
+                <p class="docs-subtitle">Configura uno qualsiasi dei {{PROVIDER_COUNT}} provider DNS supportati, con supporto multi-account</p>
             </div>
         </section>
 
         <section class="doc-content">
-            <h2>Supported DNS Providers</h2>
-            <p>CertMate supports {{PROVIDER_COUNT}} DNS providers for the ACME DNS-01 challenge. Most of them can hold more than one account.</p>
+            <h2>Provider DNS supportati</h2>
+            <p>CertMate supporta {{PROVIDER_COUNT}} provider DNS per la challenge DNS-01 di ACME. La maggior parte può avere più di un account.</p>
 
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i>
-                <strong>Multi-Account Support:</strong> Providers without a <em>Single Account</em> badge support multiple accounts for environment separation (prod/staging/dev), multi-region deployments, and permission scoping.
+                <strong>Supporto multi-account:</strong> i provider senza il badge <em>Single Account</em> supportano più account per separare gli ambienti (prod/staging/dev), per deployment multi-regione e per limitare i permessi.
             </div>
 
-            <h3>🏢 Enterprise Multi-Account Providers</h3>
+            <h3>🏢 Provider enterprise multi-account</h3>
             <div class="provider-grid">
                 <div class="provider-box">
                     <h4><i class="fas fa-cloud" style="color: #f6821f;"></i> Cloudflare</h4>
-                    <p><strong>Credentials:</strong> API Token</p>
-                    <p>Global CDN with edge locations worldwide. Free tier available.</p>
-                    <p><a href="https://developers.cloudflare.com/fundamentals/api/get-started/create-token/" target="_blank" rel="noopener noreferrer">Official Docs</a></p>
+                    <p><strong>Credenziali:</strong> API Token</p>
+                    <p>CDN globale con edge location in tutto il mondo. Piano gratuito disponibile.</p>
+                    <p><a href="https://developers.cloudflare.com/fundamentals/api/get-started/create-token/" target="_blank" rel="noopener noreferrer">Documentazione ufficiale</a></p>
                 </div>
                 
                 <div class="provider-box">
                     <h4><i class="fab fa-aws" style="color: #ff9900;"></i> AWS Route53</h4>
-                    <p><strong>Credentials:</strong> Access Key, Secret Key</p>
-                    <p>Amazon's scalable DNS service integrated with AWS infrastructure.</p>
-                    <p><a href="https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/Welcome.html" target="_blank" rel="noopener noreferrer">Official Docs</a></p>
+                    <p><strong>Credenziali:</strong> Access Key, Secret Key</p>
+                    <p>Il servizio DNS scalabile di Amazon, integrato con l'infrastruttura AWS.</p>
+                    <p><a href="https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/Welcome.html" target="_blank" rel="noopener noreferrer">Documentazione ufficiale</a></p>
                 </div>
                 
                 <div class="provider-box">
                     <h4><i class="fab fa-microsoft" style="color: #0078d4;"></i> Azure DNS</h4>
-                    <p><strong>Credentials:</strong> Service Principal</p>
-                    <p>Microsoft's cloud DNS service.</p>
-                    <p><a href="https://learn.microsoft.com/azure/dns/dns-overview" target="_blank" rel="noopener noreferrer">Official Docs</a></p>
+                    <p><strong>Credenziali:</strong> Service Principal</p>
+                    <p>Il servizio DNS cloud di Microsoft.</p>
+                    <p><a href="https://learn.microsoft.com/azure/dns/dns-overview" target="_blank" rel="noopener noreferrer">Documentazione ufficiale</a></p>
                 </div>
                 
                 <div class="provider-box">
                     <h4><i class="fab fa-google" style="color: #4285f4;"></i> Google Cloud DNS</h4>
-                    <p><strong>Credentials:</strong> Service Account JSON</p>
-                    <p>Google's high-performance DNS infrastructure.</p>
-                    <p><a href="https://cloud.google.com/dns/docs" target="_blank" rel="noopener noreferrer">Official Docs</a></p>
+                    <p><strong>Credenziali:</strong> Service Account JSON</p>
+                    <p>L'infrastruttura DNS ad alte prestazioni di Google.</p>
+                    <p><a href="https://cloud.google.com/dns/docs" target="_blank" rel="noopener noreferrer">Documentazione ufficiale</a></p>
                 </div>
                 
                 <div class="provider-box">
                     <h4><i class="fab fa-digital-ocean" style="color: #0080ff;"></i> DigitalOcean</h4>
-                    <p><strong>Credentials:</strong> API Token</p>
-                    <p>Simple cloud infrastructure with integrated DNS.</p>
-                    <p><a href="https://docs.digitalocean.com/products/networking/dns/" target="_blank" rel="noopener noreferrer">Official Docs</a></p>
+                    <p><strong>Credenziali:</strong> API Token</p>
+                    <p>Infrastruttura cloud semplice con DNS integrato.</p>
+                    <p><a href="https://docs.digitalocean.com/products/networking/dns/" target="_blank" rel="noopener noreferrer">Documentazione ufficiale</a></p>
                 </div>
                 
                 <div class="provider-box">
                     <h4><i class="fas fa-server"></i> PowerDNS</h4>
-                    <p><strong>Credentials:</strong> API URL, API Key</p>
-                    <p>Open-source DNS server with REST API support.</p>
-                    <p><a href="https://doc.powerdns.com/authoritative/http-api/" target="_blank" rel="noopener noreferrer">Official Docs</a></p>
+                    <p><strong>Credenziali:</strong> API URL, API Key</p>
+                    <p>Server DNS open source con supporto per API REST.</p>
+                    <p><a href="https://doc.powerdns.com/authoritative/http-api/" target="_blank" rel="noopener noreferrer">Documentazione ufficiale</a></p>
                 </div>
                 
                 <div class="provider-box">
                     <h4><i class="fas fa-network-wired"></i> RFC2136</h4>
-                    <p><strong>Credentials:</strong> Nameserver, TSIG Key</p>
-                    <p>Standard DNS update protocol for BIND and compatible servers.</p>
-                    <p><a href="https://datatracker.ietf.org/doc/html/rfc2136" target="_blank" rel="noopener noreferrer">Official Docs</a></p>
+                    <p><strong>Credenziali:</strong> Nameserver, TSIG Key</p>
+                    <p>Protocollo standard di aggiornamento DNS per BIND e server compatibili.</p>
+                    <p><a href="https://datatracker.ietf.org/doc/html/rfc2136" target="_blank" rel="noopener noreferrer">Documentazione ufficiale</a></p>
                 </div>
             </div>
 
-            <h3>Additional Providers</h3>
+            <h3>Altri provider</h3>
             <div class="provider-grid">
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
+                    <span class="badge badge-single">Account singolo</span>
                     <h4>Linode</h4>
-                    <p><strong>Credentials:</strong> API Key</p>
-                    <p>Cloud hosting with DNS management.</p>
+                    <p><strong>Credenziali:</strong> API Key</p>
+                    <p>Hosting cloud con gestione DNS.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
+                    <span class="badge badge-single">Account singolo</span>
                     <h4>Gandi</h4>
-                    <p><strong>Credentials:</strong> API Token</p>
-                    <p>European domain registrar and hosting.</p>
+                    <p><strong>Credenziali:</strong> API Token</p>
+                    <p>Registrar di domini e hosting europeo.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
+                    <span class="badge badge-single">Account singolo</span>
                     <h4>OVH</h4>
-                    <p><strong>Credentials:</strong> API Credentials</p>
-                    <p>Major European hosting provider.</p>
+                    <p><strong>Credenziali:</strong> Credenziali API</p>
+                    <p>Grande provider di hosting europeo.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
+                    <span class="badge badge-single">Account singolo</span>
                     <h4>Namecheap</h4>
-                    <p><strong>Credentials:</strong> Username, API Key</p>
-                    <p>Popular domain registrar.</p>
+                    <p><strong>Credenziali:</strong> Username, API Key</p>
+                    <p>Registrar di domini molto diffuso.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
+                    <span class="badge badge-single">Account singolo</span>
                     <h4>Vultr</h4>
-                    <p><strong>Credentials:</strong> API Key</p>
-                    <p>Global cloud infrastructure.</p>
+                    <p><strong>Credenziali:</strong> API Key</p>
+                    <p>Infrastruttura cloud globale.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
+                    <span class="badge badge-single">Account singolo</span>
                     <h4>DNS Made Easy</h4>
-                    <p><strong>Credentials:</strong> API Key, Secret</p>
-                    <p>Enterprise DNS management.</p>
+                    <p><strong>Credenziali:</strong> API Key, Secret</p>
+                    <p>Gestione DNS enterprise.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
+                    <span class="badge badge-single">Account singolo</span>
                     <h4>NS1</h4>
-                    <p><strong>Credentials:</strong> API Key</p>
-                    <p>Intelligent DNS platform.</p>
+                    <p><strong>Credenziali:</strong> API Key</p>
+                    <p>Piattaforma DNS intelligente.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
+                    <span class="badge badge-single">Account singolo</span>
                     <h4>Hetzner</h4>
-                    <p><strong>Credentials:</strong> API Token</p>
-                    <p>European cloud hosting.</p>
+                    <p><strong>Credenziali:</strong> API Token</p>
+                    <p>Hosting cloud europeo.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
+                    <span class="badge badge-single">Account singolo</span>
                     <h4>Porkbun</h4>
-                    <p><strong>Credentials:</strong> API Key, Secret</p>
-                    <p>Domain registrar with DNS.</p>
+                    <p><strong>Credenziali:</strong> API Key, Secret</p>
+                    <p>Registrar di domini con DNS.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
+                    <span class="badge badge-single">Account singolo</span>
                     <h4>GoDaddy</h4>
-                    <p><strong>Credentials:</strong> API Key, Secret</p>
-                    <p>Popular domain registrar.</p>
+                    <p><strong>Credenziali:</strong> API Key, Secret</p>
+                    <p>Registrar di domini molto diffuso.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
+                    <span class="badge badge-single">Account singolo</span>
                     <h4>Hurricane Electric</h4>
-                    <p><strong>Credentials:</strong> Username, Password</p>
-                    <p>Free DNS hosting service.</p>
+                    <p><strong>Credenziali:</strong> Username, Password</p>
+                    <p>Servizio gratuito di hosting DNS.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
+                    <span class="badge badge-single">Account singolo</span>
                     <h4>Dynu</h4>
-                    <p><strong>Credentials:</strong> API Token</p>
-                    <p>Dynamic DNS service.</p>
+                    <p><strong>Credenziali:</strong> API Token</p>
+                    <p>Servizio di DNS dinamico.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
+                    <span class="badge badge-single">Account singolo</span>
                     <h4>ArvanCloud</h4>
-                    <p><strong>Credentials:</strong> API Key</p>
-                    <p>Iranian cloud provider.</p>
+                    <p><strong>Credenziali:</strong> API Key</p>
+                    <p>Provider cloud iraniano.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
+                    <span class="badge badge-single">Account singolo</span>
                     <h4>Infomaniak</h4>
-                    <p><strong>Credentials:</strong> API Token</p>
-                    <p>Swiss ISP and cloud provider.</p>
+                    <p><strong>Credenziali:</strong> API Token</p>
+                    <p>ISP e provider cloud svizzero.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
+                    <span class="badge badge-single">Account singolo</span>
                     <h4>ACME-DNS</h4>
-                    <p><strong>Credentials:</strong> JSON Config</p>
-                    <p>Generic ACME-DNS server support.</p>
+                    <p><strong>Credenziali:</strong> Configurazione JSON</p>
+                    <p>Supporto generico per server ACME-DNS.</p>
                 </div>
 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
+                    <span class="badge badge-single">Account singolo</span>
                     <h4>DuckDNS</h4>
-                    <p><strong>Credentials:</strong> API Token</p>
-                    <p>Free dynamic DNS.</p>
+                    <p><strong>Credenziali:</strong> API Token</p>
+                    <p>DNS dinamico gratuito.</p>
                 </div>
 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
+                    <span class="badge badge-single">Account singolo</span>
                     <h4>deSEC</h4>
-                    <p><strong>Credentials:</strong> API Token</p>
-                    <p>Free, non-profit DNS hosting in the EU, DNSSEC by default.</p>
+                    <p><strong>Credenziali:</strong> API Token</p>
+                    <p>Hosting DNS gratuito e senza scopo di lucro nell'UE, con DNSSEC attivo per impostazione predefinita.</p>
                 </div>
 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
+                    <span class="badge badge-single">Account singolo</span>
                     <h4>Scaleway</h4>
-                    <p><strong>Credentials:</strong> Application Token</p>
-                    <p>European cloud provider.</p>
+                    <p><strong>Credenziali:</strong> Application Token</p>
+                    <p>Provider cloud europeo.</p>
                 </div>
 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
+                    <span class="badge badge-single">Account singolo</span>
                     <h4>Akamai EdgeDNS</h4>
-                    <p><strong>Credentials:</strong> Client Token, Client Secret, Access Token, Host</p>
-                    <p>Enterprise CDN and authoritative DNS.</p>
+                    <p><strong>Credenziali:</strong> Client Token, Client Secret, Access Token, Host</p>
+                    <p>CDN enterprise e DNS autoritativo.</p>
                 </div>
 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
+                    <span class="badge badge-single">Account singolo</span>
                     <h4>EfficientIP SOLIDserver</h4>
-                    <p><strong>Credentials:</strong> Host, Username, Password, DNS Name</p>
-                    <p>Enterprise DDI appliance, on-premises.</p>
+                    <p><strong>Credenziali:</strong> Host, Username, Password, DNS Name</p>
+                    <p>Appliance DDI enterprise, on-premises.</p>
                 </div>
             </div>
 
-            <h2>Configuration Examples</h2>
+            <h2>Esempi di configurazione</h2>
 
-            <h3>Cloudflare Setup</h3>
+            <h3>Configurazione di Cloudflare</h3>
             <ol>
-                <li>Go to <a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank" rel="noopener noreferrer">Cloudflare API Tokens</a></li>
-                <li>Click "Create Token" → "Custom token"</li>
-                <li>Set permissions: Zone → DNS:Edit + Zone:Read</li>
-                <li>Copy the generated token</li>
+                <li>Vai su <a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank" rel="noopener noreferrer">Cloudflare API Tokens</a></li>
+                <li>Fai clic su "Create Token" → "Custom token"</li>
+                <li>Imposta i permessi: Zone → DNS:Edit + Zone:Read</li>
+                <li>Copia il token generato</li>
             </ol>
-            <p>Enter the token in Settings, DNS Providers, or set it in the environment. Cloudflare is the only DNS provider read from the environment; the variable sets the default Cloudflare account.</p>
+            <p>Inserisci il token in Settings, DNS Providers, oppure impostalo nell'ambiente. Cloudflare è l'unico provider DNS letto dall'ambiente; la variabile imposta l'account Cloudflare predefinito.</p>
             <pre><code># Environment variable
 CLOUDFLARE_TOKEN=your_cloudflare_api_token_here</code></pre>
 
-            <h3>AWS Route53 Setup</h3>
+            <h3>Configurazione di AWS Route53</h3>
             <ol>
-                <li>Create IAM user with Route53 permissions</li>
-                <li>Attach policy: <code>AmazonRoute53FullAccess</code> or custom policy</li>
+                <li>Crea un utente IAM con permessi Route53</li>
+                <li>Associa la policy <code>AmazonRoute53FullAccess</code> o una policy personalizzata</li>
             </ol>
             <pre><code>{
   "Version": "2012-10-17",
@@ -421,19 +421,19 @@ CLOUDFLARE_TOKEN=your_cloudflare_api_token_here</code></pre>
     "Resource": "*"
   }]
 }</code></pre>
-            <p>Enter the credentials in Settings, DNS Providers, or through the API. <code>AWS_*</code> variables in the container are not read. The account fields:</p>
+            <p>Inserisci le credenziali in Settings, DNS Providers, o tramite l'API. Le variabili <code>AWS_*</code> nel container non vengono lette. I campi dell'account:</p>
             <pre><code>{
   "access_key_id": "your_access_key_id",
   "secret_access_key": "your_secret_access_key",
   "region": "us-east-1"
 }</code></pre>
 
-            <h3>Azure DNS Setup</h3>
+            <h3>Configurazione di Azure DNS</h3>
             <pre><code># Create Service Principal
 az ad sp create-for-rbac --name "CertMate" \
   --role "DNS Zone Contributor" \
   --scopes "/subscriptions/{subscription-id}/resourceGroups/{resource-group}"</code></pre>
-            <p>Enter the service principal in Settings, DNS Providers, or through the API. <code>AZURE_*</code> variables in the container are not read. The account fields:</p>
+            <p>Inserisci il service principal in Settings, DNS Providers, o tramite l'API. Le variabili <code>AZURE_*</code> nel container non vengono lette. I campi dell'account:</p>
             <pre><code>{
   "subscription_id": "your_subscription_id",
   "resource_group": "your_resource_group_name",
@@ -442,19 +442,19 @@ az ad sp create-for-rbac --name "CertMate" \
   "client_secret": "your_client_secret"
 }</code></pre>
 
-            <h2>🏢 Multi-Account Configuration</h2>
-            <p>To separate environments, regions or permissions, configure more than one account per DNS provider:</p>
+            <h2>🏢 Configurazione multi-account</h2>
+            <p>Per separare ambienti, regioni o permessi, configura più di un account per ciascun provider DNS:</p>
             
-            <h3>Via Web Interface</h3>
+            <h3>Dall'interfaccia web</h3>
             <ol>
-                <li>Navigate to Settings → DNS Providers</li>
-                <li>Select your provider (e.g., Cloudflare)</li>
-                <li>Click "Add Account"</li>
-                <li>Enter account details and credentials</li>
-                <li>Save configuration</li>
+                <li>Vai in Settings → DNS Providers</li>
+                <li>Seleziona il provider (ad es. Cloudflare)</li>
+                <li>Fai clic su "Add Account"</li>
+                <li>Inserisci i dati dell'account e le credenziali</li>
+                <li>Salva la configurazione</li>
             </ol>
 
-            <h3>Via API</h3>
+            <h3>Tramite l'API</h3>
             <pre><code># Add production account
 curl -X POST "http://localhost:8000/api/dns/cloudflare/accounts" \
   -H "Authorization: Bearer your_token" \
@@ -481,7 +481,7 @@ curl -X POST "http://localhost:8000/api/dns/cloudflare/accounts" \
     }
   }'</code></pre>
 
-            <h3>Using Specific Accounts for Certificates</h3>
+            <h3>Usare account specifici per i certificati</h3>
             <pre><code># Create certificate with specific account
 curl -X POST "http://localhost:8000/api/certificates/create" \
   -H "Authorization: Bearer your_token" \
@@ -492,29 +492,29 @@ curl -X POST "http://localhost:8000/api/certificates/create" \
     "account_id": "production"
   }'</code></pre>
 
-            <h2>Multi-Account Use Cases</h2>
+            <h2>Casi d'uso multi-account</h2>
             <ul>
-                <li><strong>Environment Separation:</strong> Different accounts for production, staging, and development</li>
-                <li><strong>Multi-Region Management:</strong> Separate accounts for different geographical regions</li>
-                <li><strong>Team Isolation:</strong> Department-specific accounts with tailored permissions</li>
-                <li><strong>Disaster Recovery:</strong> Backup accounts for high-availability scenarios</li>
-                <li><strong>Permission Scoping:</strong> Accounts with minimal required permissions for security</li>
+                <li><strong>Separazione degli ambienti:</strong> account diversi per produzione, staging e sviluppo</li>
+                <li><strong>Gestione multi-regione:</strong> account separati per regioni geografiche diverse</li>
+                <li><strong>Isolamento dei team:</strong> account per reparto con permessi su misura</li>
+                <li><strong>Disaster recovery:</strong> account di riserva per scenari ad alta disponibilità</li>
+                <li><strong>Limitazione dei permessi:</strong> account con i soli permessi minimi necessari, per sicurezza</li>
             </ul>
 
-            <h2>Next Steps</h2>
+            <h2>Prossimi passi</h2>
             <ul>
-                <li><a href="getting-started.html">Getting Started</a> - Initial setup guide</li>
-                <li><a href="api-reference.html">API Reference</a> - Complete API documentation</li>
-                <li><a href="troubleshooting.html">Troubleshooting</a> - DNS-specific issues</li>
+                <li><a href="getting-started.html">Per iniziare</a> - Guida alla configurazione iniziale</li>
+                <li><a href="../../docs/api-reference.html">Riferimento API</a> - Documentazione completa delle API</li>
+                <li><a href="../../docs/troubleshooting.html">Risoluzione dei problemi</a> - Problemi specifici del DNS</li>
             </ul>
         </section>
     </main>
 
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributors</a></p>
+            <p>&copy; 2026 CertMate. Realizzato con <i class="fas fa-heart" style="color: #ef4444;"></i> da <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> e dai <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributori</a></p>
         </div>
     </footer>
-    <script src="toc.js" defer></script>
+    <script src="../../docs/toc.js" defer></script>
 </body>
 </html>

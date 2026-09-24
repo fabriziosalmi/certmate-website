@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server MCP - Documentazione CertMate</title>
+    <link rel="stylesheet" href="../../assets/styles.css">
+    <link rel="preload" href="../../docs/vendor/font-awesome/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="../../docs/vendor/font-awesome/all.min.css"></noscript>
+    <link rel="preload" as="style" href="../../docs/vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="../../docs/vendor/fonts/fonts.css"></noscript>
+    <style>
+        .doc-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h1 {
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-6);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content p, .doc-content li {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+        .doc-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin: var(--spacing-6) 0;
+        }
+        .doc-content pre code {
+            background: none;
+            padding: 0;
+            color: white;
+        }
+        .doc-content ul, .doc-content ol {
+            margin: var(--spacing-4) 0;
+            padding-left: var(--spacing-8);
+        }
+        .doc-content li {
+            margin: var(--spacing-2) 0;
+        }
+    
+    /* In-page TOC, injected by toc.js. Sticky right column on lg+
+       viewports; collapsed to a top disclosure on smaller screens. */
+    .doc-toc {
+      display: none;
+    }
+    /* Shown only when it fits in the right margin: this page's content
+       column is 900px wide, the TOC 220px plus 24px of gap, so the viewport
+       must be at least 900 + 2 * 244 = 1388px. Below that the old rule
+       placed the TOC over the text (#588). */
+    @media (min-width: 1388px) {
+      .doc-toc {
+        display: block;
+        position: fixed;
+        top: 100px;
+        right: max(24px, calc((100vw - 900px) / 2 - 244px));
+        width: 220px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+      }
+    }
+    .doc-toc-inner {
+      border-left: 2px solid var(--gray-200);
+      padding-left: 16px;
+    }
+    .doc-toc-list { list-style: none; padding: 0; margin: 0; }
+    .doc-toc-item { margin: 4px 0; line-height: 1.4; }
+    .doc-toc-item-h3 { padding-left: 12px; }
+    .doc-toc-link {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: block;
+      padding: 2px 0;
+      transition: color 120ms ease;
+    }
+    .doc-toc-link:hover { color: var(--gray-900); }
+    .doc-toc-link.is-active {
+      color: var(--blue-600, #2563eb);
+      font-weight: 600;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="../../assets/certmate_logo.png" alt="Logo CertMate" class="brand-logo">
+                <a href="../../it/" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../../it/#features" class="nav-link">Funzionalità</a>
+                <a href="../../it/#providers" class="nav-link">Provider DNS</a>
+                <a href="../../docs/index.html" class="nav-link active">Documentazione</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-robot"></i> Server MCP</h1>
+                <p class="docs-subtitle">Come collegare un assistente IA a CertMate tramite il server MCP, quali strumenti espone e come le sue azioni vengono autorizzate e sottoposte ad audit.</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <h2>Che cos'è</h2>
+            <p>Il repository di CertMate include un server Model Context Protocol (MCP) nella directory <code>mcp/</code>. È un processo Node.js che parla MCP su stdio con un assistente IA e trasforma ogni chiamata a uno strumento in una richiesta alla REST API di CertMate. Non ha uno stato proprio e non ha alcun accesso oltre a quello consentito dal token API che gli fornisci: ogni controllo dei permessi avviene in CertMate, non nel server MCP.</p>
+            <p>Nulla nel server è specifico di un assistente. Qualsiasi client MCP in grado di avviare un server stdio funziona allo stesso modo.</p>
+
+            <h2>Strumenti</h2>
+            <p>Il server espone gli strumenti seguenti. Il ruolo minimo è quello che CertMate impone sulla route API chiamata dallo strumento.</p>
+            <table>
+                <thead>
+                    <tr><th>Strumento</th><th>Cosa fa</th><th>Chiamata API</th><th>Ruolo minimo</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>certmate_list_certificates</code></td><td>Elenca tutti i certificati con scadenza, stato e domini.</td><td><code>GET /api/certificates</code></td><td><code>viewer</code></td></tr>
+                    <tr><td><code>certmate_get_certificate</code></td><td>Dettaglio di un dominio: stato, giorni alla scadenza, SAN, provider DNS e CA, flag di rinnovo automatico.</td><td><code>GET /api/certificates/&lt;domain&gt;</code></td><td><code>viewer</code></td></tr>
+                    <tr><td><code>certmate_get_activity</code></td><td>Attività recenti e voci di audit. <code>limit</code> opzionale, da 1 a 500, predefinito 100.</td><td><code>GET /api/activity</code></td><td><code>viewer</code></td></tr>
+                    <tr><td><code>certmate_get_settings</code></td><td>Impostazioni globali. I valori segreti sono mascherati.</td><td><code>GET /api/settings</code></td><td><code>viewer</code></td></tr>
+                    <tr><td><code>certmate_list_dns_providers</code></td><td>Provider DNS supportati e configurati sull'istanza.</td><td><code>GET /api/settings/dns-providers</code></td><td><code>viewer</code></td></tr>
+                    <tr><td><code>certmate_diagnostics</code></td><td>Un'istantanea diagnostica sanificata.</td><td><code>GET /api/diagnostics/snapshot</code></td><td><code>admin</code></td></tr>
+                    <tr><td><code>certmate_create_certificate</code></td><td>Richiede un certificato. <code>domain</code> è obbligatorio; <code>dns_provider</code>, <code>account_id</code> e <code>ca_provider</code> sono opzionali.</td><td><code>POST /api/certificates/create</code></td><td><code>operator</code></td></tr>
+                    <tr><td><code>certmate_renew_certificate</code></td><td>Forza il rinnovo di un certificato esistente.</td><td><code>POST /api/certificates/&lt;domain&gt;/renew</code></td><td><code>operator</code></td></tr>
+                    <tr><td><code>certmate_update_certificate</code></td><td>Riemette un certificato con un nuovo insieme di SAN e/o un nuovo alias DNS-01.</td><td><code>POST /api/certificates/&lt;domain&gt;/reissue</code></td><td><code>operator</code></td></tr>
+                    <tr><td><code>certmate_get_job</code></td><td>Interroga un job asincrono di creazione, rinnovo o aggiornamento tramite <code>job_id</code>.</td><td><code>GET /api/certificates/jobs/&lt;job_id&gt;</code></td><td><code>operator</code></td></tr>
+                    <tr><td><code>certmate_set_auto_renew</code></td><td>Abilita o disabilita il rinnovo automatico per un dominio.</td><td><code>PUT /api/certificates/&lt;domain&gt;/auto-renew</code></td><td><code>operator</code></td></tr>
+                    <tr><td><code>certmate_download_certificate</code></td><td>Restituisce certificato, catena, catena completa e chiave privata in JSON.</td><td><code>GET /api/certificates/&lt;domain&gt;/download?format=json</code></td><td><code>operator</code></td></tr>
+                    <tr><td><code>certmate_get_certificate_file</code></td><td>Restituisce un file del bundle come testo PEM grezzo.</td><td><code>GET /api/certificates/&lt;domain&gt;/download?file=&lt;file&gt;</code></td><td><code>viewer</code> per <code>cert.pem</code>, <code>chain.pem</code>, <code>fullchain.pem</code>; <code>operator</code> per <code>privkey.pem</code>, <code>combined.pem</code>, <code>cert.pfx</code></td></tr>
+                    <tr><td><code>certmate_deploy_certificate</code></td><td>Esegue tutti i deploy hook abilitati per un dominio.</td><td><code>POST /api/certificates/&lt;domain&gt;/deploy</code></td><td><code>admin</code></td></tr>
+                    <tr><td><code>certmate_list_dns_accounts</code></td><td>Account DNS configurati, con credenziali mascherate. Filtro <code>provider</code> opzionale.</td><td><code>GET /api/dns/accounts</code> o <code>GET /api/dns/&lt;provider&gt;/accounts</code></td><td><code>admin</code></td></tr>
+                    <tr><td><code>certmate_delete_certificate</code></td><td>Rimuove i file del certificato dal disco e il dominio dalle impostazioni.</td><td><code>DELETE /api/certificates/&lt;domain&gt;</code></td><td><code>admin</code></td></tr>
+                </tbody>
+            </table>
+            <p>Due delle voci <code>admin</code> sono facili da non notare. Eseguire i deploy hook ed elencare gli account DNS toccano entrambi credenziali memorizzate, quindi un token <code>operator</code> che può rinnovare i certificati riceve comunque un 403 su queste operazioni. Se un agente con ambito operator ha bisogno di un id account per l'emissione, metti l'<code>account_id</code> nel suo prompt invece di chiedergli di cercarlo.</p>
+
+            <h2>Installazione</h2>
+            <p>Il server richiede Node.js 20 o successivo (<code>engines.node</code> è <code>&gt;=20.0.0</code> in <code>mcp/package.json</code>) e npm. Da un checkout del repository di CertMate:</p>
+            <pre><code>cd mcp
+npm install</code></pre>
+            <p>Il punto di ingresso è <code>mcp/index.js</code>. All'avvio scrive <code>CertMate MCP server running on stdio</code> su stderr.</p>
+
+            <h2>Configurazione</h2>
+            <p>Il server legge quattro variabili d'ambiente:</p>
+            <ul>
+                <li><code>CERTMATE_URL</code>: l'URL di base della tua istanza CertMate. Predefinito <code>http://localhost:8000</code>. Una barra finale viene rimossa. Quando CertMate gira su un altro host, usa un URL <code>https://</code>, perché il token viene inviato con ogni richiesta.</li>
+                <li><code>CERTMATE_TOKEN</code>: il bearer token dell'API. Obbligatorio. Senza di esso, ogni chiamata a uno strumento restituisce <code>Error: CERTMATE_TOKEN environment variable is not defined.</code></li>
+                <li><code>CERTMATE_AGENT_SESSION</code>: opzionale. L'id di sessione inviato a ogni chiamata nell'header <code>X-CertMate-Agent-Session</code>. Se non è impostato, viene generato un nuovo UUID a ogni avvio del processo. Impostalo per correlare un'esecuzione con l'id di un orchestratore esterno.</li>
+                <li><code>CERTMATE_AGENT_ID</code>: opzionale. Un'etichetta per questa installazione, inviata come <code>X-CertMate-Agent-Id</code>. Predefinito <code>certmate-mcp-server</code>.</li>
+            </ul>
+            <p>Per Claude Desktop, aggiungi il server a <code>claude_desktop_config.json</code> (su macOS in <code>~/Library/Application Support/Claude/</code>, su Windows in <code>%APPDATA%\Claude\</code>):</p>
+            <pre><code>{
+  "mcpServers": {
+    "certmate": {
+      "command": "node",
+      "args": ["/absolute/path/to/certmate/mcp/index.js"],
+      "env": {
+        "CERTMATE_URL": "http://localhost:8000",
+        "CERTMATE_TOKEN": "your_secure_bearer_token"
+      }
+    }
+  }
+}</code></pre>
+            <p>Per qualsiasi altro client MCP, configuralo in modo che esegua <code>node /absolute/path/to/certmate/mcp/index.js</code> con le stesse variabili d'ambiente.</p>
+
+            <h2>Autenticazione e ruoli</h2>
+            <p>Il server invia <code>CERTMATE_TOKEN</code> come <code>Authorization: Bearer &lt;token&gt;</code> a ogni richiesta. CertMate lo autentica e applica il ruolo e l'ambito di domini della chiave, quindi l'agente può fare esattamente ciò che può fare la chiave e nulla di più. Revocare la chiave taglia fuori l'agente.</p>
+            <p>Crea una chiave dedicata all'agente in <strong>Settings</strong>, nella scheda <strong>API Keys</strong>, oppure con <code>POST /api/keys</code> (solo admin), e assegnale il ruolo più basso che copre gli strumenti di cui ha bisogno:</p>
+            <ul>
+                <li><code>viewer</code> per un agente che legge soltanto inventario, attività e impostazioni.</li>
+                <li><code>operator</code> per un agente che crea, rinnova, riemette o scarica certificati.</li>
+                <li><code>admin</code> solo se deve eseguire deploy hook, elencare account DNS, leggere la diagnostica o eliminare certificati.</li>
+            </ul>
+            <p>Una chiave viewer o operator può essere limitata a domini specifici con <code>allowed_domains</code>. Una chiave con ambito di domini non può leggere, modificare né interrogare i job di domini al di fuori del suo ambito. Le chiavi admin non possono avere un ambito di domini: CertMate rifiuta la richiesta con <code>Admin keys cannot be domain-scoped; use the operator role for scoped access</code>. Una chiave non può mai essere creata con un ruolo più alto di quello della chiave o dell'utente che la crea.</p>
+
+            <h2>Cosa un agente può e non può modificare</h2>
+            <ul>
+                <li>Creazione, rinnovo e aggiornamento sono asincroni. Il server invia sempre <code>async: true</code> e CertMate risponde con HTTP 202, un <code>job_id</code> e <code>status: "queued"</code>. Interroga con <code>certmate_get_job</code>; il job passa per <code>queued</code> e <code>running</code> e termina come <code>succeeded</code> o <code>failed</code>. Se la coda di emissione è piena, CertMate restituisce 429 con il codice <code>ISSUANCE_QUEUE_FULL</code>.</li>
+                <li>Dalla v2.35.0, un <code>ca_provider</code> non configurato sull'istanza viene rifiutato, non sostituito: il job di creazione termina come <code>failed</code> con un errore che indica la CA, e nessun certificato viene emesso da un'altra CA. Let's Encrypt e Let's Encrypt staging non richiedono una configurazione salvata. Un job di creazione fallito non emette <code>certificate_failed</code>, quindi il segnale è il resoconto dell'agente stesso.</li>
+                <li><code>certmate_update_certificate</code> non può cambiare il dominio principale, che è l'identità del certificato. Ometti <code>sans</code> per mantenere l'insieme di SAN attuale, passa un array vuoto per rimuovere tutti i SAN e passa <code>domain_alias: ""</code> per azzerare l'alias.</li>
+                <li><code>certmate_set_auto_renew</code> richiede un booleano vero e proprio. Se il modello invia la stringa <code>"false"</code>, il server rifiuta la chiamata con <code>enabled must be true or false</code> invece di inoltrarla.</li>
+                <li><code>certmate_deploy_certificate</code> esegue ogni deploy hook abilitato per il dominio con <code>CERTMATE_EVENT=manual</code>; i filtri per evento degli hook vengono ignorati.</li>
+                <li><code>certmate_delete_certificate</code> è distruttivo e non si può annullare. Non revoca il certificato presso la CA. Si rifiuta di procedere mentre una creazione o un rinnovo detiene il lock del dominio.</li>
+                <li>Nessuno strumento scrive impostazioni, gestisce chiavi API o utenti, né aggiunge, modifica o rimuove account DNS. <code>certmate_get_settings</code> e <code>certmate_list_dns_accounts</code> sono di sola lettura e restituiscono segreti mascherati.</li>
+                <li><code>certmate_download_certificate</code> e <code>certmate_get_certificate_file</code> con <code>privkey.pem</code>, <code>combined.pem</code> o <code>cert.pfx</code> portano materiale di chiave privata nel contesto dell'assistente. Dai all'agente una chiave operator solo se è ciò che intendi.</li>
+            </ul>
+
+            <h2>Attribuzione nell'audit</h2>
+            <p>Per distinguere le azioni di un agente da quelle di una persona, dai al server MCP una chiave propria, spuntando la casella <strong>AI agent key</strong> al momento della creazione (oppure con <code>"is_agent": true</code> nel corpo di <code>POST /api/keys</code>), e usa quella chiave come <code>CERTMATE_TOKEN</code>.</p>
+            <p>CertMate registra chi ha agito in un blocco <code>actor</code> su ogni voce di audit, e determina il tipo di attore solo dalla chiave autenticata:</p>
+            <ul>
+                <li>Una chiave contrassegnata come chiave agente viene registrata come <code>actor.kind="agent"</code> con l'id della chiave, e la causa del trigger è <code>agent</code>.</li>
+                <li>Qualsiasi altra chiave API, e il bearer token globale legacy, viene registrata come <code>api_token</code>. Il token legacy inoltre non ha un id di chiave e compare come <code>api_user</code>.</li>
+            </ul>
+            <p>Gli header <code>X-CertMate-Agent-Session</code> e <code>X-CertMate-Agent-Id</code> vengono memorizzati come <code>actor.agent_session</code> e <code>actor.agent_id</code>, troncati a 128 caratteri. Sono dichiarazioni non autenticate: permettono di raggruppare le azioni di un'esecuzione, ma non trasformano mai un chiamante non agente in <code>agent</code>. Lo strumento <code>certmate_get_activity</code> legge lo stesso log. Vedi <a href="compliance.html">Conformità</a> per la catena di audit a cui appartengono queste voci.</p>
+
+            <h2>Eseguire un agente a intervalli pianificati</h2>
+            <p>Un assistente in grado di eseguire un prompt salvato secondo una pianificazione e di chiamare strumenti MCP può mantenere rinnovati i certificati secondo una policy che scrivi nel prompt. Il ciclo:</p>
+            <ol>
+                <li>Chiama <code>certmate_list_certificates</code>, oppure <code>certmate_get_certificate</code> per ogni dominio, e leggi <code>days_left</code>.</li>
+                <li>Per ogni dominio che soddisfa la tua condizione, ad esempio <code>days_left &lt; 14</code>, chiama <code>certmate_renew_certificate</code>.</li>
+                <li>Interroga <code>certmate_get_job</code> con il <code>job_id</code> restituito finché lo stato non è <code>succeeded</code> o <code>failed</code>.</li>
+                <li>Segnala i fallimenti. Un job di rinnovo fallito, tranne uno rifiutato perché il dominio era occupato, emette anche l'evento <code>certificate_failed</code> di CertMate, quindi le notifiche configurate partono indipendentemente da ciò che fa l'agente.</li>
+            </ol>
+            <p>Questo ciclo richiede una chiave <code>operator</code>.</p>
+
+            <h2>Prossimi passi</h2>
+            <ul>
+                <li><a href="../../docs/api-reference.html">Riferimento API</a>: gli endpoint chiamati dagli strumenti</li>
+                <li><a href="../../docs/security.html">Sicurezza</a>: autenticazione, ruoli e chiavi API</li>
+                <li><a href="compliance.html">Conformità</a>: la traccia di audit e i suoi limiti</li>
+                <li><a href="../../docs/deploy-hooks.html">Deploy hook</a>: cosa esegue <code>certmate_deploy_certificate</code></li>
+                <li><a href="../../docs/troubleshooting.html">Risoluzione dei problemi</a>: diagnosticare un'emissione fallita</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Realizzato con <i class="fas fa-heart" style="color: #ef4444;"></i> da <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> e dai <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributori</a></p>
+        </div>
+    </footer>
+    <script src="../../docs/toc.js" defer></script>
+</body>
+</html>

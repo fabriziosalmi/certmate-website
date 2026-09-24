@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evidenze di conformità - Documentazione CertMate</title>
+    <link rel="stylesheet" href="../../assets/styles.css">
+    <link rel="preload" href="../../docs/vendor/font-awesome/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="../../docs/vendor/font-awesome/all.min.css"></noscript>
+    <link rel="preload" as="style" href="../../docs/vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="../../docs/vendor/fonts/fonts.css"></noscript>
+    <style>
+        .doc-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h1 {
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-6);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content p, .doc-content li {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+        .doc-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin: var(--spacing-6) 0;
+        }
+        .doc-content pre code {
+            background: none;
+            padding: 0;
+            color: white;
+        }
+        .doc-content ul, .doc-content ol {
+            margin: var(--spacing-4) 0;
+            padding-left: var(--spacing-8);
+        }
+        .doc-content li {
+            margin: var(--spacing-2) 0;
+        }
+    
+    /* In-page TOC, injected by toc.js. Sticky right column on lg+
+       viewports; collapsed to a top disclosure on smaller screens. */
+    .doc-toc {
+      display: none;
+    }
+    /* Shown only when it fits in the right margin: this page's content
+       column is 900px wide, the TOC 220px plus 24px of gap, so the viewport
+       must be at least 900 + 2 * 244 = 1388px. Below that the old rule
+       placed the TOC over the text (#588). */
+    @media (min-width: 1388px) {
+      .doc-toc {
+        display: block;
+        position: fixed;
+        top: 100px;
+        right: max(24px, calc((100vw - 900px) / 2 - 244px));
+        width: 220px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+      }
+    }
+    .doc-toc-inner {
+      border-left: 2px solid var(--gray-200);
+      padding-left: 16px;
+    }
+    .doc-toc-list { list-style: none; padding: 0; margin: 0; }
+    .doc-toc-item { margin: 4px 0; line-height: 1.4; }
+    .doc-toc-item-h3 { padding-left: 12px; }
+    .doc-toc-link {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: block;
+      padding: 2px 0;
+      transition: color 120ms ease;
+    }
+    .doc-toc-link:hover { color: var(--gray-900); }
+    .doc-toc-link.is-active {
+      color: var(--blue-600, #2563eb);
+      font-weight: 600;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="../../assets/certmate_logo.png" alt="Logo CertMate" class="brand-logo">
+                <a href="../../it/" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../../it/#features" class="nav-link">Funzionalità</a>
+                <a href="../../it/#providers" class="nav-link">Provider DNS</a>
+                <a href="../../docs/index.html" class="nav-link active">Documentazione</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-scale-balanced"></i> Evidenze di conformità</h1>
+                <p class="docs-subtitle">Come la traccia di audit registra, firma ed esporta le azioni sui certificati, come questo si collega a NIS2, all'AI Act dell'UE e a ISO/IEC 42001, e dove finiscono le evidenze.</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <h2>Ambito: cosa questa pagina afferma e cosa no</h2>
+            <p>CertMate è uno strumento self-hosted a istanza singola con licenza MIT. Non è un sistema di IA, non è un sistema di IA ad alto rischio e non è un'entità regolamentata. Non si conforma a nulla e non certifica nulla. Gli obblighi di conformità ricadono sull'operatore che lo utilizza.</p>
+            <p>CertMate fornisce artefatti probatori che l'operatore può usare per i propri obblighi. Ogni corrispondenza qui sotto indica cosa l'operatore può dimostrare e dove questo si ferma.</p>
+
+            <h2>Cosa registra la traccia di audit</h2>
+            <h3>Attribuzione</h3>
+            <p>Le azioni del ciclo di vita dei certificati, tra cui creazione, rinnovo, riemissione, deploy, l'attivazione o disattivazione del rinnovo automatico e i rinnovi pianificati non presidiati, vengono registrate con due campi strutturati:</p>
+            <ul>
+                <li><code>actor</code>: chi o cosa ha agito. <code>kind</code> è uno tra <code>user</code> (un login di sessione o OIDC), <code>api_token</code>, <code>agent</code>, <code>scheduler</code> o <code>system</code>. Per una chiave API con ambito, il record riporta anche l'<code>id</code> della chiave e il <code>token_prefix</code>.</li>
+                <li><code>trigger</code>: perché. <code>cause</code> è <code>manual</code>, <code>api</code>, <code>agent</code>, <code>scheduled_renewal</code> (con il <code>job_id</code> dello scheduler) o <code>event</code>.</li>
+            </ul>
+            <p><code>actor.kind</code> deriva solo dall'identità autenticata. Un'azione viene registrata come <code>agent</code> solo quando è eseguita con una chiave API con ambito creata con <code>is_agent</code> impostato. Una richiesta con il bearer token globale legacy viene registrata come <code>api_token</code>, perché non ha un id di chiave e non si può dimostrare che sia un agente.</p>
+            <p>Per rendere distinguibili le azioni di un agente da quelle di un umano, dai all'agente una chiave propria:</p>
+            <pre><code>curl -X POST https://certmate.example.com/api/keys \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "renewal-agent", "role": "operator", "is_agent": true}'</code></pre>
+            <p>Un agente può anche inviare <code>X-CertMate-Agent-Session</code> e <code>X-CertMate-Agent-Id</code>. Questi vengono registrati come <code>actor.agent_session</code> e <code>actor.agent_id</code>, troncati a 128 caratteri, per la correlazione. Sono forniti dal client e non autenticati, quindi sono una dichiarazione e non cambiano mai <code>actor.kind</code>. L'identità affidabile è la chiave API.</p>
+
+            <h3>Evidenza di manomissione</h3>
+            <p>Ogni voce di audit viene anche aggiunta a una catena di hash SHA-256, <code>data/audit/certificate_audit.chain.jsonl</code>. Ogni riga contiene un <code>seq</code> senza buchi, la voce, l'hash della riga precedente e il proprio hash. Una modifica, una cancellazione o un riordinamento da parte di chi non può ricalcolare la catena è rilevabile, e il verificatore riporta il <code>seq</code> in cui la catena si interrompe. Il file leggibile <code>certificate_audit.log</code> non ha alcuna proprietà di integrità.</p>
+            <p>La catena è attiva per impostazione predefinita. <code>CERTMATE_AUDIT_CHAIN=0</code> la disattiva.</p>
+
+            <h3>Firma</h3>
+            <p>L'istanza possiede una chiave Ed25519. Al primo avvio viene generata e salvata come <code>data/.audit_signing_key</code> con modalità 0600; <code>AUDIT_SIGNING_KEY_FILE</code> indica a CertMate una chiave conservata altrove. Se la variabile è impostata ma il file non si può leggere, o la chiave salvata è corrotta, la firma viene disattivata anziché generare una nuova chiave, e la catena non firmata continua a funzionare.</p>
+            <p>Ogni 100 voci della catena, la testa della catena viene firmata e aggiunta a <code>data/audit/certificate_audit.checkpoints.jsonl</code>. Dalla v2.35.0 la testa viene firmata anche a un arresto pulito, come ultimo passo dopo che gli eventi in sospeso sono stati consegnati, così le voci scritte dall'ultimo checkpoint periodico, comprese quelle scritte durante l'arresto, sono coperte. Un crash, un <code>SIGKILL</code> o un'interruzione di corrente si fermano prima di quel passo; vedi <a href="#limits-of-the-evidence">Limiti delle evidenze</a>.</p>
+
+            <h2 id="searching-the-log">Ricerca nel log</h2>
+            <p><code>GET /api/activity</code> (viewer e superiori) restituisce le voci più recenti, dalla più nuova. <code>limit</code> vale 100 per impostazione predefinita ed è limitato a 1&ndash;500.</p>
+            <p>Dalla v2.35.0 la ricerca si può restringere con uno qualsiasi tra <code>operation</code>, <code>resource_type</code>, <code>resource_id</code>, <code>user</code> e <code>status</code>. Un filtro non viene applicato alla coda restituita da una chiamata senza filtri: la ricerca scorre il log all'indietro finché non ha <code>limit</code> corrispondenze o non raggiunge l'inizio, quindi anche le voci vecchie vengono trovate.</p>
+            <pre><code># Which users were created while the instance was still in setup mode?
+curl -H "Authorization: Bearer $TOKEN" \
+  "https://certmate.example.com/api/activity?operation=create&amp;resource_type=user&amp;user=setup_user"</code></pre>
+            <p>La risposta contiene <code>entries</code>, <code>count</code>, <code>limit</code>, <code>complete</code>, e <code>filters</code> quando ne è stato indicato uno. <code>complete</code> dice come leggere il risultato:</p>
+            <ul>
+                <li><code>complete: true</code> senza voci: la ricerca ha raggiunto l'inizio del log e non ce ne sono.</li>
+                <li><code>complete: true</code> con voci: sono tutte.</li>
+                <li><code>complete: false</code> con voci: la ricerca si è fermata a <code>limit</code> corrispondenze, e potrebbero essercene di più vecchie.</li>
+                <li><code>complete: false</code> senza voci: il log non si è potuto leggere. Questo non significa che non ce ne siano.</li>
+            </ul>
+            <p>Una chiamata senza filtri riporta sempre <code>complete: true</code>.</p>
+
+            <h2>Verificare la catena</h2>
+            <h3>Sull'istanza</h3>
+            <p><code>GET /api/audit/verify</code> (admin) ricalcola la catena. Restituisce HTTP 200 quando è integra e 409 quando è interrotta. Quando è presente una chiave di firma, confronta anche la catena con il checkpoint firmato più recente che verifica con la chiave dell'istanza; il risultato riporta <code>checkpoint_verified</code>, <code>checkpoint_seq</code> e <code>checkpoint_reason</code>. Un'istanza nuova senza file della catena e senza checkpoint restituisce 200 con <code>state</code> impostato su <code>absent</code>. Un file della catena mancante quando esistono checkpoint, o un file dei checkpoint illeggibile, restituisce 409.</p>
+
+            <h3>Fuori dall'istanza</h3>
+            <p>Il verificatore autonomo richiede la libreria standard di Python per un file della catena, più <code>cryptography</code> per un bundle firmato, e non richiede di eseguire CertMate né di fidarsene:</p>
+            <pre><code># Verify a raw chain file
+python -m modules.core.audit_verify data/audit/certificate_audit.chain.jsonl
+
+# Verify a signed export bundle, pinning the instance key
+python -m modules.core.audit_verify --bundle bundle.json --pubkey instance.pem</code></pre>
+            <p><code>--json</code> stampa il risultato in JSON. Codici di uscita: 0 integra, 1 interrotta (con il <code>seq</code> e il motivo), 2 errore di utilizzo o di I/O.</p>
+
+            <h3>Export firmato per un revisore</h3>
+            <ol>
+                <li>Recupera la chiave pubblica dell'istanza con <code>GET /api/audit/public-key</code> (admin). Restituisce <code>algorithm</code>, <code>public_key_pem</code> e <code>fingerprint</code>, oppure 404 quando l'istanza non ha una chiave di firma. Consegna il PEM al revisore fuori banda.</li>
+                <li>Esporta la catena con <code>GET /api/audit/export</code> (admin). I parametri opzionali <code>from_seq</code> e <code>to_seq</code> delimitano la porzione; una porzione che inizia a metà catena porta con sé il proprio anchor e si verifica da sola.</li>
+                <li>Il revisore esegue il verificatore con <code>--pubkey</code>. Senza, il verificatore stampa una nota secondo cui il fingerprint è autodichiarato dal bundle.</li>
+            </ol>
+            <p>Una verifica superata dimostra, a chiunque non possieda la chiave di firma, che le voci non sono state modificate dopo essere state scritte e quale istanza le ha prodotte.</p>
+
+            <h2>Invio a un SIEM</h2>
+            <p>Ogni voce di audit può anche essere inviata a un collettore esterno, configurato nella chiave di impostazioni <code>audit_sink</code> (admin, <code>POST /api/settings</code>). È disattivato per impostazione predefinita. Campi e valori predefiniti:</p>
+            <pre><code>{
+  "audit_sink": {
+    "enabled": false,
+    "format": "syslog",
+    "protocol": "udp",
+    "host": "",
+    "port": 514,
+    "url": "",
+    "timeout": 3.0,
+    "facility": 16,
+    "app_name": "certmate"
+  }
+}</code></pre>
+            <ul>
+                <li><code>format</code>: <code>syslog</code> (RFC 5424, la voce in JSON nel messaggio), <code>cef</code>, oppure <code>json</code> (HTTP POST della voce a <code>url</code>).</li>
+                <li><code>protocol</code>: <code>udp</code> o <code>tcp</code>, per <code>syslog</code> e <code>cef</code>, inviato a <code>host</code>:<code>port</code>.</li>
+            </ul>
+            <p>Le voci passano dal sanitizzatore delle credenziali prima di lasciare il processo. Un errore di invio viene registrato come avviso e non interrompe mai il logging di audit né l'operazione sul certificato.</p>
+            <p>Dalla v2.35.0 il riepilogo settimanale (digest) è a sua volta una voce di audit, quindi è nella catena e raggiunge il sink come tutte le altre: <code>operation</code> <code>send</code>, <code>resource_type</code> <code>digest</code>, <code>resource_id</code> <code>weekly</code>, <code>status</code> <code>success</code> o <code>failed</code> (con l'errore), attribuita ad <code>actor.kind</code> <code>system</code>. Registra per quanti destinatari era il digest e i conteggi che riportava, non i destinatari stessi: sono dati personali, e una catena in sola aggiunta non può più toglierli. Un digest saltato perché le notifiche, l'SMTP o il digest sono disattivati non scrive alcuna voce.</p>
+
+            <h2>Corrispondenza con i regimi</h2>
+            <h3>NIS2 (Direttiva (UE) 2022/2555)</h3>
+            <p>A cosa aiuta: le operazioni sui certificati sono eventi rilevanti per la sicurezza. CertMate produce di ciascuna un record a prova di manomissione, attribuito e con marca temporale, oltre a una verifica indipendente, che l'operatore può usare nelle proprie pratiche di logging (Art. 21) e di documentazione degli incidenti (Art. 23).</p>
+            <p>Limite: NIS2 vincola le entità essenziali e importanti, non gli strumenti software. CertMate non valuta, non monitora e non segnala incidenti. Essere un'entità che rientra nell'ambito, e rispettare NIS2 nella sua interezza, è responsabilità dell'operatore.</p>
+
+            <h3>AI Act dell'UE, Articolo 50 (trasparenza, solo nello spirito)</h3>
+            <p>A cosa aiuta: quando un agente IA gestisce i certificati, il record riporta <code>actor.kind</code> impostato su <code>agent</code> e la sessione dichiarata dall'agente, così l'operatore può mostrare a posteriori quali modifiche ha fatto un agente IA rispetto a un umano, con quale chiave e cosa le ha innescate.</p>
+            <p>Limite: gli obblighi dell'Art. 50 ricadono su fornitori e deployer di sistemi di IA e riguardano l'informativa alle persone fisiche che interagiscono con l'IA. Un agente che rinnova certificati TLS non è un caso da manuale dell'Art. 50, e CertMate è uno strumento, non un sistema di IA. Questa corrispondenza riguarda solo lo spirito di trasparenza e di supervisione umana. CertMate non soddisfa l'Art. 50 per conto di nessuno.</p>
+
+            <h3>ISO/IEC 42001 (sistema di gestione dell'IA)</h3>
+            <p>A cosa aiuta: i record attribuiti e a prova di manomissione sono evidenze oggettive che un agente IA ha compiuto specifiche azioni sui certificati, utilizzabili per i controlli sui record operativi e sulla tracciabilità dell'AIMS dell'operatore.</p>
+            <p>Limite: ISO/IEC 42001 certifica il sistema di gestione di un'organizzazione, non uno strumento. CertMate non è certificato ISO/IEC 42001 e non può certificare l'operatore.</p>
+
+            <h2 id="limits-of-the-evidence">Limiti delle evidenze</h2>
+            <ul>
+                <li>La chiave non vincola l'operatore. Chi possiede la chiave di firma può firmare di nuovo una catena, un checkpoint o un anchor riscritti. Per vincolare l'operatore servono checkpoint firmati inviati a un sink esterno in sola aggiunta; è previsto e non ancora rilasciato.</li>
+                <li>Autenticità, non completezza. Le scritture di audit sono best-effort e non bloccano mai un'operazione sui certificati. Un <code>seq</code> mancante all'interno prova una cancellazione, ma una scrittura fallita prima di essere registrata non lascia nulla da verificare.</li>
+                <li>Il troncamento in coda viene rilevato solo fino all'ultimo checkpoint. Un arresto pulito firma la coda, quindi un'istanza che si ferma normalmente non lascia nulla di non attestato. Dopo un crash, un <code>SIGKILL</code> o un'interruzione di corrente, le voci scritte dopo il checkpoint firmato più recente possono essere eliminate senza che ce ne si accorga, finché il checkpoint successivo non le sigilla. Conserva gli export firmati successivi se devi chiudere questo varco.</li>
+                <li>L'header della sessione agente è una dichiarazione. Viene registrato per la correlazione; l'identità è la chiave API autenticata.</li>
+                <li>Le azioni di bootstrap sono attribuite a <code>setup_user</code>. Finché il setup non è completato l'istanza serve ogni richiesta come admin, quindi non esiste un'identità reale da registrare. Una voce con <code>operation</code> <code>create</code>, <code>resource_type</code> <code>user</code> e <code>user</code> <code>setup_user</code> significa che quell'utente è stato creato mentre chiunque potesse raggiungere l'istanza era admin. Dalla v2.34.0 la modalità setup crea solo il primo admin: un ulteriore utente o una chiave API vengono rifiutati con <code>409 SETUP_BOOTSTRAP_ONLY</code>, e il rifiuto viene registrato nell'audit. Ci si aspetta quindi esattamente una voce di questo tipo. Più di una significa che l'istanza è stata inizializzata con una versione precedente, e ogni utente oltre il primo va confermato o rimosso. Le chiavi API create in quella finestra sono segnalate nella pagina API Keys finché un operatore non le esamina; gli utenti non sono segnalati, e per loro la risposta sta nella catena. <a href="#searching-the-log">Ricerca nel log</a> mostra la query.</li>
+                <li>Limite storico. La catena inizia quando la funzionalità viene abilitata per la prima volta. La cronologia <code>.log</code> precedente non ne fa parte.</li>
+                <li>Una catena potata prova meno. Dopo una potatura, la verifica copre le voci dall'anchor in avanti, e sia l'API sia il verificatore riportano <code>anchored</code> e il <code>seq</code> dell'anchor anziché un semplice "intact".</li>
+            </ul>
+
+            <h2>Conservazione: archiviare un prefisso della catena</h2>
+            <p>Non esiste una potatura automatica né un endpoint API per farla. La potatura è un solo comando, da eseguire con CertMate fermo, dopo che il prefisso è stato esportato e verificato fuori dalla macchina:</p>
+            <pre><code># 1. Export the prefix to archive (admin token)
+curl -H "Authorization: Bearer $TOKEN" \
+     "https://certmate.example.com/api/audit/export?to_seq=1199" &gt; archive-0-1199.json
+
+# 2. Verify it off this box, pinning the instance key
+python -m modules.core.audit_verify --bundle archive-0-1199.json --pubkey instance.pem
+
+# 3. Store the archive, then, with CertMate stopped:
+python -m modules.core.audit_prune --bundle archive-0-1199.json --data-dir data/audit
+python -m modules.core.audit_prune --bundle archive-0-1199.json --data-dir data/audit --yes</code></pre>
+            <p>Senza <code>--yes</code> il comando stampa il piano e non modifica nulla. Si rifiuta, e non rimuove nulla, se il bundle non verifica, non è firmato, è vuoto, non inizia dove inizia la catena, non coincide con la catena a un qualsiasi <code>seq</code>, o lascerebbe la catena vuota. <code>--data-dir</code> vale per impostazione predefinita <code>data/audit</code> e <code>--key-dir</code>, la directory che contiene <code>.audit_signing_key</code>, vale per impostazione predefinita <code>data</code>, entrambi relativi alla directory da cui esegui il comando. Se <code>AUDIT_SIGNING_KEY_FILE</code> è impostata, viene usato quel file, come sull'istanza.</p>
+            <p>Con <code>--yes</code>, si rifiuta anche se lì non trova alcuna chiave di firma, o se la chiave appartiene a un'istanza diversa da quella che ha esportato il bundle. Entrambi i controlli avvengono prima che venga rimosso qualcosa. Lo strumento non crea mai una chiave: una nuova chiave sarebbe una nuova identità d'istanza, e un anchor firmato con essa non supererebbe la verifica dell'istanza stessa.</p>
+            <p>Una potatura:</p>
+            <ul>
+                <li>aggiunge alla catena che sopravvive una voce <code>archive</code>, che registra l'intervallo di seq archiviato, il numero di voci, il loro hash di testa e lo SHA-256 del file di archivio;</li>
+                <li>scrive <code>certificate_audit.anchor.json</code>, firmato con la chiave dell'istanza, che dichiara dove inizia ora la catena e da cosa prosegue, così una catena semplicemente troncata non può essere spacciata per una potata;</li>
+                <li>riscrive la catena senza le voci archiviate.</li>
+            </ul>
+            <p>L'anchor descrive solo l'archivio più recente. La cronologia completa è la sequenza dei bundle esportati, quindi conservali tutti.</p>
+
+            <h2>Prossimi passi</h2>
+            <ul>
+                <li><a href="mcp-server.html">Server MCP</a>: eseguire un agente IA su CertMate</li>
+                <li><a href="../../docs/api-reference.html">Riferimento API</a>: autenticazione ed endpoint</li>
+                <li><a href="../../docs/security.html">Sicurezza</a>: autenticazione, ruoli e hardening</li>
+                <li><a href="../../docs/backup-recovery.html">Backup e ripristino</a>: proteggere la directory dei dati</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Realizzato con <i class="fas fa-heart" style="color: #ef4444;"></i> da <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> e dai <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributori</a></p>
+        </div>
+    </footer>
+    <script src="../../docs/toc.js" defer></script>
+</body>
+</html>
