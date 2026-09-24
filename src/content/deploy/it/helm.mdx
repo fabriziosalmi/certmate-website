@@ -1,0 +1,296 @@
+---
+title: "CertMate su Kubernetes con Helm"
+platform: "Helm"
+description: "Installare CertMate su Kubernetes con il chart Helm: values, secret, storage, backup, upgrade e come i certificati rinnovati arrivano ai workload."
+summary: "Installa CertMate nel cluster con il chart ufficiale: i values che contano, perché gira con una sola replica e come i rinnovi arrivano nei Secret TLS dei tuoi workload."
+icon: "fa6-solid:ship"
+order: 5
+updated: "2026-09-24"
+---
+
+Questa pagina riguarda l'esecuzione di CertMate stesso in un cluster. Per come
+l'Ingress legge un certificato TLS, e quando cert-manager è la scelta migliore,
+vedi [Deploy di certificati TLS su Kubernetes](/it/deploy/kubernetes/).
+
+## Prerequisiti
+
+- Helm 3.8 o successivo. Il chart è pubblicato come artifact OCI su GHCR, quindi
+  non serve `helm repo add`.
+- Una storage class in grado di creare un volume ReadWriteOnce, oppure un claim
+  esistente gestito da te.
+
+## 1. Installa
+
+```bash
+helm install certmate oci://ghcr.io/fabriziosalmi/charts/certmate \
+  --namespace certmate --create-namespace
+kubectl -n certmate port-forward svc/certmate 8000:8000
+```
+
+Poi apri `http://localhost:8000`. La versione del chart è la versione di
+CertMate: `--version 2.35.0` installa CertMate 2.35.0, e senza l'opzione prendi
+la più recente. Non c'è una seconda versione del chart da tenere allineata.
+
+## 2. Una replica, sempre
+
+Lo scheduler dei rinnovi di CertMate gira dentro il processo web, e gunicorn
+usa un solo worker di proposito. Una seconda replica sarebbe un secondo
+scheduler che rinnova sullo stesso archivio di certificati, e un secondo
+processo che scrive sullo stesso volume. Il chart la rifiuta in fase di
+template:
+
+```bash
+helm install certmate ... --set replicaCount=2
+# Error: ... certmate: replicaCount must be 1. ...
+```
+
+Si scalano le risorse, non le repliche. Per lo stesso motivo il Deployment usa
+la strategia `Recreate`: un volume ReadWriteOnce non può essere montato dal
+nuovo pod finché lo tiene il vecchio, quindi un upgrade comporta qualche
+secondo di downtime.
+
+## 3. I values che contano
+
+Un file di values per un'installazione reale:
+
+```yaml
+image:
+  tag: "2.35.0"            # di default l'appVersion del chart
+
+secrets:
+  existingSecret: certmate-secrets
+
+persistence:
+  size: 2Gi
+  backups:
+    separateClaim: true
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1536Mi
+
+env:
+  behindProxy: true        # corretto quando il traffico arriva dall'Ingress
+  gunicornTimeout: 300     # DNS-01 può richiedere minuti sui provider lenti
+  letsencryptEmail: ops@example.com
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: certmate.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - hosts: ["certmate.example.com"]
+      secretName: certmate-tls
+```
+
+```bash
+helm install certmate oci://ghcr.io/fabriziosalmi/charts/certmate \
+  --version 2.35.0 --namespace certmate --create-namespace -f values.yaml
+```
+
+Il Secret `certmate-tls` per l'hostname di CertMate può scriverlo CertMate
+stesso, con il deploy target della sezione 7, una volta emesso un certificato
+per `certmate.example.com`. Fino ad allora lo raggiungi con
+`kubectl port-forward`.
+
+**Risorse.** Il chart ha di default un limite di memoria di 512Mi. Certbot e i
+suoi plugin DNS girano come sottoprocessi nello stesso container e durante
+l'emissione aggiungono un picco di memoria, quindi per un'istanza che gestisce
+decine di certificati la documentazione di CertMate raccomanda la request da
+512Mi e il limite da 1536Mi mostrati sopra. Se il pod si riavvia mentre crea un
+certificato, alza per primo il limite di memoria.
+
+**Persistenza.** Certificati, archivio delle impostazioni, inventario, catena di
+audit e log stanno su un unico claim, in subPath separati (`/app/certificates`,
+`/app/data`, `/app/logs`). Il chart non fa il render con la persistenza
+disattivata, a meno che `persistence.existingClaim` indichi un volume gestito
+da te. Il claim ha l'annotazione `helm.sh/resource-policy: keep`, quindi
+`helm uninstall` lascia al loro posto i certificati; cancellarli è un
+`kubectl delete pvc` deliberato.
+
+## 4. Il token API e gli altri secret
+
+`values.yaml` non è un archivio di segreti. Crea tu il Secret e indica al chart
+di usarlo:
+
+```bash
+kubectl -n certmate create secret generic certmate-secrets \
+  --from-literal=API_BEARER_TOKEN="$(openssl rand -hex 32)" \
+  --from-literal=SECRET_KEY="$(openssl rand -hex 32)" \
+  --from-literal=CERTMATE_BACKUP_PASSPHRASE='una passphrase lunga conservata altrove' \
+  --from-literal=CLOUDFLARE_TOKEN='...'
+```
+
+Ogni chiave del Secret arriva al container come variabile d'ambiente, quindi
+anche le credenziali del provider DNS vanno qui. Il riferimento non è
+opzionale: se `existingSecret` indica un Secret che non esiste, il pod non
+parte, invece di partire senza credenziali.
+
+Imposta `API_BEARER_TOKEN` prima di attivare l'Ingress. Finché non esiste una
+credenziale dell'operatore (questo token, un utente admin locale o l'SSO),
+CertMate resta in setup mode per poter essere configurato, e in setup mode non
+chiede credenziali a chi lo chiama.
+
+Il chart riavvia il pod quando cambia un Secret generato da lui. Non può vedere
+dentro `existingSecret`, quindi dopo averlo ruotato riavvia tu il Deployment,
+oppure usa un controller come Reloader:
+
+```bash
+kubectl -n certmate rollout restart deployment/certmate
+```
+
+## 5. Backup fuori dal volume
+
+Di default `/app/backups` è un subPath dello stesso claim dei dati che serve a
+recuperare, quindi la perdita di un volume li porta via entrambi.
+`persistence.backups.separateClaim: true` dà ai backup un claim proprio;
+`persistence.backups.existingClaim` lo punta a un volume su uno storage diverso.
+
+Per copiare gli archivi fuori dal cluster, attiva il CronJob. Immagine e
+argomenti li scegli tu; il chart monta il volume dei backup in sola lettura, così
+la copia non può danneggiare ciò che copia, e lo esegue con lo stesso utente
+non-root di CertMate:
+
+```yaml
+persistence:
+  backups:
+    separateClaim: true
+    offsite:
+      enabled: true
+      schedule: "17 3 * * *"
+      image: rclone/rclone:1.71.2
+      command:              # passati come argomenti all'entrypoint dell'immagine
+        - copy
+        - /app/backups/unified
+        - remote:certmate-backups
+      env:
+        - name: RCLONE_CONFIG_REMOTE_TYPE
+          value: s3
+        - name: RCLONE_CONFIG_REMOTE_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef: {name: certmate-offsite, key: access-key}
+        # ...e il resto della configurazione del remote
+```
+
+Il pod del job monta lo stesso claim di CertMate. Con un claim ReadWriteOnce
+può partire solo sul nodo dove gira CertMate.
+
+Un archivio copiato ripristina l'istanza solo se `CERTMATE_BACKUP_PASSPHRASE`
+era impostata quando è stato scritto. Senza, i backup automatici mascherano i
+segreti. Vedi [Backup and Recovery](/docs/backup-recovery.html).
+
+## 6. Upgrade
+
+```bash
+helm upgrade certmate oci://ghcr.io/fabriziosalmi/charts/certmate \
+  --version 2.35.0 --namespace certmate -f values.yaml
+```
+
+Il vecchio pod si ferma prima che parta il nuovo (`Recreate`), e il volume resta
+lo stesso attraverso l'upgrade.
+
+## 7. Portare i certificati rinnovati ai workload
+
+Un deploy hook shell gira dentro il container di CertMate, che non ha `kubectl`.
+Usa invece il deploy target tipizzato **Kubernetes Secret**: all'emissione e a
+ogni rinnovo scrive `fullchain.pem` e `privkey.pem` del certificato in un Secret
+`kubernetes.io/tls` come `tls.crt` e `tls.key`, con una sola richiesta
+Server-Side Apply che lo crea o lo aggiorna. Il Secret ha l'etichetta
+`app.kubernetes.io/managed-by: certmate`.
+
+Con `in_cluster: true`, CertMate legge indirizzo dell'API server, token e CA dal
+service account montato nel suo pod. Il chart crea quel service account
+(`certmate` per una release chiamata `certmate`) ma nessuna regola RBAC, quindi
+concedigli `create` e `patch` sui Secret in ogni namespace in cui deve scrivere:
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: certmate-tls-writer
+  namespace: web
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: certmate-tls-writer
+  namespace: web
+subjects:
+  - kind: ServiceAccount
+    name: certmate
+    namespace: certmate
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: certmate-tls-writer
+```
+
+I target non hanno un editor in Settings → Deploy; si configurano dall'API di
+amministrazione. Includi `"enabled": true`, che è l'interruttore generale dei
+deploy:
+
+```bash
+curl -X POST http://localhost:8000/api/deploy/config \
+  -H "Authorization: Bearer $API_BEARER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "enabled": true,
+    "targets": [{
+      "id": "web-tls",
+      "name": "example.com to web/example-tls",
+      "type": "kubernetes-secret",
+      "enabled": true,
+      "on_events": ["created", "renewed"],
+      "domains": ["example.com"],
+      "config": {
+        "secret_name": "example-tls",
+        "namespace": "web",
+        "in_cluster": true
+      }
+    }]
+  }'
+```
+
+Senza `namespace`, il Secret finisce nel namespace di CertMate. Una lista
+`targets` nella richiesta sostituisce quella salvata, quindi manda ogni volta
+tutti i target.
+
+Pubblica subito il certificato attuale invece di aspettare il prossimo rinnovo:
+
+```bash
+curl -X POST http://localhost:8000/api/certificates/example.com/deploy \
+  -H "Authorization: Bearer $API_BEARER_TOKEN"
+```
+
+Un target che fallisce viene registrato nei log e nell'audit log e fa scattare
+l'alert `deploy_hook_failed`, ma non blocca mai l'operazione sul certificato. I
+target accettano anche le stesse finestre di manutenzione dei deploy hook shell;
+vedi [Deploy Hooks](/docs/deploy-hooks.html).
+
+Un certificato emesso da una CSR non ha la chiave privata lato CertMate, quindi
+un target tipizzato non può pubblicarlo.
+
+## OpenShift
+
+Le directory scrivibili dell'immagine appartengono al gruppo 0 con setgid,
+quindi un UID assegnato funziona. Azzera i values che entrerebbero in conflitto
+con la SCC:
+
+```bash
+helm install certmate oci://ghcr.io/fabriziosalmi/charts/certmate \
+  --namespace certmate --create-namespace \
+  --set podSecurityContext.runAsUser=null \
+  --set podSecurityContext.fsGroup=null
+```
