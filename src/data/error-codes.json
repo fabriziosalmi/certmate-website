@@ -140,6 +140,13 @@
     "evidence": "Cannot communicate securely with peer: no common encryption algorithm(s)."
   },
   {
+    "code": "SSL_ERROR_PROTOCOL_VERSION_ALERT",
+    "symbol": "SSL_ERROR_PROTOCOL_VERSION_ALERT",
+    "emittedBy": "NSS (Firefox, Thunderbird)",
+    "source": "nss/lib/ssl/sslerr.h + gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
+    "evidence": "Peer reports incompatible or unsupported protocol version."
+  },
+  {
     "code": "SSL_ERROR_RX_RECORD_TOO_LONG",
     "symbol": "SSL_ERROR_RX_RECORD_TOO_LONG",
     "emittedBy": "NSS (Firefox, Thunderbird)",
@@ -152,5 +159,12 @@
     "emittedBy": "NSS (Firefox, Thunderbird)",
     "source": "nss/lib/ssl/sslerr.h + gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
     "evidence": "Peer does not recognize and trust the CA that issued your certificate."
+  },
+  {
+    "code": "SSL_ERROR_UNSUPPORTED_VERSION",
+    "symbol": "SSL_ERROR_UNSUPPORTED_VERSION",
+    "emittedBy": "NSS (Firefox, Thunderbird)",
+    "source": "nss/lib/ssl/sslerr.h + gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
+    "evidence": "Peer using unsupported version of security protocol."
   }
 ]
