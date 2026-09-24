@@ -25,17 +25,49 @@ import {
   type NavLocale,
 } from '~/data/nav';
 
-type IconSet = { icons: Record<string, { body: string; width?: number; height?: number }>; width?: number; height?: number };
+type IconSet = {
+  icons: Record<string, { body: string; width?: number; height?: number }>;
+  width?: number;
+  height?: number;
+};
 
 /** An inline SVG from the same icon sets astro-icon uses. */
-export function svgIcon(name: string, cls = 'site-icon'): string {
+export function svgIcon(name: string, cls = 'site-icon', style = ''): string {
   const [prefix, key] = name.split(':');
   const set = (prefix === 'fa6-brands' ? brands : solid) as IconSet;
   const icon = set.icons[key];
   if (!icon) throw new Error(`docs-shell: no icon ${name}`);
   const w = icon.width ?? set.width ?? 512;
   const h = icon.height ?? set.height ?? 512;
-  return `<svg class="${cls}" viewBox="0 0 ${w} ${h}" width="1em" height="1em" aria-hidden="true" focusable="false">${icon.body}</svg>`;
+  return `<svg class="${cls}" viewBox="0 0 ${w} ${h}" width="1em" height="1em" aria-hidden="true" focusable="false"${style ? ` style="${style}"` : ''}>${icon.body}</svg>`;
+}
+
+/**
+ * The documentation pages draw their icons as <i class="fas fa-rocket">, which
+ * took the whole Font Awesome stylesheet and three webfonts, about 250 KB, for
+ * a few dozen glyphs. Each becomes the same icon as inline SVG, kept inside an
+ * <i> so the pages' own rules (.docs-title i, .alert i) still apply. An icon
+ * left unconverted fails the build: without the stylesheet it would render as
+ * nothing.
+ */
+// Font Awesome 5 names the pages were written with, and the Font Awesome 6
+// icon each became.
+const FA5_TO_FA6: Record<string, string> = {
+  'info-circle': 'circle-info',
+  'exclamation-triangle': 'triangle-exclamation',
+  'shield-alt': 'shield-halved',
+  save: 'floppy-disk',
+};
+
+export function inlineFontAwesome(html: string, source: string): string {
+  const out = html.replace(
+    /<i class="(fas|fab|far) fa-([a-z0-9-]+)"(?: style="([^"]*)")?><\/i>/g,
+    (_, style: string, name: string, css?: string) =>
+      `<i class="fa-svg" aria-hidden="true">${svgIcon(`${style === 'fab' ? 'fa6-brands' : 'fa6-solid'}:${FA5_TO_FA6[name] ?? name}`, 'site-icon', css ?? '')}</i>`,
+  );
+  const left = out.match(/<i class="fa[sbr]? [^"]*"/g);
+  if (left) throw new Error(`docs-shell: ${source} has Font Awesome markup this cannot convert: ${left.join(', ')}`);
+  return out;
 }
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
@@ -217,7 +249,7 @@ export function applyShell(
     }
     return input.replace(re, () => replacement);
   };
-  let out = html;
+  let out = inlineFontAwesome(html, opts.source);
   out = swap(out, /<!-- SITE_HEADER:[^>]*-->/, renderHeader(opts), 'SITE_HEADER');
   out = swap(out, /<!-- SITE_FOOTER:[^>]*-->/, renderFooter(), 'SITE_FOOTER');
   out = swap(out, /<\/head>/, `    ${THEME_INIT}\n</head>`, '</head>');
