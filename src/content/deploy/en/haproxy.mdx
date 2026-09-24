@@ -1,0 +1,141 @@
+---
+title: "Deploy a TLS certificate on HAProxy"
+platform: "HAProxy"
+description: "HAProxy wants the certificate chain and key in one PEM file. How to get it from CertMate as combined.pem, load it, verify it and keep it renewed."
+summary: "Download CertMate's combined.pem, point HAProxy's crt at it, and get each renewal onto the HAProxy host with a pull or a hook that works from inside the container."
+icon: "fa6-solid:scale-unbalanced"
+order: 6
+updated: "2026-09-24"
+---
+
+## Prerequisites
+
+- A certificate for the domain already issued in CertMate.
+- An API key with the **operator** role. A viewer can download the public
+  files but not the private key, and the file HAProxy needs contains it.
+- HAProxy installed on a host that can reach CertMate over HTTPS.
+
+## 1. The file HAProxy wants
+
+Nginx takes the certificate chain and the key as two files. HAProxy's `crt`
+takes one PEM file holding both. CertMate serves that file as `combined.pem`:
+it is `fullchain.pem` (the leaf and the intermediates) followed by
+`privkey.pem`, joined when you download it. It is not stored on disk and is not
+part of the ZIP download, which contains `cert.pem`, `chain.pem`,
+`fullchain.pem` and `privkey.pem`.
+
+Download it with the path form of the download URL:
+
+```bash
+curl -fsS -H "Authorization: Bearer $CERTMATE_TOKEN" \
+  -o /etc/haproxy/certs/example.com.pem \
+  https://certmate.example.com/api/certificates/example.com/download/combined
+```
+
+`combined` needs the operator role. A viewer key gets `403` with the code
+`PRIVKEY_REQUIRES_OPERATOR`. If the key is limited with `allowed_domains`, a
+domain outside that list gets `403 DOMAIN_OUT_OF_SCOPE`. A certificate issued
+from your own CSR has no private key in CertMate, so there is no `combined.pem`
+for it: the request returns `404`.
+
+## 2. Point HAProxy at it
+
+```text
+frontend https
+    bind :443 ssl crt /etc/haproxy/certs/example.com.pem
+    default_backend app
+```
+
+With several certificates, point `crt` at the directory instead
+(`crt /etc/haproxy/certs/`). HAProxy loads the certificates in it and picks the
+certificate by the SNI name the client sends. A `crt-list` file does the same
+with one line per certificate, and is only worth it when certificates need
+different options.
+
+Check the configuration, then reload:
+
+```bash
+sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
+```
+
+HAProxy reads certificate files when it starts or reloads. A new file on disk
+changes nothing until the reload.
+
+## 3. Verify
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/null \
+  | openssl x509 -noout -issuer -dates -fingerprint -sha256
+```
+
+Compare the fingerprint with the one in the file you installed:
+
+```bash
+openssl x509 -in /etc/haproxy/certs/example.com.pem -noout -fingerprint -sha256
+```
+
+If they differ, HAProxy is still serving the certificate it loaded before the
+last reload, or `-servername` matched a different file in the directory.
+
+## 4. Get each renewal onto the HAProxy host
+
+CertMate renews a certificate when 30 days or fewer remain (the default
+threshold), on a nightly sweep. The new file then has to reach HAProxy, and a
+deploy hook cannot do that by itself: a hook runs inside the CertMate
+container, which has `sh`, `bash`, `curl` and `openssl` and has no `haproxy`,
+`systemctl`, `ssh` or `scp`. A hook that runs `systemctl reload haproxy` exits
+with 127. Three approaches work.
+
+### Pull from the HAProxy host
+
+The HAProxy host fetches the file on a schedule and reloads only when it
+changed. This needs nothing in CertMate beyond the operator key. Run it daily
+from cron or a systemd timer, as root:
+
+```sh
+#!/bin/sh
+set -eu
+DOMAIN=example.com
+DEST=/etc/haproxy/certs/$DOMAIN.pem
+CERTMATE_TOKEN=$(cat /etc/haproxy/certmate.token)
+TMP=$(mktemp /etc/haproxy/.combined.XXXXXX)
+trap 'rm -f "$TMP"' EXIT
+
+curl -fsS -H "Authorization: Bearer $CERTMATE_TOKEN" -o "$TMP" \
+  "https://certmate.example.com/api/certificates/$DOMAIN/download/combined"
+
+# Nothing to do if the file is unchanged.
+if cmp -s "$TMP" "$DEST"; then exit 0; fi
+
+# Refuse a file that does not hold a certificate valid for another day.
+openssl x509 -in "$TMP" -noout -checkend 86400
+
+mv "$TMP" "$DEST"
+haproxy -c -f /etc/haproxy/haproxy.cfg
+systemctl reload haproxy
+```
+
+`-f` makes `curl` fail on an HTTP error, so a `403` or `404` never replaces a
+working certificate with an error body. The temporary file is kept out of the
+certificate directory so HAProxy never loads a half-written file, and `mv`
+replaces the old one in a single step.
+
+### Tell the HAProxy host from a hook
+
+If you would rather act at the moment of renewal, a hook can call something on
+the HAProxy host over HTTP, since `curl` is in the container. That something is
+yours to run: a small endpoint that runs the pull script above.
+
+```sh
+curl -fsS -X POST -H "Authorization: Bearer $DEPLOY_TOKEN" https://haproxy-host.internal/certmate/$CERTMATE_DOMAIN
+```
+
+The hook command field rejects `;`, `&&` and `$(...)`, so keep the logic on the
+receiving side. A hook can also carry a maintenance window, which holds the
+deploy until a time you choose without delaying the renewal.
+
+### Build your own image
+
+CertMate's image can be a base image. Add the tools your hook needs (for
+example `openssh-client` for `scp`), and the hook can copy the files and run the
+reload itself. The added packages are then yours to patch.
