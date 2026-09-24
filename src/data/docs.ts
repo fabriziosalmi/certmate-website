@@ -250,3 +250,15 @@ export function docAlternates(slug: string): { hreflang: string; href: string }[
     { hreflang: 'x-default', href: docUrl(slug) },
   ];
 }
+
+// A slug listed twice builds the same route twice, and the sitemap, the
+// index and the build all accept it without a word: that is how a scripted
+// rebuild once published every new page up to nineteen times over. Refuse
+// it where the list is defined, so nothing downstream has to notice.
+for (const [name, list] of [['DOC_PAGES', DOC_PAGES], ['DOC_PAGES_IT', DOC_PAGES_IT]] as const) {
+  const seen = new Set<string>();
+  for (const page of list) {
+    if (seen.has(page.slug)) throw new Error(`src/data/docs.ts: ${name} lists '${page.slug}' twice`);
+    seen.add(page.slug);
+  }
+}
