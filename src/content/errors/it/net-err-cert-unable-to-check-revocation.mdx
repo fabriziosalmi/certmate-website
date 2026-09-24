@@ -1,0 +1,143 @@
+---
+title: "NET::ERR_CERT_UNABLE_TO_CHECK_REVOCATION"
+errorCode: "NET::ERR_CERT_UNABLE_TO_CHECK_REVOCATION"
+description: "Risolvi NET::ERR_CERT_UNABLE_TO_CHECK_REVOCATION: un Chrome gestito deve verificare la revoca di una CA privata e non raggiunge il responder OCSP o la CRL."
+summary: "Chromium doveva confermare che il certificato non è revocato, e nessun responder OCSP o CRL gli ha dato una risposta. Nelle versioni attuali l'obbligo viene da una policy dell'amministratore e riguarda le CA private."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 20
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+Chromium mostra `NET::ERR_CERT_UNABLE_TO_CHECK_REVOCATION` con la descrizione
+*"Il certificato del server non può essere verificato."* I dettagli spiegano
+che il server *"non è riuscito a dimostrare"* di essere il sito richiesto,
+perché il suo certificato *"potrebbe essere revocato"*.
+
+Per quanto Chromium ha potuto vedere, il certificato in sé è a posto. Manca
+una risposta alla domanda se sia stato revocato, e in questa configurazione
+Chromium non può andare avanti senza.
+
+È una configurazione ristretta. Con le impostazioni predefinite Chromium non
+fa alcuna richiesta OCSP o CRL in tempo reale. Un amministratore può attivarle
+con la policy `EnableOnlineRevocationChecks`, ma in quella modalità il
+controllo è soft-fail: un responder irraggiungibile viene ignorato. L'unica
+modalità in cui un controllo fallito blocca la connessione è la policy
+`RequireOnlineRevocationChecksForLocalAnchors`, disponibile su Windows, macOS,
+Linux e ChromeOS, e vale solo quando la catena termina in una radice che non è
+tra le radici pubbliche del browser: una CA privata o aziendale installata
+sulla macchina.
+
+Quindi, nelle versioni attuali di Chromium, questo errore significa che sono
+vere tre cose insieme: il browser è gestito con quella policy, il sito usa una
+CA privata e nessuna fonte di revoca ha risposto.
+
+<Handshake
+  caption="Dove viene sollevato NET::ERR_CERT_UNABLE_TO_CHECK_REVOCATION"
+  steps={[
+    { from: 'Chrome', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Chrome', label: 'Catena di certificati che termina in una radice privata' },
+    { from: 'Chrome', label: 'Costruisce un percorso verso la radice installata in locale: riesce' },
+    { from: 'Chrome', label: 'La policy richiede una risposta sulla revoca: prova gli URL OCSP e CRL di ogni certificato sotto la radice' },
+    { from: 'Chrome', to: 'Server', label: 'Nessun URL ha dato una risposta definitiva: connessione rifiutata (NET::ERR_CERT_UNABLE_TO_CHECK_REVOCATION)', fails: true },
+  ]}
+/>
+
+Chromium controlla ogni certificato della catena tranne la radice, quindi la
+risposta mancante può riguardare un intermedio e non la foglia. Per la foglia,
+una risposta OCSP valida in stapling dal server vale prima che venga fatta
+qualsiasi richiesta.
+
+A differenza di `NET::ERR_CERT_REVOKED`, Chromium non considera fatale questo
+errore, quindi l'interstitial può offrire di procedere dove le eccezioni sono
+consentite. La policy che l'ha prodotto però l'ha impostata qualcuno che voleva
+farla rispettare.
+
+## Cause comuni
+
+- **L'host OCSP o CRL non è raggiungibile dal client.** Si risolve solo sulla
+  rete interna, la VPN è spenta, un proxy o un firewall lo blocca, oppure il
+  DNS split dà al portatile una risposta diversa da quella della sala server.
+- **Il responder risponde con qualcosa che Chromium non può usare.** Una
+  pagina di errore al posto di una risposta OCSP, oppure una risposta o una CRL
+  che non chiude la questione per questo certificato. Chromium passa all'URL
+  successivo e, quando non ne restano, riporta questo errore.
+- **Il responder o il server della CRL è troppo lento**, e la richiesta fallisce
+  o la verifica esaurisce il tempo prima che arrivi una risposta.
+
+Se il certificato non indica alcun URL utilizzabile, la stessa policy produce
+un errore diverso, secondo cui il certificato non ha alcun meccanismo di
+revoca. Chromium conta solo gli URL
+OCSP e CRL `http://` (uno `https://` richiederebbe a sua volta un controllo di
+certificato), e ignora i punti di distribuzione CRL che coprono solo alcuni
+motivi di revoca o che indicano un emittente di CRL separato. E poiché questo
+codice ha la priorità più bassa fra tutti gli errori di certificato tranne
+quello, compare solo quando nient'altro è sbagliato.
+
+## Come risolverlo
+
+**1. Guarda a cosa punta il certificato.** Controlla la foglia e ogni
+intermedio:
+
+```bash
+echo | openssl s_client -connect intranet.example.com:443 -servername intranet.example.com -showcerts 2>/dev/null \
+  | awk '/BEGIN CERTIFICATE/{n++} n{print > ("cert" n ".pem")}'
+for f in cert*.pem; do
+  echo "== $f"
+  openssl x509 -in "$f" -noout -subject -ocsp_uri -ext crlDistributionPoints
+done
+```
+
+**2. Scarica quegli URL dalla macchina che ha il problema**, non dal server. La
+domanda è se il *client* riesce a raggiungerli:
+
+```bash
+curl -sS -o /dev/null -w '%{http_code} %{size_download} bytes\n' http://crl.example.internal/ca.crl
+```
+
+**3. Verifica che il responder risponda correttamente** per la foglia:
+
+```bash
+openssl ocsp -issuer cert2.pem -cert cert1.pem \
+  -url "$(openssl x509 -in cert1.pem -noout -ocsp_uri)" | grep 'cert1.pem'
+```
+
+**4. Sistema il percorso, non il browser.** Pubblica la CRL o esponi il
+responder su un nome `http://` semplice che ogni client gestito può risolvere e
+raggiungere, oppure fai fare al server lo stapling delle risposte OCSP, così la
+foglia non dipende dalla rete del client. Se la CA inserisce URL
+irraggiungibili, riemetti da lei con URL raggiungibili: gli URL sono scritti
+dentro i certificati già esistenti.
+
+## Evitare che si ripresenti
+
+CertMate non configura i tuoi browser né i punti di distribuzione della tua
+CA. Quello che può fare è eseguire lo stesso tipo di controllo dal proprio
+lato e dirti con precisione quando fallisce.
+
+Il controllo di revoca della discovery dei certificati, e `POST /api/probe`
+per un singolo host, interrogano il responder OCSP indicato dal certificato e
+ripiegano sulla sua CRL, solo su `http://` semplice, come fa Chromium. Quando
+non arriva alcuna risposta verificata il risultato è `unavailable`, mai buono,
+con il motivo in `error` e ogni URL provato, con il suo esito, in `attempts`.
+Un responder andato in timeout, una CRL oltre il suo `nextUpdate` e una firma
+che non si verifica si leggono in modo diverso, ed è proprio la diagnosi che
+questo errore non ti dà. [Revocation Checking](/docs/revocation.html) elenca
+ogni stato e ogni motivo.
+
+Per le CA private contano tre limiti. Il controllo parte dalla rete di
+CertMate, quindi una risposta buona lì non dimostra che un portatile fuori
+dalla VPN raggiunga lo stesso responder. CertMate rifiuta gli indirizzi privati
+e di loopback a meno che tu non lo consenta esplicitamente, con *Allow
+private/loopback targets* nelle impostazioni della discovery o con
+`CERTMATE_PROBE_ALLOW_PRIVATE` per `POST /api/probe`; fino ad allora un
+responder interno risulta `unavailable`. E controlla solo il certificato
+foglia, mentre Chromium controlla anche gli intermedi.
+
+## Errori correlati
+
+- `NET::ERR_CERT_REVOKED`: il controllo è riuscito, e la risposta è stata "revocato".
+- `SEC_ERROR_REVOKED_CERTIFICATE`: Firefox ha trovato il certificato revocato.
+- `NET::ERR_CERT_AUTHORITY_INVALID`: la radice privata non è installata affatto, quindi la catena fallisce prima di arrivare alla revoca.

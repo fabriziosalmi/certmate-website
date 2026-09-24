@@ -63,6 +63,20 @@
     "evidence": "NET_ERROR(CERT_DATE_INVALID, -201)"
   },
   {
+    "code": "NET::ERR_CERT_REVOKED",
+    "symbol": "ERR_CERT_REVOKED",
+    "emittedBy": "Chromium (Chrome, Edge, Brave, Opera, Vivaldi)",
+    "source": "chromium/net/base/net_error_list.h",
+    "evidence": "NET_ERROR(CERT_REVOKED, -206)"
+  },
+  {
+    "code": "NET::ERR_CERT_UNABLE_TO_CHECK_REVOCATION",
+    "symbol": "ERR_CERT_UNABLE_TO_CHECK_REVOCATION",
+    "emittedBy": "Chromium (Chrome, Edge, Brave, Opera, Vivaldi)",
+    "source": "chromium/net/base/net_error_list.h",
+    "evidence": "NET_ERROR(CERT_UNABLE_TO_CHECK_REVOCATION, -205)"
+  },
+  {
     "code": "SEC_ERROR_EXPIRED_CERTIFICATE",
     "symbol": "SEC_ERROR_EXPIRED_CERTIFICATE",
     "emittedBy": "NSS (Firefox, Thunderbird)",

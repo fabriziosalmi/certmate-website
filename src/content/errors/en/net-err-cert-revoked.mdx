@@ -1,0 +1,133 @@
+---
+title: "NET::ERR_CERT_REVOKED"
+errorCode: "NET::ERR_CERT_REVOKED"
+description: "Fix Chrome's NET::ERR_CERT_REVOKED: the issuer withdrew the certificate. Where Chromium learns it, why there is no Proceed link, and how to recover."
+summary: "Chromium found the served certificate, or one above it in the chain, marked as revoked, and will not let you past. The fix is a new certificate on a new key, actually deployed."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 19
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+Chromium shows `NET::ERR_CERT_REVOKED` with the description *"Server's
+certificate has been revoked."* The details line is blunter: the security
+credentials the server presented *"absolutely should not be trusted"*.
+
+The certificate is in date, chains to a trusted root and matches the name.
+Chromium only checks revocation on a path that is otherwise valid, so if the
+certificate were also expired or untrusted you would see that error instead.
+What failed is the last question: has the issuer withdrawn it?
+
+This is one of the few certificate errors Chromium treats as fatal. The
+interstitial has no *Proceed* link, on any site, whatever the settings.
+
+Chromium does not ask the CA on every visit. With default settings it learns
+about revocation from two places only:
+
+- **The CRLSet**, a compact list the browser holds locally, which names revoked
+  certificates by issuer key and serial, and can also block a key or subject
+  outright. It is checked for every certificate in the chain, root included,
+  so a revoked intermediate produces this error as well.
+- **A stapled OCSP response**, which the server itself sends in the handshake.
+  If that response says *revoked*, Chromium believes it.
+
+Live OCSP and CRL queries happen only when an administrator turns them on by
+policy (`EnableOnlineRevocationChecks`, or
+`RequireOnlineRevocationChecksForLocalAnchors` for private roots).
+
+<Handshake
+  caption="Where NET::ERR_CERT_REVOKED is raised"
+  steps={[
+    { from: 'Chrome', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Chrome', label: 'Certificate chain, optionally a stapled OCSP response' },
+    { from: 'Chrome', label: 'Builds a trusted path, dates and name check out' },
+    { from: 'Chrome', label: 'Checks each certificate against the CRLSet, then the stapled OCSP response' },
+    { from: 'Chrome', to: 'Server', label: 'A certificate in the path is revoked: connection refused (NET::ERR_CERT_REVOKED)', fails: true },
+  ]}
+/>
+
+## Common causes
+
+- **The private key was exposed** and the certificate was revoked for it: a
+  key committed to a repository, left in a backup, or on a compromised host.
+- **Somebody revoked it on purpose** during a cleanup or a key rotation, and
+  the server is still serving it. A replacement was issued and never loaded.
+- **The CA revoked it** after finding a validation problem or a misissuance.
+- **The intermediate was revoked**, not your certificate. Every certificate
+  that chains through it fails at once, and the fix is a new chain from the CA.
+- **The server staples a revoked response.** The server fetched an OCSP answer
+  for the certificate it holds and hands it to every visitor. If that
+  certificate is the revoked one, the server is reporting on itself.
+
+Because default Chromium does not query the CA, a revoked certificate can keep
+loading in Chrome for a while and fail in Firefox, or the reverse. Neither
+browser is wrong; they read different sources at different times.
+
+## How to fix it
+
+**1. Find out which certificate is being served**, by serial and issuer.
+Revocation records name a serial, so this is what you compare:
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/null \
+  | openssl x509 -noout -serial -issuer -dates
+```
+
+**2. Ask the issuer directly.** Save the served chain, then query the OCSP
+responder the certificate names, with its issuer:
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com -showcerts 2>/dev/null \
+  | awk '/BEGIN CERTIFICATE/{n++} n{print > ("cert" n ".pem")}'
+openssl ocsp -issuer cert2.pem -cert cert1.pem \
+  -url "$(openssl x509 -in cert1.pem -noout -ocsp_uri)" | grep 'cert1.pem'
+```
+
+If the certificate names no OCSP responder, its CRL is listed under
+`openssl x509 -in cert1.pem -noout -ext crlDistributionPoints`.
+
+**3. Issue a new certificate on a new key.** Reusing the key repeats the
+problem whenever the key was the reason for the revocation:
+
+```bash
+certbot certonly --force-renewal --new-key -d example.com
+```
+
+**4. Reload, then run step 1 again.** The serial must change. A server that
+still presents the old serial, or still staples the old OCSP response, keeps
+this error alive after a successful reissue.
+
+**5. If the key leaked, treat it as an incident.** Rotate whatever else it
+protected and find out how it got out.
+
+## Prevent it from recurring
+
+For a certificate from a public CA, revocation is the CA's decision, and no
+certificate manager can undo it. What CertMate does is notice it.
+
+When its certificate discovery is enabled, every scheduled sweep can ask each
+served certificate's issuer whether it has been revoked: OCSP first, then the
+CRL. The check is on by default once discovery is turned on, as *Check
+revocation (OCSP, then CRL)* in the inventory settings. An answer only counts
+if its signature verifies against the issuer and it is fresh; anything less is
+reported as `unavailable`, never as good. The result is stored with the
+certificate in the inventory, where a revoked one is flagged *Revoked*, with
+the date and the reason the issuer published. A `revoked` answer is final: no
+later answer replaces it.
+
+CertMate asks the CA itself, which default Chromium does not. A revocation
+that is not in the CRLSet still shows up in the inventory. For a
+single host, `POST /api/probe` returns the same verified answer on demand.
+[Revocation Checking](/docs/revocation.html) describes what is checked and
+what each status means.
+
+The check covers the served leaf certificate. A revoked intermediate appears
+in Chromium as this error without appearing in CertMate's answer.
+
+## Related errors
+
+- `SEC_ERROR_REVOKED_CERTIFICATE`: the Firefox equivalent of this error.
+- `NET::ERR_CERT_UNABLE_TO_CHECK_REVOCATION`: Chromium was required to check revocation and could not.
+- `NET::ERR_CERT_DATE_INVALID`: withdrawn by time rather than by the issuer.
