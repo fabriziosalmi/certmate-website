@@ -30,8 +30,9 @@ const SRC = join(ROOT, 'src');
 const SOURCE_OF_TRUTH = join(SRC, 'data', 'site.ts');
 
 /** A digit adjacent to the word "provider", in any of the site's languages. */
+// (?<!DNS-): "DNS-01 providers" names the ACME challenge, not a count.
 const HARDCODED_COUNT =
-  /\b\d{1,3}\+?\s*(?:altri\s+|other\s+|weitere\s+|otros\s+|autres\s+)?(?:DNS[- ]?)?(?:providers?|fornitori|proveedores?|Anbieter|fournisseurs?)\b/gi;
+  /(?<!DNS-)\b\d{1,3}\+?\s*(?:altri\s+|other\s+|weitere\s+|otros\s+|autres\s+)?(?:DNS[- ]?)?(?:providers?|fornitori|proveedores?|Anbieter|fournisseurs?)\b/gi;
 
 // .html is the documentation in src/docs, which src/pages/docs/[slug].html.ts
 // builds by substituting {{PROVIDER_COUNT}}. It was left out, so those ten
