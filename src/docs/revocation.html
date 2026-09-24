@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revocation Checking - CertMate Documentation</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="preload" href="vendor/font-awesome/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/font-awesome/all.min.css"></noscript>
+    <link rel="preload" as="style" href="vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/fonts/fonts.css"></noscript>
+    <style>
+        .doc-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h1 {
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-6);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content p, .doc-content li {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+        .doc-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin: var(--spacing-6) 0;
+        }
+        .doc-content pre code {
+            background: none;
+            padding: 0;
+            color: white;
+        }
+        .doc-content ul, .doc-content ol {
+            margin: var(--spacing-4) 0;
+            padding-left: var(--spacing-8);
+        }
+        .doc-content li {
+            margin: var(--spacing-2) 0;
+        }
+    
+    /* In-page TOC, injected by toc.js. Sticky right column on lg+
+       viewports; collapsed to a top disclosure on smaller screens. */
+    .doc-toc {
+      display: none;
+    }
+    /* Shown only when it fits in the right margin: this page's content
+       column is 900px wide, the TOC 220px plus 24px of gap, so the viewport
+       must be at least 900 + 2 * 244 = 1388px. Below that the old rule
+       placed the TOC over the text (#588). */
+    @media (min-width: 1388px) {
+      .doc-toc {
+        display: block;
+        position: fixed;
+        top: 100px;
+        right: max(24px, calc((100vw - 900px) / 2 - 244px));
+        width: 220px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+      }
+    }
+    .doc-toc-inner {
+      border-left: 2px solid var(--gray-200);
+      padding-left: 16px;
+    }
+    .doc-toc-list { list-style: none; padding: 0; margin: 0; }
+    .doc-toc-item { margin: 4px 0; line-height: 1.4; }
+    .doc-toc-item-h3 { padding-left: 12px; }
+    .doc-toc-link {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: block;
+      padding: 2px 0;
+      transition: color 120ms ease;
+    }
+    .doc-toc-link:hover { color: var(--gray-900); }
+    .doc-toc-link.is-active {
+      color: var(--blue-600, #2563eb);
+      font-weight: 600;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="../assets/certmate_logo.png" alt="CertMate Logo" class="brand-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html#features" class="nav-link">Features</a>
+                <a href="../index.html#providers" class="nav-link">DNS Providers</a>
+                <a href="index.html" class="nav-link active">Documentation</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-ban"></i> Revocation Checking</h1>
+                <p class="docs-subtitle">How CertMate asks the issuer whether a certificate a host is serving has been revoked, and what the answer means.</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <h2>What Is Checked</h2>
+            <p>An issuer can revoke a certificate long before it expires. A revoked certificate that is still being served has the right names, valid dates and a sound key, so nothing else the probe reports gives it away. The revocation check asks the issuer directly.</p>
+            <p>The check runs on the certificate a host serves, as read by the deep TLS probe, in two places:</p>
+            <ul>
+                <li>the discovery sweep, for every endpoint it probes, when <code>check_revocation</code> in <code>monitored_endpoints</code> is on (the default is <code>true</code>);</li>
+                <li><code>POST /api/probe</code>, for one host, when the request's <code>check_revocation</code> is true (the default).</li>
+            </ul>
+            <p>Only the served leaf certificate is checked, not the intermediates in its chain. With <code>check_revocation</code> off, the probe result's <code>revocation</code> is <code>null</code>: not checked, which is different from checked and good.</p>
+
+            <h2>Where the Issuer Comes From</h2>
+            <p>Verifying an OCSP or CRL answer needs the certificate of the CA that issued the leaf. CertMate looks for it in the chain the host served, which requires Python 3.13 or later. The CertMate image runs Python 3.12, so in practice it takes the second route: it downloads the issuer from the <code>caIssuers</code> URL in the certificate's Authority Information Access extension, trying up to two URLs. The payload may be DER, PEM or a PKCS#7 bundle.</p>
+            <p>Either way the candidate must actually have signed the leaf: its name must match and the leaf's signature must verify against its key. If no issuer is found, the result is <code>unavailable</code> with an error that starts <code>issuer not available:</code>.</p>
+            <p>A certificate whose subject equals its issuer and which verifies against its own key is self-signed. No issuer exists that could revoke it, so the result is <code>not_applicable</code> and nothing is fetched.</p>
+
+            <h2>OCSP First, Then the CRL</h2>
+            <ol>
+                <li><strong>OCSP.</strong> CertMate sends an OCSP request to the first responder URL in the certificate's Authority Information Access extension. A verified <code>good</code> or <code>revoked</code> ends the check.</li>
+                <li><strong>CRL.</strong> If the certificate names no responder, the responder fails, or it answers that it does not know the certificate, CertMate reads the CRL at the certificate's CRL distribution points, trying up to two of them. The first verified CRL settles the answer: <code>revoked</code> if the serial is on it, <code>good</code> if it is not.</li>
+            </ol>
+            <p>Let's Encrypt turned OCSP off in 2025, so for its certificates the CRL is the only source.</p>
+            <p>A certificate that names neither an OCSP responder nor a CRL is <code>unavailable</code> with the error <code>certificate names neither an OCSP responder nor a CRL</code>.</p>
+
+            <h2>What Counts as a Verified Answer</h2>
+            <p>An OCSP response counts only if all of these hold:</p>
+            <ul>
+                <li>its response status is <code>successful</code>;</li>
+                <li>it is signed by the issuer, or by a delegated responder certificate included in the response that the issuer signed and that carries the <code>id-kp-OCSPSigning</code> extended key usage, and the signature verifies;</li>
+                <li>it contains an entry for this certificate's serial number under this issuer's key hash;</li>
+                <li>its <code>thisUpdate</code> is not in the future and its <code>nextUpdate</code>, if present, is not in the past.</li>
+            </ul>
+            <p>A CRL counts only if it names this certificate's issuer as its issuer, its signature verifies against the issuer's key, and it is not past its <code>nextUpdate</code>. A serial that is absent from such a CRL is a <code>good</code> answer.</p>
+            <p>Both date checks allow five minutes of clock difference between CertMate and the responder.</p>
+
+            <h2>The Five Statuses</h2>
+            <table>
+                <thead>
+                    <tr><th><code>status</code></th><th>Meaning</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>good</code></td><td>A verified OCSP or CRL answer says the certificate is not revoked.</td></tr>
+                    <tr><td><code>revoked</code></td><td>A verified answer says it is revoked. <code>revoked_at</code> and <code>reason</code> carry what the issuer published.</td></tr>
+                    <tr><td><code>unknown</code></td><td>The OCSP responder said it does not know this certificate, and no CRL settled it. Not a pass.</td></tr>
+                    <tr><td><code>unavailable</code></td><td>No verified answer could be obtained. <code>error</code> says why. Not a pass.</td></tr>
+                    <tr><td><code>not_applicable</code></td><td>The certificate is self-signed, so no issuer could revoke it.</td></tr>
+                </tbody>
+            </table>
+            <p>In the inventory a sixth state exists: <code>revocation</code> is <code>null</code> when the certificate has never been checked, because checking is off or no sweep has seen it served since.</p>
+
+            <h2>An Unverified Answer Is Not Good</h2>
+            <p><code>good</code> means one thing only: a signed, current answer from the issuer said the certificate is not revoked. <code>unavailable</code> and <code>unknown</code> are not passes. They mean CertMate does not know whether the certificate is revoked.</p>
+            <p><code>unavailable</code> covers every way of failing to get a verified answer, including:</p>
+            <ul>
+                <li>the issuer certificate could not be found, or what the <code>caIssuers</code> URL returned did not sign the leaf;</li>
+                <li>a responder or CRL server could not be reached, answered with an HTTP status other than 200, or returned something that is not an OCSP response or a CRL;</li>
+                <li>the OCSP responder answered with a status other than <code>successful</code>;</li>
+                <li>a signature did not verify, or the OCSP signer was neither the issuer nor an authorised delegate;</li>
+                <li>the OCSP response did not cover this certificate;</li>
+                <li>a response was dated in the future or was past its <code>nextUpdate</code>;</li>
+                <li>a URL was not plain <code>http</code>, its body was over the size cap, or the SSRF guard refused its host.</li>
+            </ul>
+            <p>A failed source never turns into <code>good</code>. If the OCSP responder is down, answers about a different certificate, or signs with a key the issuer did not authorise, CertMate moves on to the CRL; if no CRL gives a verified answer either, the result is <code>unavailable</code>. The <code>error</code> field carries the reason from the last source tried. The <code>attempts</code> list in a <code>POST /api/probe</code> answer shows each source in turn.</p>
+            <p><code>unknown</code> is narrower: the responder answered with a verified response saying it has no record of the certificate, and no CRL gave a verified answer either. Its error is <code>the OCSP responder does not know this certificate</code>.</p>
+            <p>The inventory page follows the same rule. Only <code>good</code> and <code>revoked</code> get a coloured badge ("Not revoked" in green, "Revoked" in red). <code>unknown</code> and <code>unavailable</code> are grey, with the reason on hover.</p>
+
+            <h2>Revoked Is Final</h2>
+            <p>A CA cannot un-revoke a certificate. Once a verified answer has stored <code>revoked</code> on an inventory record, no later answer replaces it: not <code>unavailable</code> from a responder that is down, and not any other status. Every other status is rewritten on each sweep that checks the certificate.</p>
+
+            <h2>Where the Answer Appears</h2>
+            <h3>POST /api/probe</h3>
+            <p>The probe answer carries the full result under <code>revocation</code>. It is not stored in the inventory.</p>
+            <pre><code>curl -X POST https://certmate.example.com/api/probe \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"host": "shop.example.com", "port": 443, "check_revocation": true}'</code></pre>
+            <p>The <code>revocation</code> object has these fields:</p>
+            <ul>
+                <li><code>status</code>: one of the five statuses;</li>
+                <li><code>method</code>: <code>ocsp</code> or <code>crl</code>, whichever gave the answer;</li>
+                <li><code>url</code>: the responder or CRL that gave it;</li>
+                <li><code>revoked_at</code> and <code>reason</code>: set when revoked;</li>
+                <li><code>error</code>: why the answer is <code>unavailable</code> or <code>unknown</code>;</li>
+                <li><code>checked_at</code>: when the check ran;</li>
+                <li><code>attempts</code>: each source tried, as <code>{method, url, outcome, error}</code>.</li>
+            </ul>
+            <p>A certificate whose OCSP responder failed and whose CRL did not list it would come back like this:</p>
+            <pre><code>"revocation": {
+  "status": "good",
+  "method": "crl",
+  "url": "http://crl.ca.example/r1.crl",
+  "revoked_at": null,
+  "reason": null,
+  "error": null,
+  "checked_at": "2026-09-24T08:15:02.123456",
+  "attempts": [
+    {"method": "ocsp", "url": "http://ocsp.ca.example", "outcome": "error",
+     "error": "http://ocsp.ca.example answered HTTP 503"},
+    {"method": "crl", "url": "http://crl.ca.example/r1.crl", "outcome": "good", "error": null}
+  ]
+}</code></pre>
+            <p>The endpoint needs the viewer role. A scoped key can probe only hosts, and <code>server_name</code> values, within its <code>allowed_domains</code>. It has its own rate-limit bucket of 30 requests a minute, because each call opens a TLS connection to a third party and may fetch that CA's OCSP response or CRL.</p>
+            <h3>Inventory records</h3>
+            <p>Since API contract 2.4, every record from <code>GET /api/inventory</code> carries <code>revocation</code> as <code>{status, method, reason, revoked_at, error, checked_at}</code>, or <code>null</code> if it was never checked. The inventory keeps the last answer only; it does not store <code>url</code> or <code>attempts</code>.</p>
+            <h3>Summary counts</h3>
+            <p>The <code>summary</code> in the same response counts records per status under <code>revocation</code>: <code>revoked</code>, <code>good</code>, <code>unknown</code>, <code>unavailable</code>, <code>not_applicable</code> and <code>unchecked</code> for records never checked. The inventory page shows the <code>revoked</code> count in its summary and has a <strong>Revoked</strong> filter.</p>
+            <h3>Sweep results</h3>
+            <p><code>POST /api/inventory/scan</code> (admin) runs a sweep now. In its answer, each entry of <code>discovery.results</code> has a <code>revocation</code> field holding just the status string for that endpoint, or <code>null</code> when it was not checked.</p>
+
+            <h2>Fetches, Caches and Timeouts</h2>
+            <p>Every OCSP, CRL and issuer URL comes from a certificate CertMate did not necessarily issue, so the fetches go through the probe's SSRF guard. The host is resolved and refused if any address is private, loopback or otherwise not global, unless private targets are allowed. The connection is then pinned to the address that passed. A sweep follows its <code>allow_private</code> setting; <code>POST /api/probe</code> follows <code>CERTMATE_PROBE_ALLOW_PRIVATE</code>. A refused URL makes that source fail, which leads to <code>unavailable</code> if nothing else answers.</p>
+            <ul>
+                <li>Only plain <code>http</code> URLs are fetched. OCSP and CRL payloads are signed, so TLS would add nothing to their integrity.</li>
+                <li>Redirects are not followed; any answer other than HTTP 200 is a failure.</li>
+                <li>Bodies are capped: 64 KiB for an OCSP response or an issuer certificate, 20 MiB for a CRL.</li>
+                <li>Each fetch uses the probe timeout: 5 seconds by default, set with <code>CERTMATE_PROBE_TIMEOUT_SECONDS</code>, clamped to between 1 and 30 seconds.</li>
+                <li>Requests carry the user agent <code>CertMate-revocation-check</code>.</li>
+            </ul>
+            <p>The issuer certificate and each CRL are cached in the memory of the CertMate process, keyed by URL. An issuer certificate is kept for 24 hours. A CRL is kept for at most an hour and never past its <code>nextUpdate</code>, so a sweep over many hosts behind one CA downloads the CRL once. The caches are bounded (64 issuer entries, 16 CRLs), and a restart empties them. OCSP responses are not cached.</p>
+
+            <h2>What It Does Not Do</h2>
+            <ul>
+                <li>It does not check the intermediate certificates in the chain, only the leaf.</li>
+                <li>It does not read an OCSP response stapled in the TLS handshake. It asks the responder itself.</li>
+                <li>It does not check certificates found only in Certificate Transparency. A <code>ct-log</code> record stays unchecked until a sweep sees the certificate served on an endpoint.</li>
+                <li>It does not act on the answer. A <code>revoked</code> result is recorded and reported; it does not trigger a renewal, a deploy hook or a notification.</li>
+                <li>It does not validate PKI trust. The probe still describes an expired, self-signed or mismatched certificate, and its <code>validation</code> block reports those conditions.</li>
+            </ul>
+
+            <h2>Next Steps</h2>
+            <ul>
+                <li><a href="certificate-discovery.html">Certificate Discovery</a>: the sweep, the deep TLS probe and the inventory that store this answer</li>
+                <li><a href="domain-health.html">Domain Health</a>: the checks that look at the domain rather than the certificate</li>
+                <li><a href="api-reference.html">API Reference</a>: authentication and the rest of the API</li>
+                <li><a href="security.html">Security</a>: roles and scoped API keys</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributors</a></p>
+        </div>
+    </footer>
+    <script src="toc.js" defer></script>
+</body>
+</html>
