@@ -1,0 +1,140 @@
+---
+title: "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
+errorCode: "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
+description: "Risolvi UNABLE_TO_VERIFY_LEAF_SIGNATURE di Node.js (unable to verify the first certificate): manca l'intermedio o la CA emittente non è attendibile."
+summary: "Node.js non ha trovato il certificato che ha firmato la foglia del server, né tra quelli inviati dal server né nel suo trust store. Di solito il server invia la foglia senza l'intermedio."
+browsers: ["Node.js"]
+order: 31
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+Node.js solleva un `Error` con `code` uguale a `UNABLE_TO_VERIFY_LEAF_SIGNATURE`
+e con il messaggio con cui OpenSSL descrive questa condizione, *"unable to
+verify the first certificate"*. Da Node.js 24 in poi al messaggio si aggiunge
+un suggerimento: *"; if the root CA is installed locally, try running Node.js
+with --use-system-ca"*.
+
+Il nome è preciso. OpenSSL ha provato a costruire la catena risalendo dal
+certificato del server e non è riuscito a fare nemmeno un passo: la catena che
+ottiene è la sola foglia, e la foglia non è autofirmata. Il certificato che
+l'ha firmata non era tra quelli inviati dal server e non era nel trust store
+usato da Node.js. Non c'è niente con cui verificare la firma della foglia.
+
+OpenSSL costruisce la catena solo da queste due fonti. Alcuni browser
+rimediano da soli a un intermedio mancante, ed è per questo che un sito può
+sembrare a posto nel browser e fallire da uno script Node.js sullo stesso URL.
+
+<Handshake
+  caption="Dove viene sollevato UNABLE_TO_VERIFY_LEAF_SIGNATURE"
+  steps={[
+    { from: 'Node.js', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Node.js', label: 'ServerHello, Certificate (solo la foglia)' },
+    { from: 'Node.js', label: "OpenSSL cerca l'emittente della foglia tra i certificati inviati e nel trust store: non lo trova" },
+    { from: 'Node.js', label: "L'handshake si completa; Node.js legge il risultato della verifica" },
+    { from: 'Node.js', to: 'Server', label: 'rejectUnauthorized è true: socket distrutto con UNABLE_TO_VERIFY_LEAF_SIGNATURE', fails: true },
+  ]}
+/>
+
+Node.js lascia che OpenSSL completi l'handshake e decide dopo: la sua callback
+di verifica accetta sempre, e il client controlla il risultato memorizzato una
+volta aperta la connessione. Per questo l'errore arriva come evento `error`
+sul socket e non durante l'handshake vero e proprio.
+
+## Cause comuni
+
+- **Il server invia la foglia senza l'intermedio.** È di gran lunga il caso
+  più frequente. Il server è configurato con `cert.pem` dove servirebbe
+  `fullchain.pem`, oppure con un file di certificato composto a mano. I trust
+  store contengono radici, non intermedi, quindi il buco non si può colmare
+  dal lato client.
+- **La foglia è stata firmata direttamente da una CA di cui Node.js non si
+  fida**, e il server non invia quella CA. Tipico delle piccole CA interne che
+  emettono direttamente dalla radice. Se il server invia anche la radice,
+  Node.js riporta invece `SELF_SIGNED_CERT_IN_CHAIN`.
+- **La CA è nello store del sistema operativo, non in quello di Node.js.**
+  Node.js di norma usa una propria copia dello store di CA di Mozilla, fissata
+  al rilascio di quella versione (il default si sceglie in fase di build). Una
+  radice aziendale installata sulla macchina non viene consultata se non lo
+  chiedi.
+
+Se il server invia l'intermedio e manca solo la radice, l'errore è
+`UNABLE_TO_GET_ISSUER_CERT_LOCALLY` (*"unable to get local issuer
+certificate"*). Quello di solito si risolve sul client.
+
+## Come risolverlo
+
+**1. Conta cosa invia il server.** Serve a distinguere un problema del server
+da un problema del client:
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com -showcerts 2>/dev/null \
+  | grep -c 'BEGIN CERTIFICATE'
+```
+
+Un risultato di `1` per un certificato emesso da una CA pubblica significa che
+manca l'intermedio, e la correzione va fatta sul server.
+
+**2. Servi la catena completa.** Punta il server al file che contiene la
+foglia seguita dal suo intermedio, non alla foglia da sola:
+
+```nginx
+ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
+ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+```
+
+Ricarica, poi ripeti il passo 1: il conteggio deve essere `2` o più. Così
+sistemi anche tutti gli altri client che non colmano il buco da soli, non solo
+Node.js.
+
+**3. Se la CA è privata, aggiungila al client.** Per una radice della tua
+organizzazione, passa a Node.js il certificato in formato PEM all'avvio del
+processo:
+
+```bash
+NODE_EXTRA_CA_CERTS=/etc/ssl/internal-root.pem node app.js
+```
+
+La variabile estende le radici incluse invece di sostituirle. Viene letta una
+sola volta all'avvio, quindi impostare `process.env.NODE_EXTRA_CA_CERTS`
+dall'interno del programma non ha effetto. Viene anche ignorata per ogni
+richiesta che passa un'opzione `ca` esplicita, perché `ca` sostituisce del
+tutto i default.
+
+Se la radice è già installata nello store del sistema operativo, avvia Node.js
+con `--use-system-ca` (da Node.js 23.8) oppure imposta `NODE_USE_SYSTEM_CA=1`
+(da 22.19 e 24.6), così legge quello store oltre al proprio. È ciò che
+suggerisce il messaggio di errore.
+
+**Non impostare `NODE_TLS_REJECT_UNAUTHORIZED=0`.** Non ripara la catena:
+disattiva la validazione dei certificati per ogni connessione TLS del
+processo, e la documentazione di Node.js definisce il risultato insicuro. Lo
+stesso vale per `rejectUnauthorized: false`. Entrambi trasformano un errore
+visibile in un'esposizione invisibile.
+
+## Evitare che si ripresenti
+
+Un intermedio mancante è quasi sempre una scelta di distribuzione che ha preso
+il file sbagliato, e tende a tornare ogni volta che un certificato viene
+copiato a mano.
+
+CertMate scrive `fullchain.pem` accanto a `cert.pem` e `chain.pem` per ogni
+certificato che emette. Un deploy hook riceve il percorso della catena
+completa come `CERTMATE_FULLCHAIN_PATH`, e i soli intermedi come
+`CERTMATE_CHAIN_PATH` per i server che li vogliono in un file separato. I
+deploy target tipizzati leggono `fullchain.pem`. Un hook che copia
+`$CERTMATE_FULLCHAIN_PATH` al suo posto porta con sé l'intermedio ogni volta.
+
+Con una CA ACME privata, CertMate si fida del certificato della CA che gli
+fornisci passandolo a certbot come `REQUESTS_CA_BUNDLE`. È lo stesso principio
+di `NODE_EXTRA_CA_CERTS`: fidarsi esplicitamente della radice invece di
+spegnere la verifica.
+
+## Errori correlati
+
+- `x509: certificate signed by unknown authority`: lo stesso errore in Go.
+- `PKIX path building failed`: lo stesso errore in Java.
+- `NET::ERR_CERT_AUTHORITY_INVALID`: ciò che mostra Chromium quando non arriva a una radice attendibile.
+- `SEC_ERROR_UNKNOWN_ISSUER`: l'equivalente in Firefox.

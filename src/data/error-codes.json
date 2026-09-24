@@ -1,5 +1,12 @@
 [
   {
+    "code": "CERTIFICATE_VERIFY_FAILED",
+    "symbol": "SSL_R_CERTIFICATE_VERIFY_FAILED",
+    "emittedBy": "Python (ssl module)",
+    "source": "cpython/Modules/_ssl_data_300.h",
+    "evidence": "{\"CERTIFICATE_VERIFY_FAILED\", ERR_LIB_SSL, SSL_R_CERTIFICATE_VERIFY_FAILED},"
+  },
+  {
     "code": "ERR_BAD_SSL_CLIENT_AUTH_CERT",
     "symbol": "ERR_BAD_SSL_CLIENT_AUTH_CERT",
     "emittedBy": "Chromium (Chrome, Edge, Brave, Opera, Vivaldi)",
@@ -75,6 +82,13 @@
     "emittedBy": "Chromium (Chrome, Edge, Brave, Opera, Vivaldi)",
     "source": "chromium/net/base/net_error_list.h",
     "evidence": "NET_ERROR(CERT_UNABLE_TO_CHECK_REVOCATION, -205)"
+  },
+  {
+    "code": "PKIX path building failed",
+    "symbol": "ValidatorException",
+    "emittedBy": "Java (JDK sun.security.validator)",
+    "source": "jdk/src/java.base/share/classes/sun/security/validator/PKIXValidator.java",
+    "evidence": "(\"PKIX path building failed: \" + e.toString(), e);"
   },
   {
     "code": "SEC_ERROR_EXPIRED_CERTIFICATE",
@@ -166,5 +180,47 @@
     "emittedBy": "NSS (Firefox, Thunderbird)",
     "source": "nss/lib/ssl/sslerr.h + gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
     "evidence": "Peer using unsupported version of security protocol."
+  },
+  {
+    "code": "UNABLE_TO_VERIFY_LEAF_SIGNATURE",
+    "symbol": "X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE",
+    "emittedBy": "Node.js (tls)",
+    "source": "node/deps/ncrypto/ncrypto.cc",
+    "evidence": "CASE(UNABLE_TO_VERIFY_LEAF_SIGNATURE)"
+  },
+  {
+    "code": "self-signed certificate in certificate chain",
+    "symbol": "X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN",
+    "emittedBy": "OpenSSL (openssl s_client, curl, Python ssl, Node.js tls)",
+    "source": "openssl/crypto/x509/x509_txt.c",
+    "evidence": "return \"self-signed certificate in certificate chain\";"
+  },
+  {
+    "code": "unable to get local issuer certificate",
+    "symbol": "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY",
+    "emittedBy": "OpenSSL (openssl s_client, curl, Python ssl, Node.js tls)",
+    "source": "openssl/crypto/x509/x509_txt.c",
+    "evidence": "return \"unable to get local issuer certificate\";"
+  },
+  {
+    "code": "x509: certificate signed by unknown authority",
+    "symbol": "UnknownAuthorityError",
+    "emittedBy": "Go (crypto/x509)",
+    "source": "go/src/crypto/x509/verify.go",
+    "evidence": "s := \"x509: certificate signed by unknown authority\""
+  },
+  {
+    "code": "SELF_SIGNED_CERT_IN_CHAIN",
+    "symbol": "X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN",
+    "emittedBy": "Node.js (tls)",
+    "source": "node/deps/ncrypto/ncrypto.cc",
+    "evidence": "CASE(SELF_SIGNED_CERT_IN_CHAIN)"
+  },
+  {
+    "code": "UNABLE_TO_GET_ISSUER_CERT_LOCALLY",
+    "symbol": "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY",
+    "emittedBy": "Node.js (tls)",
+    "source": "node/deps/ncrypto/ncrypto.cc",
+    "evidence": "CASE(UNABLE_TO_GET_ISSUER_CERT_LOCALLY)"
   }
 ]

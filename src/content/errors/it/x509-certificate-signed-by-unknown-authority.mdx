@@ -1,0 +1,150 @@
+---
+title: "x509: certificate signed by unknown authority"
+errorCode: "x509: certificate signed by unknown authority"
+description: "Risolvi x509: certificate signed by unknown authority di Go: intermedio mancante sul server, CA privata o container senza bundle di CA."
+summary: "Go non è riuscito a costruire una catena dal certificato del server a una radice attendibile. Un server che omette l'intermedio, una CA privata, o un'immagine container senza alcun certificato radice."
+browsers: ["Go"]
+order: 32
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+Il pacchetto `crypto/x509` di Go restituisce un `UnknownAuthorityError` quando
+non riesce a costruire nessuna catena dal certificato del server a una radice
+attendibile. Il testo è *"x509: certificate signed by unknown authority"*.
+Passando da `net/http` o `crypto/tls` di solito arriva incapsulato:
+
+```text
+tls: failed to verify certificate: x509: certificate signed by unknown authority
+```
+
+A volte segue un indizio, nella forma *(possibly because of "..." while trying
+to verify candidate authority certificate "...")*. Significa che Go ha trovato
+un certificato che sembrava l'emittente e lo ha scartato: la firma non
+tornava, oppure quel certificato era a sua volta non valido. L'indizio indica
+il candidato, ed è spesso la via più rapida verso la causa.
+
+Il verificatore interno di Go, quello usato su Linux, cerca l'emittente in due
+soli posti: il pool delle radici e i certificati che il server ha inviato dopo
+la foglia. Non va a prendere un intermedio mancante da nessun'altra parte.
+
+<Handshake
+  caption="Dove viene sollevato x509: certificate signed by unknown authority"
+  steps={[
+    { from: 'Client Go', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Client Go', label: 'ServerHello, Certificate (foglia + gli intermedi che invia)' },
+    { from: 'Client Go', label: 'Cerca un emittente valido nel pool delle radici, poi negli intermedi inviati: nessuna catena' },
+    { from: 'Client Go', to: 'Server', label: 'alert bad_certificate: x509: certificate signed by unknown authority', fails: true },
+  ]}
+/>
+
+## Cause comuni
+
+- **Il server non invia il suo intermedio.** L'emittente della foglia è un
+  intermedio che nessun pool di radici contiene, e non è nell'handshake. Il
+  server è configurato con il certificato da solo invece che con la catena
+  completa.
+- **Il certificato viene da una CA privata.** Una CA ACME interna, una radice
+  aziendale, una CA di sviluppo. La catena può essere completa: è la sua
+  radice che non sta nel pool usato da Go.
+- **Il container non ha certificati radice.** Su Linux, Go legge il bundle di
+  sistema da un elenco fisso di percorsi, il primo dei quali è
+  `/etc/ssl/certs/ca-certificates.crt`, più i file in `/etc/ssl/certs` e
+  `/etc/pki/tls/certs`. Un'immagine costruita `FROM scratch`, o un'immagine
+  minimale senza pacchetto di CA, non ne ha nessuno. Go verifica allora contro
+  un pool vuoto, e ogni richiesta HTTPS fallisce con questo errore, comprese
+  quelle verso siti pubblici con certificati validi.
+- **`RootCAs` è stato impostato a un pool che contiene solo la radice
+  privata.** Un `tls.Config` con `RootCAs` non nil usa quel pool al posto delle
+  radici di sistema, e i siti pubblici smettono di verificarsi.
+
+## Come risolverlo
+
+**1. Capisci quale lato è sbagliato.** Conta i certificati che il server invia:
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com -showcerts 2>/dev/null \
+  | grep -c 'BEGIN CERTIFICATE'
+```
+
+`1` per un certificato emesso da una CA pubblica significa che manca
+l'intermedio. Se falliscono tutti gli host, compresi quelli pubblici noti, il
+problema è il pool di radici del client, non un server.
+
+**2. Intermedio mancante: servi la catena completa.**
+
+```nginx
+ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
+ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+```
+
+**3. Container vuoto: dagli delle radici.** Installa nell'immagine il
+pacchetto di CA della distribuzione, oppure copia il bundle dallo stage di
+build nell'immagine finale:
+
+```dockerfile
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+```
+
+Per un binario che deve funzionare senza alcun bundle di sistema, importa
+`golang.org/x/crypto/x509roots/fallback`. Incorpora un insieme di radici e lo
+registra con `x509.SetFallbackRoots`, che Go usa solo quando non ci sono radici
+di sistema disponibili. Il team di Go avverte che il pacchetto va tenuto
+aggiornato.
+
+**4. CA privata: aggiungi la radice, tieni quelle pubbliche.** Su Linux,
+`SSL_CERT_FILE` sostituisce il file di bundle letto da Go e `SSL_CERT_DIR`
+sostituisce le directory (separate da due punti). Puntale a un bundle che
+contiene le radici pubbliche e la tua, non alla sola tua radice. Nel codice,
+parti dal pool di sistema e aggiungi:
+
+```go
+pool, err := x509.SystemCertPool()
+if err != nil {
+	return err
+}
+pem, err := os.ReadFile("/etc/ssl/internal-root.pem")
+if err != nil {
+	return err
+}
+if !pool.AppendCertsFromPEM(pem) {
+	return errors.New("no certificates found in internal-root.pem")
+}
+client := &http.Client{Transport: &http.Transport{
+	TLSClientConfig: &tls.Config{RootCAs: pool},
+}}
+```
+
+Su macOS e Windows Go di norma chiede al sistema operativo di verificare la
+catena, quindi una radice attendibile nel Portachiavi o nello store di Windows
+viene rispettata senza toccare il programma.
+
+**Non impostare `InsecureSkipVerify: true`.** La documentazione di Go dice che
+con questa opzione `crypto/tls` accetta qualunque certificato e qualunque nome
+host, e la connessione è esposta a un machine-in-the-middle. L'errore sparisce
+perché non si controlla più niente.
+
+## Evitare che si ripresenti
+
+La metà lato server di questo errore è una catena che ha perso l'intermedio
+lungo la strada verso il server. CertMate scrive `fullchain.pem` accanto a
+`cert.pem` e `chain.pem` per ogni certificato che emette, passa ai deploy hook
+la catena completa come `CERTMATE_FULLCHAIN_PATH` (e i soli intermedi come
+`CERTMATE_CHAIN_PATH`), e i suoi deploy target tipizzati leggono
+`fullchain.pem`. Una distribuzione costruita su quei percorsi non perde
+l'intermedio.
+
+La metà lato client, un pool di radici vuoto o incompleto, dipende da come il
+programma Go è costruito ed eseguito: nessun emittente di certificati può
+risolverla. Quando CertMate stesso parla con una CA ACME privata, si fida del
+certificato della CA che gli fornisci passandolo a certbot come
+`REQUESTS_CA_BUNDLE`, invece di spegnere la verifica.
+
+## Errori correlati
+
+- `UNABLE_TO_VERIFY_LEAF_SIGNATURE`: l'errore di Node.js per una foglia di cui non si trova l'emittente.
+- `PKIX path building failed`: lo stesso errore in Java.
+- `NET::ERR_CERT_AUTHORITY_INVALID`: ciò che mostra Chromium quando non arriva a una radice attendibile.
+- `SEC_ERROR_UNKNOWN_ISSUER`: l'equivalente in Firefox.

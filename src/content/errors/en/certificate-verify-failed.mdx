@@ -1,0 +1,167 @@
+---
+title: "CERTIFICATE_VERIFY_FAILED"
+errorCode: "CERTIFICATE_VERIFY_FAILED"
+description: "Fix Python's [SSL: CERTIFICATE_VERIFY_FAILED]: the text after the colon names the real cause. Missing intermediates, CA bundles, certifi, internal CAs."
+summary: "Python's ssl module could not verify the server's certificate. The words after 'certificate verify failed:' are OpenSSL's reason, and they decide the fix."
+browsers: ["Python"]
+order: 30
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+Python's `ssl` module raises `ssl.SSLCertVerificationError`, a subclass of
+`ssl.SSLError`, with a message of this shape:
+
+```text
+[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1082)
+```
+
+The bracket holds OpenSSL's library and reason code. `CERTIFICATE_VERIFY_FAILED`
+only says that verification failed; it is the same for every cause. The text
+after the colon is the part that matters: OpenSSL's description of the
+verification error, or, for a name mismatch, Python's own sentence. The
+`_ssl.c` number is the line in Python's source that raised the exception and
+changes between Python versions. It says nothing about your server.
+
+The exception carries the same information as attributes, `verify_code` (the
+OpenSSL error number) and `verify_message`. Libraries built on `ssl` wrap it:
+`requests` raises `requests.exceptions.SSLError` with the Python message
+inside.
+
+The reasons you will meet most, with their `verify_code`:
+
+- `unable to get local issuer certificate` (20): a missing intermediate on the
+  server, or a root missing from the bundle Python uses.
+- `self-signed certificate in certificate chain` (19): the server sent a root
+  this client does not trust.
+- `self-signed certificate` (18): the server's own certificate is
+  self-signed.
+- `certificate has expired` (10): a certificate's `notAfter` date has passed.
+- `Hostname mismatch, certificate is not valid for 'example.com'.` (62): the
+  certificate does not cover the name you connected to.
+
+<Handshake
+  caption="Where CERTIFICATE_VERIFY_FAILED is raised"
+  steps={[
+    { from: 'Python', label: 'create_default_context(): CERT_REQUIRED, hostname check on, default CA certificates loaded' },
+    { from: 'Python', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Python', label: 'ServerHello, Certificate (leaf + intermediates)' },
+    { from: 'Python', label: 'OpenSSL builds and checks the chain against the CA certificates the context loaded' },
+    { from: 'Python', to: 'Server', label: 'Verification fails: handshake aborted, ssl.SSLCertVerificationError raised (CERTIFICATE_VERIFY_FAILED)', fails: true },
+  ]}
+/>
+
+## Where Python gets its trusted roots
+
+This is behind most of these errors, and it is not the same for every Python
+program:
+
+- **The `ssl` module.** `ssl.create_default_context()` requires a valid
+  certificate and checks the hostname. It loads CA certificates with
+  `load_default_certs()`: on Windows from the system `CA` and `ROOT` stores,
+  and on every platform from OpenSSL's default file and directory. Those
+  defaults are fixed when that OpenSSL is built, and `SSL_CERT_FILE` and
+  `SSL_CERT_DIR` override them. If nothing is found there, Python does not
+  complain when the context is created; the first connection fails instead.
+- **`requests`.** It does not use those defaults. It verifies against the
+  bundle of the `certifi` package, unless `REQUESTS_CA_BUNDLE` (or
+  `CURL_CA_BUNDLE`) is set or you pass `verify="/path/to/bundle.pem"`. Unless
+  whoever packaged it pointed it elsewhere, a root added to the operating
+  system's store makes no difference to `requests`.
+- **Python from the python.org macOS installer.** It includes its own copy of
+  OpenSSL and does not use the certificates in the macOS keychains. The
+  installer puts an *Install Certificates* command in the Python folder under
+  `/Applications`, which installs `certifi` and links OpenSSL's default CA file
+  to its bundle. Until that has been run, verification fails with
+  `unable to get local issuer certificate`.
+
+## Common causes
+
+- **The server does not send its intermediate.** Suffix
+  `unable to get local issuer certificate`. Browsers may still load the site.
+- **The bundle Python uses has no root at all**, or not the right one: the
+  python.org macOS build before *Install Certificates*, a slim container image
+  without a CA package, `SSL_CERT_FILE` pointing at the wrong file.
+- **An internal CA**, trusted by the machine but not by `certifi`, so
+  `requests` fails where a browser or curl on the same machine works.
+- **A proxy that intercepts TLS** and re-signs traffic with its own root.
+- **An outdated `certifi`** that predates the root the server chains to.
+
+## How to fix it
+
+**1. Read the reason and see which bundle is in use.**
+
+```python
+import socket
+import ssl
+
+host = "example.com"
+ctx = ssl.create_default_context()
+try:
+    with socket.create_connection((host, 443), timeout=10) as sock:
+        with ctx.wrap_socket(sock, server_hostname=host):
+            print("verified")
+except ssl.SSLCertVerificationError as e:
+    print(e.verify_code, e.verify_message)
+print(ssl.get_default_verify_paths())
+```
+
+`get_default_verify_paths()` shows the file and directory OpenSSL looks in and
+the names of the environment variables that override them. For `requests`,
+`python3 -m certifi` prints the path of the bundle it uses.
+
+**2. If the server is at fault, fix the server.** For
+`unable to get local issuer certificate` against a public site, check that the
+server sends its intermediate, and serve `fullchain.pem` if it does not. The
+page for that message shows how to tell.
+
+**3. On python.org macOS builds, run *Install Certificates*** from the Python
+folder in `/Applications`, once per Python version installed.
+
+**4. For an internal CA, add the root to what Python actually reads.** Get the
+root from whoever runs the CA, not from the failing connection. With the `ssl`
+module, add it to the default context rather than replacing the defaults:
+
+```python
+ctx = ssl.create_default_context()
+ctx.load_verify_locations(cafile="/etc/ssl/internal-root.pem")
+```
+
+Passing `cafile=` to `create_default_context()` itself loads only that file,
+and public sites then fail. For `requests`, `REQUESTS_CA_BUNDLE` and `verify=`
+replace `certifi`'s bundle, so build one that holds both:
+
+```bash
+cat "$(python3 -m certifi)" /etc/ssl/internal-root.pem > /etc/ssl/bundle-with-internal-root.pem
+export REQUESTS_CA_BUNDLE=/etc/ssl/bundle-with-internal-root.pem
+```
+
+**5. For an outdated bundle,** `pip install --upgrade certifi`.
+
+**`verify=False` is not a fix.** In `requests` it sets `ssl.CERT_NONE`: no
+certificate is checked, from any server, including an impostor's.
+`ssl._create_unverified_context()` does the same for the `ssl` module. Both
+turn a visible error into an invisible exposure.
+
+## Prevent it from recurring
+
+CertMate is itself a Python program that talks to CAs over HTTPS, and it
+follows step 4 rather than disabling checks. For a private ACME CA, the CA
+certificate you paste into the account is used as `verify=` for the
+connection test and passed to certbot as `REQUESTS_CA_BUNDLE` at issuance and
+at renewal. See [CA Providers](/docs/ca-providers.html).
+
+For your own servers, the Python-side error most often traced back to them is
+the missing intermediate. CertMate writes `fullchain.pem` for every
+certificate and hands deploy hooks its path as `CERTMATE_FULLCHAIN_PATH`, so a
+hook that installs that file serves the complete chain.
+
+## Related errors
+
+- `unable to get local issuer certificate`: the most common reason after the colon.
+- `self-signed certificate in certificate chain`: an untrusted root sent by the server.
+- `MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT`: Firefox, when the server's own certificate is self-signed.
+- `NET::ERR_CERT_DATE_INVALID`: the Chromium view of `certificate has expired`.
+- `NET::ERR_CERT_COMMON_NAME_INVALID`: the Chromium view of a hostname mismatch.

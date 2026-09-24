@@ -1,0 +1,147 @@
+---
+title: "self-signed certificate in certificate chain"
+errorCode: "self-signed certificate in certificate chain"
+description: "Risolvi 'self-signed certificate in certificate chain': il server invia una radice ignota al client. CA interne, intercettazione TLS, bundle vecchi."
+summary: "La catena inviata dal server termina con un certificato radice, e quella radice non è nel trust store di questo client. Di solito una CA interna, un proxy che intercetta il TLS o un bundle CA vecchio."
+browsers: ["curl", "OpenSSL", "Python"]
+order: 29
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+È il testo di OpenSSL per l'errore di verifica 19,
+`X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN`. Le versioni di OpenSSL precedenti alla
+3.0 scrivono *self signed*, senza trattino. Arriva racchiuso nel messaggio del
+client:
+
+```text
+curl: (60) SSL certificate problem: self-signed certificate in certificate chain
+curl: (60) SSL certificate OpenSSL verify result: self-signed certificate in certificate chain (19)
+[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1082)
+verify error:num=19:self-signed certificate in certificate chain
+```
+
+Nell'ordine: curl fino alla 8.16, curl dalla 8.17 in poi con il backend
+OpenSSL, Python e `openssl s_client`. Node.js segnala la stessa condizione con
+il codice `SELF_SIGNED_CERT_IN_CHAIN`.
+
+OpenSSL ha costruito la catena verso l'alto dal certificato del server e ha
+raggiunto un certificato che si è firmato da solo: una radice. Una radice
+presente nel trust store del client conclude la verifica con successo. Questa
+non c'è, ed è arrivata dal server, quindi nulla di cui il client si fida
+garantisce per alcun certificato della catena.
+
+Inviare la radice non è di per sé un problema. Un server che include nella
+catena una radice pubblicamente riconosciuta funziona con ogni client che ha
+quella radice. L'errore dice che la radice è sconosciuta **a questo client**.
+
+La formulazione lo distingue da due errori vicini. `self-signed certificate`
+(errore 18) significa che è autofirmato il certificato del server stesso,
+senza alcuna catena. `unable to get local issuer certificate` (errore 20)
+significa che la catena si è fermata prima di qualunque radice.
+
+<Handshake
+  caption="Dove viene sollevato self-signed certificate in certificate chain"
+  steps={[
+    { from: 'curl', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'curl', label: 'ServerHello, Certificate (foglia, intermedio, radice)' },
+    { from: 'curl', label: 'OpenSSL costruisce la catena fino alla radice inviata dal server' },
+    { from: 'curl', label: 'La radice si è firmata da sola e non è nel trust store locale' },
+    { from: 'curl', to: 'Server', label: 'Risultato di verifica 19: connessione abbandonata, codice di uscita 60 (self-signed certificate in certificate chain)', fails: true },
+  ]}
+/>
+
+## Cause comuni
+
+- **Una CA interna.** Il certificato del server viene dalla CA della tua
+  organizzazione (un server ACME privato, una PKI interna) e il server invia
+  la radice insieme alla catena. Una postazione su cui la radice è stata
+  installata se ne fida; un container nuovo, un runner di CI o un client
+  Python che usa `certifi` no.
+- **Qualcosa sta intercettando il TLS.** Un proxy aziendale o un prodotto di
+  sicurezza per endpoint termina la connessione e la rifirma con una propria
+  radice. Il segnale è che ogni sito HTTPS mostra la stessa radice nelle righe
+  `i:`, con il nome del proxy o del fornitore invece di quello della CA del
+  sito.
+- **Il bundle CA del client è più vecchio della radice.** Il server invia una
+  radice pubblicamente riconosciuta che è entrata nei trust store dopo la
+  creazione del bundle di questo client: un'immagine base vecchia, un pacchetto
+  `ca-certificates` vecchio, un `certifi` vecchio.
+
+## Come risolverlo
+
+**1. Identifica la radice.** Separa ciò che il server invia e stampa nomi e
+impronta di ogni certificato:
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com -showcerts 2>/dev/null \
+  | awk '/BEGIN CERT/{n++; p=1} p{print > ("served-" n ".pem")} /END CERT/{p=0}'
+for f in served-*.pem; do
+  openssl x509 -in "$f" -noout -subject -issuer -fingerprint -sha256
+done
+```
+
+Il certificato il cui subject coincide con l'issuer è la radice che il client
+ha rifiutato.
+
+**2. Decidi se merita fiducia.** Una radice presa dalla connessione fallita
+non dimostra nulla: se qualcuno sta intercettando il traffico, è esattamente
+il certificato che ti consegnerebbe. Procurati la radice da chi gestisce la CA,
+attraverso un canale separato, e confronta l'impronta SHA-256. Se la radice
+risulta appartenere a un proxy di cui non sapevi nulla, parlane con chi
+gestisce la rete prima di fidarti di qualunque cosa.
+
+**3. Rendi la radice attendibile per il client.** Per un comando, per un
+processo o per la macchina:
+
+```bash
+curl --cacert /etc/ssl/internal-root.pem https://internal.example.com/
+
+export SSL_CERT_FILE=/etc/ssl/bundle-with-internal-root.pem
+
+cp internal-root.pem /usr/local/share/ca-certificates/internal-root.crt
+update-ca-certificates
+```
+
+`--cacert`, `CURL_CA_BUNDLE` e `SSL_CERT_FILE` sostituiscono il bundle
+predefinito, quindi un file con la sola radice interna rompe i siti pubblici.
+Lo store di sistema (le ultime due righe, Debian e Ubuntu; PEM con estensione
+`.crt`) invece si aggiunge. Node.js estende le sue radici incluse con
+`NODE_EXTRA_CA_CERTS`, letta una sola volta all'avvio. Git legge
+`http.sslCAInfo` o `GIT_SSL_CAINFO`. Python e `requests` sono trattati in
+`CERTIFICATE_VERIFY_FAILED`.
+
+**4. Se il bundle è vecchio, aggiornalo** invece di aggiungere a mano una
+radice pubblica: aggiorna il pacchetto `ca-certificates` della distribuzione,
+ricostruisci su un'immagine base recente, oppure
+`pip install --upgrade certifi`.
+
+**Disattivare la verifica non è una soluzione.** `curl -k`, `verify=False` in
+Python o l'equivalente altrove accettano qualsiasi certificato, compreso
+quello dell'intercettatore che il passo 2 serve a scoprire.
+
+## Evitare che si ripresenti
+
+Questo errore riguarda la distribuzione della fiducia, e l'unica soluzione
+duratura è mettere la radice interna nello store di ogni client in modo
+deliberato, una volta, attraverso lo stesso canale che usi per il resto della
+configurazione della macchina.
+
+CertMate applica questa regola alle proprie connessioni. Un account CA ACME
+privata in CertMate prevede il certificato della CA come campo. Il test di
+connessione verifica l'endpoint ACME con quel certificato e, se la verifica
+fallisce senza che sia stato fornito, risponde `SSL verification failed.
+Provide CA cert for verification.` Emissione e rinnovo passano il certificato
+a certbot come `REQUESTS_CA_BUNDLE`. L'account non ha
+un'opzione per saltare la verifica. Vedi
+[CA Providers](/docs/ca-providers.html).
+
+## Errori correlati
+
+- `unable to get local issuer certificate`: la catena si è fermata prima di qualunque radice.
+- `CERTIFICATE_VERIFY_FAILED`: come Python segnala questo e gli altri errori di verifica.
+- `MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT`: Firefox, quando è autofirmato il certificato del server stesso.
+- `NET::ERR_CERT_AUTHORITY_INVALID`: l'equivalente in Chromium.
+- `SEC_ERROR_UNKNOWN_ISSUER`: l'equivalente in Firefox.
