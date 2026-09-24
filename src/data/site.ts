@@ -17,13 +17,20 @@
  */
 
 /** Latest published CertMate release. Bump on every release. */
-export const VERSION = '2.34.0';
+export const VERSION = '2.35.0';
 
 /** Provider cards rendered in DnsProviders.astro (keep in sync with that grid). */
 export const PROVIDER_COUNT = 29;
 
 /** Certificate-storage backends the app ships (see modules/api/models.py). */
 export const STORAGE_BACKEND_COUNT = 6;
+
+/**
+ * Certificate authorities the app can issue from (modules/core/ca_manager.py).
+ * Let's Encrypt staging is Let's Encrypt in test mode, not another CA, so the
+ * registry's nine entries are eight authorities. v2.35.0 added Sectigo.
+ */
+export const CA_COUNT = 8;
 
 export const GITHUB = 'https://github.com/fabriziosalmi/certmate';
 export const RELEASES_URL = `${GITHUB}/releases`;
