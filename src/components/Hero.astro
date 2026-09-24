@@ -1,6 +1,6 @@
 ---
 import { Icon } from 'astro-icon/components';
-import { VERSION, PROVIDER_COUNT, GITHUB, CA_COUNT, STORAGE_BACKEND_COUNT } from '~/data/site';
+import { VERSION, PROVIDER_COUNT, CA_COUNT, STORAGE_BACKEND_COUNT } from '~/data/site';
 
 // Hero leads with substance, not adjectives: what CertMate is, and the one
 // thing that sets it apart — an independently verifiable audit trail. The
@@ -58,24 +58,31 @@ import { VERSION, PROVIDER_COUNT, GITHUB, CA_COUNT, STORAGE_BACKEND_COUNT } from
       <div class="mt-8 grid grid-cols-3 gap-4 sm:gap-6">
         <div>
           <div class="text-3xl font-bold text-primary sm:text-4xl">{PROVIDER_COUNT}+</div>
-          <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">DNS Providers</div>
+          <div class="mt-1 text-sm text-gray-600 dark:text-gray-400">DNS Providers</div>
         </div>
         <div>
           <div class="text-3xl font-bold text-primary sm:text-4xl">{CA_COUNT + STORAGE_BACKEND_COUNT}</div>
-          <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">CA &amp; Storage Backends</div>
+          <div class="mt-1 text-sm text-gray-600 dark:text-gray-400">CA &amp; Storage Backends</div>
         </div>
         <div>
-          <div class="text-3xl font-bold text-primary sm:text-4xl">1.2k+</div>
-          <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            <Icon name="fa6-solid:star" class="text-yellow-500" aria-hidden="true" /> GitHub Stars
+          <div class="flex items-center gap-2 text-3xl font-bold text-primary sm:text-4xl">
+            1.2k+ <Icon name="fa6-solid:star" class="text-xl text-yellow-500 sm:text-2xl" aria-hidden="true" />
           </div>
+          <div class="mt-1 text-sm text-gray-600 dark:text-gray-400">GitHub Stars</div>
         </div>
       </div>
 
+      {/* One primary action and one secondary. Four buttons of equal weight
+         wrapped onto two rows, with nothing to say which came first; GitHub
+         and the security page are a header link and a text link. */}
       <div class="mt-8 flex flex-wrap gap-3">
+        <a href="#installation" class="btn btn-primary">
+          <Icon name="fa6-solid:rocket" aria-hidden="true" />
+          Get started
+        </a>
         <a
           href="https://demo.certmate.org"
-          class="btn btn-primary"
+          class="btn btn-secondary"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -83,37 +90,25 @@ import { VERSION, PROVIDER_COUNT, GITHUB, CA_COUNT, STORAGE_BACKEND_COUNT } from
           Live demo
           <span class="sr-only">(opens in new tab)</span>
         </a>
-        <a href="#installation" class="btn btn-secondary">
-          <Icon name="fa6-solid:rocket" aria-hidden="true" />
-          Get Started
-        </a>
-        <a href="/security" class="btn btn-secondary">
-          <Icon name="fa6-solid:shield-halved" aria-hidden="true" />
-          Security &amp; trust
-        </a>
-        <a
-          href={GITHUB}
-          class="btn btn-secondary"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Icon name="fa6-brands:github" aria-hidden="true" />
-          View on GitHub
-          <span class="sr-only">(opens in new tab)</span>
-        </a>
       </div>
 
-      <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
+      <p class="mt-4 text-sm text-gray-600 dark:text-gray-400">
         Demo login
         <code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-gray-800 dark:bg-gray-800 dark:text-gray-200">demo</code>
         /
         <code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-gray-800 dark:bg-gray-800 dark:text-gray-200">demodemo123!</code>
         &middot; resets hourly &middot; a shared sandbox &mdash; please don&rsquo;t enter real credentials.
       </p>
+      <p class="mt-2 text-sm">
+        <a href="/security/" class="font-medium text-primary hover:underline">How CertMate handles security reports and its audit trail &rarr;</a>
+      </p>
     </div>
 
     {/* Illustrative certmate-cli transcript. Real command names from
-       clients/certmate-cli; the output lines are schematic examples, not a
+       clients/certmate-cli. Lines wrap only between tokens: each flag and its
+       value are one unbreakable unit, where break-words used to split
+       "--wait" after its dashes. Kept short enough to fit on one line from
+       1024px up. The output lines are schematic examples, not a
        captured run — presented as an example, never as live product output. */}
     <div
       class="overflow-hidden rounded-xl border border-gray-200 bg-gray-950 shadow-2xl dark:border-gray-800"
@@ -126,10 +121,10 @@ import { VERSION, PROVIDER_COUNT, GITHUB, CA_COUNT, STORAGE_BACKEND_COUNT } from
         <span class="h-3 w-3 rounded-full bg-green-500" aria-hidden="true"></span>
         <span class="ml-3 text-xs font-medium text-gray-400">certmate-cli &mdash; illustrative</span>
       </div>
-      <pre class="overflow-x-auto whitespace-pre-wrap break-words p-4 text-xs leading-relaxed text-gray-100 font-mono sm:text-sm"><code><span class="text-emerald-400">$</span> <span class="text-gray-100">pip install certmate-cli</span>
+      <pre class="whitespace-pre-wrap p-4 text-xs leading-relaxed text-gray-100 font-mono xl:text-sm"><code><span class="text-emerald-400">$</span> <span class="text-gray-100">pip install certmate-cli</span>
 <span class="text-emerald-400">$</span> <span class="text-gray-100">export CERTMATE_URL=https://certmate.example.com</span>
-<span class="text-emerald-400">$</span> <span class="text-gray-100">certmate cert create app.example.com --dns cloudflare --wait</span>
-<span class="text-gray-400">issued  app.example.com  Let's Encrypt  expires in 90d</span>
+<span class="text-emerald-400">$</span> <span class="text-gray-100">certmate cert create example.com <span class="whitespace-nowrap">--dns cloudflare</span> <span class="whitespace-nowrap">--wait</span></span>
+<span class="text-gray-400">issued  example.com  Let's Encrypt  expires in 90d</span>
 <span class="text-emerald-400">$</span> <span class="text-gray-100">certmate audit verify</span>
 <span class="text-gray-400">PASS  chain intact · Ed25519 checkpoint verified</span>
 <span class="text-emerald-400">$</span> <span class="text-gray-100">certmate health</span>
