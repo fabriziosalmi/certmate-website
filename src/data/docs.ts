@@ -186,6 +186,12 @@ export const DOC_PAGES: DocPage[] = [
     description:
       'Use a DNS service CertMate has no provider for: the hook script contract, path rules, propagation wait, apex plus wildcard, and a curl example.',
   },
+  {
+    slug: 'notifications',
+    title: 'Notifications - CertMate Documentation',
+    description:
+      'Configure CertMate notifications: email, Slack, Discord, Telegram, ntfy, Gotify and generic webhooks, event filters, expiry warnings, weekly digest.',
+  },
 ];
 
 /** The published URL of a documentation page, absolute. */

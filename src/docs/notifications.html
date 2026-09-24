@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - CertMate Documentation</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="preload" href="vendor/font-awesome/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/font-awesome/all.min.css"></noscript>
+    <link rel="preload" as="style" href="vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/fonts/fonts.css"></noscript>
+    <style>
+        .doc-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h1 {
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-6);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content p, .doc-content li {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+        .doc-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin: var(--spacing-6) 0;
+        }
+        .doc-content pre code {
+            background: none;
+            padding: 0;
+            color: white;
+        }
+        .doc-content ul, .doc-content ol {
+            margin: var(--spacing-4) 0;
+            padding-left: var(--spacing-8);
+        }
+        .doc-content li {
+            margin: var(--spacing-2) 0;
+        }
+    
+    /* In-page TOC, injected by toc.js. Sticky right column on lg+
+       viewports; collapsed to a top disclosure on smaller screens. */
+    .doc-toc {
+      display: none;
+    }
+    /* Shown only when it fits in the right margin: this page's content
+       column is 900px wide, the TOC 220px plus 24px of gap, so the viewport
+       must be at least 900 + 2 * 244 = 1388px. Below that the old rule
+       placed the TOC over the text (#588). */
+    @media (min-width: 1388px) {
+      .doc-toc {
+        display: block;
+        position: fixed;
+        top: 100px;
+        right: max(24px, calc((100vw - 900px) / 2 - 244px));
+        width: 220px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+      }
+    }
+    .doc-toc-inner {
+      border-left: 2px solid var(--gray-200);
+      padding-left: 16px;
+    }
+    .doc-toc-list { list-style: none; padding: 0; margin: 0; }
+    .doc-toc-item { margin: 4px 0; line-height: 1.4; }
+    .doc-toc-item-h3 { padding-left: 12px; }
+    .doc-toc-link {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: block;
+      padding: 2px 0;
+      transition: color 120ms ease;
+    }
+    .doc-toc-link:hover { color: var(--gray-900); }
+    .doc-toc-link.is-active {
+      color: var(--blue-600, #2563eb);
+      font-weight: 600;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="../assets/certmate_logo.png" alt="CertMate Logo" class="brand-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html#features" class="nav-link">Features</a>
+                <a href="../index.html#providers" class="nav-link">DNS Providers</a>
+                <a href="index.html" class="nav-link active">Documentation</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-bell"></i> Notifications</h1>
+                <p class="docs-subtitle">Where CertMate sends certificate events, what each channel needs, which events can be filtered, and the weekly digest.</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <h2>Where Notifications Are Configured</h2>
+            <p>Notifications are set up in Settings &rarr; Notifications. Nothing is sent until <strong>Enable Notifications</strong> is on; after that, each channel has its own enable switch. The page holds one email channel, the weekly digest, and a list of webhook channels. Click <strong>Save Notification Settings</strong> to store the changes. Reading or saving this configuration requires the admin role.</p>
+
+            <h2>Channels</h2>
+            <p>Email uses SMTP. Every other channel is a webhook entry with a <strong>type</strong>: Generic, Slack, Discord, Telegram, ntfy or Gotify. The type decides the fields the entry shows and the shape of the request CertMate sends.</p>
+            <table>
+                <thead>
+                    <tr><th>Channel</th><th>What you enter</th><th>What CertMate sends</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Email (SMTP)</td><td>SMTP host, port (default 587), username, password, from address, to addresses (comma-separated)</td><td>One message to all recipients, subject <code>[CertMate] &lt;title&gt;</code>, plain-text and HTML parts</td></tr>
+                    <tr><td>Slack</td><td>Incoming webhook URL</td><td>JSON with <code>text</code> and <code>blocks</code>: a header with the title, a section with the message, and one field per event detail</td></tr>
+                    <tr><td>Discord</td><td>Webhook URL</td><td>JSON with one embed: the title, the message as description, and one inline field per event detail</td></tr>
+                    <tr><td>Telegram</td><td>Bot token, chat ID</td><td>JSON to <code>https://api.telegram.org/bot&lt;token&gt;/sendMessage</code> with <code>chat_id</code> and <code>text</code>, as plain text</td></tr>
+                    <tr><td>ntfy</td><td>Topic URL, such as <code>https://ntfy.sh/your-topic</code>; priority; optional access token</td><td>The message and details as a plain-text body, with <code>Title</code> and <code>Priority</code> headers</td></tr>
+                    <tr><td>Gotify</td><td>Server URL, app token, priority (0&ndash;10)</td><td>JSON with <code>title</code>, <code>message</code> and <code>priority</code> to <code>&lt;server&gt;/message</code></td></tr>
+                    <tr><td>Generic</td><td>URL, optional HMAC secret, method, authentication, custom headers, payload template, timeout, attempts</td><td>A JSON body, CertMate's own or rendered from your template</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Email</h3>
+            <p>The from address defaults to the username when left empty. CertMate logs in only when both username and password are set. The connection is upgraded with STARTTLS; this is the <code>use_tls</code> field, which is on by default and has no switch in the UI. Implicit TLS on connect is not offered. A message is tried up to 3 times, 1 and then 2 seconds apart; a channel without a host or without recipients fails at once and is not retried.</p>
+            <p>The plain-text part is the message followed by a <code>Details:</code> list of the event's fields; the HTML part shows the same fields as a table.</p>
+            <p>Microsoft Teams has no channel type of its own. Add a Teams channel's email address as a recipient of the email channel, and Teams posts the message into the channel.</p>
+
+            <h3>Telegram, ntfy and Gotify</h3>
+            <ul>
+                <li><strong>Telegram</strong> has no URL field: the address is built from the bot token. Both the token and the chat ID are required. The text is the title, the message and one line per event detail, sent without Markdown parsing, so characters such as <code>*</code> and <code>_</code> in domain names and error messages arrive unchanged.</li>
+                <li><strong>ntfy</strong> priority defaults to <code>default</code>; the field suggests <code>default</code>, <code>high</code> or <code>urgent</code>. The access token, if set, is sent as <code>Authorization: Bearer &lt;token&gt;</code>.</li>
+                <li><strong>Gotify</strong> needs both the server URL and the app token. The token is sent in the <code>X-Gotify-Key</code> header. Priority defaults to 5.</li>
+            </ul>
+            <p>Slack, Discord, Telegram, ntfy and Gotify always use <code>POST</code>. Their timeout is 10 seconds and they are tried up to 3 times, unless <code>timeout</code> or <code>max_retries</code> is set on the entry through the API.</p>
+
+            <h3>Generic webhooks</h3>
+            <p>The generic type is for any receiver that is not in the list. Its request body, payload templates, method and authentication options, HMAC signature, retry rules and the restrictions on internal targets are described in <a href="webhooks.html">Webhooks</a>. The restrictions on internal targets and the retry rules apply to every webhook type, not only generic.</p>
+
+            <h2>Events</h2>
+            <p>These events reach notification channels. The title is what appears in the email subject, the Slack header and the other channels' title fields.</p>
+            <table>
+                <thead>
+                    <tr><th>Event</th><th>Title</th><th>Sent when</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>certificate_created</code></td><td>Certificate Created (Certificate Adopted for an adopted certificate)</td><td>A certificate is issued for a new domain</td></tr>
+                    <tr><td><code>certificate_renewed</code></td><td>Certificate Renewed</td><td>A certificate is renewed</td></tr>
+                    <tr><td><code>certificate_failed</code></td><td>Certificate Failed</td><td>Issuance or renewal fails</td></tr>
+                    <tr><td><code>certificate_revoked</code></td><td>Certificate Revoked</td><td>A client certificate is revoked</td></tr>
+                    <tr><td><code>certificate_deployed</code></td><td>Certificate Deployed</td><td>At least one deploy hook succeeded for a certificate</td></tr>
+                    <tr><td><code>certificate_expiring</code></td><td>Certificate Expiring</td><td>A certificate crosses an expiry threshold (below)</td></tr>
+                    <tr><td><code>domain_expiring</code></td><td>Domain Registration Expiring</td><td>A tracked domain registration crosses an expiry threshold (below)</td></tr>
+                    <tr><td><code>deploy_hook_failed</code></td><td>Deploy Hook Failed</td><td>A deploy hook or deploy target fails</td></tr>
+                    <tr><td><code>certificate_deploy_incomplete</code></td><td>Certificate Not Deployed</td><td>A certificate was obtained but not every deploy target received it</td></tr>
+                </tbody>
+            </table>
+            <p>The message is <code>&lt;title&gt;: &lt;domain&gt;</code>, extended with the hook name, the days left or "expired" for the two expiry events, and the error when there is one. Other internal events, such as the start and completion of each deploy hook, are not sent to notification channels.</p>
+
+            <h3>Filters</h3>
+            <p>There are two event filters, and an event must pass both.</p>
+            <ul>
+                <li><strong>Notify on Events</strong>, at the top of the page, applies to every channel, email included.</li>
+                <li><strong>Events (leave empty for all)</strong>, on each webhook entry, applies to that webhook only. The email channel has no filter of its own.</li>
+            </ul>
+            <p>An empty filter lets every event through. Both offer the same seven events: <code>certificate_created</code>, <code>certificate_renewed</code>, <code>certificate_deployed</code>, <code>certificate_expiring</code>, <code>certificate_revoked</code>, <code>certificate_failed</code> and <code>domain_expiring</code>.</p>
+
+            <h3>Always delivered</h3>
+            <p><code>deploy_hook_failed</code> and <code>certificate_deploy_incomplete</code> have no checkbox. They are sent to every enabled channel whatever either filter says, because they report a certificate that may not have reached the systems serving it. Only the <strong>Enable Notifications</strong> switch and each channel's own switch stop them.</p>
+
+            <h2>Expiry Warnings</h2>
+            <p>A job runs every day at 07:00, after the 02:00 renewal sweep, and publishes an expiry event when a certificate or a domain registration crosses a threshold of days left.</p>
+            <table>
+                <thead>
+                    <tr><th>Event</th><th>Thresholds (days left)</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>certificate_expiring</code>, auto-renew on</td><td>14, 7, 3, 1, 0</td></tr>
+                    <tr><td><code>certificate_expiring</code>, auto-renew off</td><td>The renewal threshold (default 30) or 14, whichever is larger, then 14, 7, 3, 1, 0</td></tr>
+                    <tr><td><code>domain_expiring</code></td><td>60, 30, 14, 7, 1, 0</td></tr>
+                </tbody>
+            </table>
+            <p>With auto-renew on, renewal starts at the renewal threshold, so a certificate still unrenewed at 14 days means renewals have been failing. With auto-renew off, the first warning comes when someone has to act. A threshold of 0 means the day it expires, or expired.</p>
+            <p>Each threshold is announced once per expiry date. A repeated run says nothing new, and a renewed certificate has a new expiry date and starts again from the first threshold. If the job missed days, it announces the nearest threshold that has been crossed, once, rather than every threshold it skipped.</p>
+            <p><code>domain_expiring</code> covers only domains whose registration expiry CertMate tracks and could look up; see <a href="domain-health.html">Domain Health</a>.</p>
+
+            <h2>Weekly Digest</h2>
+            <p>The digest is a summary email sent every Sunday at 00:00 to the email channel's recipients. It goes out only when notifications are enabled, the email channel is enabled, and <strong>Weekly Digest</strong> is on; the digest switch is on by default and can be changed only while the email channel is enabled. It is not affected by the event filters and is not sent to webhooks.</p>
+            <p>The subject is <code>[CertMate] Weekly Certificate Digest</code>. It contains:</p>
+            <ul>
+                <li><strong>Server Certificates</strong>: total, valid, expiring soon (within the renewal threshold) and expired, followed by each expiring domain with its days left.</li>
+                <li><strong>Client Certificates</strong>: total, active and revoked.</li>
+                <li><strong>Activity (last 7 days)</strong>: certificates created, renewed, and failed operations, counted from the audit log.</li>
+            </ul>
+            <p><strong>Send now</strong> sends the digest immediately (<code>POST /api/digest/send</code>, admin). Each send, successful or failed, is recorded in the audit log with the number of recipients; the addresses themselves are not recorded.</p>
+
+            <h2>Testing a Channel</h2>
+            <p><strong>Send test email</strong> and each webhook's <strong>Test</strong> send one message titled "Test Notification" with the text "This is a test notification from CertMate.", using the values currently in the form, saved or not. A test makes a single attempt, bypasses the event filters and is not written to the delivery log. On failure the toast shows the error returned by the SMTP server or the receiver, or the reason CertMate refused to send.</p>
+
+            <h2>Delivery Log</h2>
+            <p>Every delivery to the email channel or a webhook, after its retries, is appended to <code>webhook_deliveries.jsonl</code> in CertMate's data directory, which keeps the latest 1,000 entries. The weekly digest and tests are not logged there. Each entry records the time, channel name and type, event, HTTP status, success, number of attempts, error and duration.</p>
+            <p>Of the destination URL, only the origin is kept: scheme, host and port. The path and query are dropped, because for Slack, Discord, ntfy and Gotify the path is the credential. <strong>Recent Deliveries</strong>, below the webhook list, shows the latest 50 entries; <code>GET /api/webhooks/deliveries</code> (admin) returns up to 500. Details are in <a href="webhooks.html">Webhooks</a>.</p>
+
+            <h2>Next Steps</h2>
+            <ul>
+                <li><a href="webhooks.html">Webhooks</a>: generic webhook body, payload templates, signatures, retries and the notifications API</li>
+                <li><a href="deploy-hooks.html">Deploy Hooks</a>: what produces <code>certificate_deployed</code>, <code>deploy_hook_failed</code> and <code>certificate_deploy_incomplete</code></li>
+                <li><a href="domain-health.html">Domain Health</a>: tracking domain registration expiry</li>
+                <li><a href="security.html">Security</a>: roles and how stored credentials are handled</li>
+                <li><a href="troubleshooting.html">Troubleshooting</a>: diagnosing failed deliveries</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributors</a></p>
+        </div>
+    </footer>
+    <script src="toc.js" defer></script>
+</body>
+</html>
