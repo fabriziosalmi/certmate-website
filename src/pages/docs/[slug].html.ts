@@ -19,8 +19,8 @@
  * are replaced by the site's (src/lib/docs-shell.ts).
  */
 import type { APIRoute } from 'astro';
-import { DOC_PAGES, DOC_PAGES_IT, docAlternates, docUrl, type DocPage } from '../../data/docs';
-import { applyShell } from '~/lib/docs-shell';
+import { DOC_CARDS, DOC_GROUPS, DOC_PAGES, DOC_PAGES_IT, docAlternates, docUrl, type DocPage } from '../../data/docs';
+import { applyShell, renderDocsIndex } from '~/lib/docs-shell';
 import { ogImageFor } from '~/lib/og';
 import { buildHead } from '../../lib/seo';
 import { PROVIDER_COUNT } from '../../data/site';
@@ -86,7 +86,15 @@ export const GET: APIRoute = ({ props }) => {
   // The provider count is stated in prose on two of these pages and had
   // drifted to 22 and 28 against a declared 29. src/data/site.ts is the one
   // place that number lives; the token is how these pages read it.
-  const body = source.replace(/\{\{PROVIDER_COUNT\}\}/g, String(PROVIDER_COUNT));
+  // The index's sections are rendered from DOC_GROUPS; see renderDocsIndex.
+  const withIndex =
+    page.slug === 'index'
+      ? source.replace(/<!-- DOCS_INDEX:[^>]*-->/, () => renderDocsIndex(DOC_GROUPS, DOC_CARDS))
+      : source;
+  if (page.slug === 'index' && withIndex === source) {
+    throw new Error('src/docs/index.html has no DOCS_INDEX marker');
+  }
+  const body = withIndex.replace(/\{\{PROVIDER_COUNT\}\}/g, String(PROVIDER_COUNT));
 
   // The site's header and footer replace the page's own; see docs-shell.ts.
   const pathname = new URL(docUrl(page.slug)).pathname;
