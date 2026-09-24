@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNS-01 Delegation - CertMate Documentation</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="preload" href="vendor/font-awesome/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/font-awesome/all.min.css"></noscript>
+    <link rel="preload" as="style" href="vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/fonts/fonts.css"></noscript>
+    <style>
+        .doc-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h1 {
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-6);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content p, .doc-content li {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+        .doc-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin: var(--spacing-6) 0;
+        }
+        .doc-content pre code {
+            background: none;
+            padding: 0;
+            color: white;
+        }
+        .doc-content ul, .doc-content ol {
+            margin: var(--spacing-4) 0;
+            padding-left: var(--spacing-8);
+        }
+        .doc-content li {
+            margin: var(--spacing-2) 0;
+        }
+    
+    /* In-page TOC, injected by toc.js. Sticky right column on lg+
+       viewports; collapsed to a top disclosure on smaller screens. */
+    .doc-toc {
+      display: none;
+    }
+    /* Shown only when it fits in the right margin: this page's content
+       column is 900px wide, the TOC 220px plus 24px of gap, so the viewport
+       must be at least 900 + 2 * 244 = 1388px. Below that the old rule
+       placed the TOC over the text (#588). */
+    @media (min-width: 1388px) {
+      .doc-toc {
+        display: block;
+        position: fixed;
+        top: 100px;
+        right: max(24px, calc((100vw - 900px) / 2 - 244px));
+        width: 220px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+      }
+    }
+    .doc-toc-inner {
+      border-left: 2px solid var(--gray-200);
+      padding-left: 16px;
+    }
+    .doc-toc-list { list-style: none; padding: 0; margin: 0; }
+    .doc-toc-item { margin: 4px 0; line-height: 1.4; }
+    .doc-toc-item-h3 { padding-left: 12px; }
+    .doc-toc-link {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: block;
+      padding: 2px 0;
+      transition: color 120ms ease;
+    }
+    .doc-toc-link:hover { color: var(--gray-900); }
+    .doc-toc-link.is-active {
+      color: var(--blue-600, #2563eb);
+      font-weight: 600;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="../assets/certmate_logo.png" alt="CertMate Logo" class="brand-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html#features" class="nav-link">Features</a>
+                <a href="../index.html#providers" class="nav-link">DNS Providers</a>
+                <a href="index.html" class="nav-link active">Documentation</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-share-nodes"></i> DNS-01 Delegation</h1>
+                <p class="docs-subtitle">How CertMate issues for a domain whose DNS it cannot write, by answering the DNS-01 challenge in a zone it can.</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <h2>The Problem</h2>
+            <p>A DNS-01 challenge is answered by publishing a TXT record at <code>_acme-challenge.&lt;domain&gt;</code>. CertMate does that through the API of a configured DNS provider, so it needs write access to the zone that holds the name. Sometimes it cannot have it: the zone is served by several providers at once (multi-master DNS), the provider has no API CertMate supports, or the zone belongs to someone else who will not hand out credentials.</p>
+
+            <h2>How Delegation Works</h2>
+            <p>The owner of the domain adds one CNAME, once, from the challenge name into a zone CertMate can write. CertMate calls that zone the <strong>domain alias</strong> (the <code>domain_alias</code> field). At issuance and at every renewal CertMate writes the TXT value at <code>_acme-challenge.&lt;domain_alias&gt;</code>; the CA's lookup of <code>_acme-challenge.&lt;domain&gt;</code> follows the CNAME and finds it there. The certificate is still ordered for the real domain: only the place where the challenge is answered moves.</p>
+            <p>The DNS credentials CertMate holds are those of the alias zone, so they never need to reach the zone that serves the domain. It does not matter which provider answers a given query for the domain, as long as each one serves the CNAME.</p>
+
+            <h2>Create the CNAME</h2>
+            <p>Pick a name in a zone CertMate can write, for example <code>validation.example.org</code>. In every DNS provider that serves <code>example.com</code>, add:</p>
+            <pre><code>_acme-challenge.example.com. 300 IN CNAME _acme-challenge.validation.example.org.</code></pre>
+            <p>The target always carries the <code>_acme-challenge.</code> prefix in front of the alias. Every name on the certificate needs its own CNAME, all pointing at the same target:</p>
+            <pre><code>_acme-challenge.example.com.     300 IN CNAME _acme-challenge.validation.example.org.
+_acme-challenge.www.example.com. 300 IN CNAME _acme-challenge.validation.example.org.</code></pre>
+            <p>Put the CNAMEs in place before requesting the certificate.</p>
+
+            <h2>Configure the Alias in CertMate</h2>
+            <h3>In the dashboard</h3>
+            <ol>
+                <li>Choose the <strong>DNS Provider</strong> (and <strong>Account</strong>, if the provider has several) that controls the alias zone, not the domain's own zone.</li>
+                <li>Open <strong>Advanced Options</strong> and fill in <strong>DNS-01 Alias Domain</strong> with the alias, without the <code>_acme-challenge.</code> prefix: <code>validation.example.org</code>. The form strips the prefix, and a trailing dot, if you paste them.</li>
+                <li>Once the domain and the alias are filled in, the help text under the field lists the CNAMEs to create, one per requested name. <strong>Check DNS-01 Alias</strong> looks them up before you submit.</li>
+            </ol>
+            <p>A certificate issued this way shows a <strong>Check DNS-01 Alias</strong> button in its detail panel, which repeats the check against the names the certificate carries.</p>
+
+            <h3>Through the API</h3>
+            <p><code>POST /api/certificates/create</code> (operator) takes <code>domain_alias</code> beside the usual fields. <code>dns_provider</code> and <code>account_id</code> name the provider account that writes the alias zone:</p>
+            <pre><code>curl -X POST https://certmate.example.com/api/certificates/create \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "domain": "example.com",
+    "san_domains": ["www.example.com"],
+    "dns_provider": "cloudflare",
+    "domain_alias": "validation.example.org"
+  }'</code></pre>
+            <p>The alias is validated as a domain name, so a value that still carries <code>_acme-challenge.</code> is rejected with <code>Invalid domain_alias</code>.</p>
+            <p>CertMate stores the alias in the certificate's metadata as <code>domain_alias</code>, and the provider that writes it as <code>alias_dns_provider</code>, which at creation is the <code>dns_provider</code> of the request. Both appear in <code>GET /api/certificates/&lt;domain&gt;</code>, and renewals read them from there, so a renewal needs nothing new from you.</p>
+
+            <h3>Changing or removing the alias</h3>
+            <ul>
+                <li><code>POST /api/certificates/&lt;domain&gt;/reissue</code> (operator) takes <code>domain_alias</code> (omit to keep it, <code>""</code> to clear it) and <code>alias_dns_provider</code> (omit to keep it). Clearing the alias also clears <code>alias_dns_provider</code>, and the certificate goes back to the provider's normal DNS-01 flow. In the dashboard, editing a certificate and emptying the alias field does the same.</li>
+                <li><code>PATCH /api/certificates/&lt;domain&gt;</code> (operator) takes <code>alias_dns_provider</code> without reissuing, for when the alias zone moves to another provider. The provider must already be configured, or the request fails with <code>400</code>; the new value applies from the next renewal.</li>
+            </ul>
+            <p>An alias provider different from <code>dns_provider</code> is looked up under the certificate's <code>account_id</code>.</p>
+
+            <h2>Which Providers Can Write the Alias Zone</h2>
+            <p>Alias mode does not use the provider's certbot plugin. CertMate runs certbot with a manual DNS hook of its own that creates the TXT record through the provider's API, waits the provider's propagation time (the <code>dns_propagation_seconds</code> value for that provider, otherwise its default), and deletes the record once validation is over. A failed deletion is logged and does not fail the issuance.</p>
+            <p>The hook supports these providers: <code>cloudflare</code>, <code>route53</code>, <code>azure</code>, <code>google</code>, <code>powerdns</code>, <code>digitalocean</code>, <code>linode</code>, <code>edgedns</code>, <code>gandi</code>, <code>ovh</code>, <code>namecheap</code>, <code>arvancloud</code>, <code>infomaniak</code>, <code>acme-dns</code>, <code>duckdns</code> and <code>rfc2136</code>. With any other provider a request that sets <code>domain_alias</code> fails with <code>DNS alias mode does not support this DNS provider yet</code>. The domain being certified can sit at any provider, including one CertMate does not support; only the alias zone has to be on this list.</p>
+            <p>For <code>rfc2136</code> (BIND, Technitium and other servers that accept dynamic updates), the TXT is written with a TSIG-signed update using the account's <code>nameserver</code>, <code>tsig_key</code> and <code>tsig_secret</code>. CertMate finds the zone that owns the alias from the server's SOA, so one TSIG key can serve several zones.</p>
+            <p>Alias mode applies to DNS-01 only; with <code>challenge_type</code> set to <code>http-01</code> the alias is not used.</p>
+
+            <h3>ACME-DNS</h3>
+            <p>ACME-DNS is itself built on this kind of delegation: the <code>_acme-challenge</code> CNAME points at the subdomain the ACME-DNS server assigned to your account, and CertMate publishes the TXT value with an authenticated update to that server. CertMate sends every <code>acme-dns</code> issuance and renewal through its alias hook, using the account's <strong>Subdomain</strong> as the alias, whether or not <code>domain_alias</code> is set. If you do set <code>domain_alias</code> with ACME-DNS, it must match the configured subdomain exactly, or the request fails with <code>ACME-DNS domain_alias must match configured subdomain</code>. CertMate does not delete the record afterwards, since ACME-DNS keeps only the latest validation value.</p>
+
+            <h2>Wildcards</h2>
+            <p>The challenge for <code>*.example.com</code> is answered at <code>_acme-challenge.example.com</code>, the same name as for <code>example.com</code>, so one CNAME serves both. Request the wildcard as the domain, or tick <strong>Generate wildcard certificate</strong> in the dashboard, which covers <code>*.example.com</code> and <code>example.com</code>:</p>
+            <pre><code>curl -X POST https://certmate.example.com/api/certificates/create \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "domain": "*.example.com",
+    "dns_provider": "cloudflare",
+    "domain_alias": "validation.example.org"
+  }'</code></pre>
+            <p>The CNAME is the same as for the apex:</p>
+            <pre><code>_acme-challenge.example.com. 300 IN CNAME _acme-challenge.validation.example.org.</code></pre>
+
+            <h2>Verify the Delegation</h2>
+            <h3>With dig</h3>
+            <pre><code># The CNAME, as a public resolver sees it
+dig @8.8.8.8 _acme-challenge.example.com CNAME +short
+# Expected: _acme-challenge.validation.example.org.
+
+# While an issuance is running, the TXT value on the alias
+dig _acme-challenge.validation.example.org TXT +short</code></pre>
+            <p>The TXT record exists only between the hook's create and delete steps, so an empty answer outside an issuance is expected.</p>
+
+            <h3>With CertMate's check</h3>
+            <p>Two viewer endpoints check the CNAMEs:</p>
+            <ul>
+                <li><code>POST /api/certificates/check-dns-alias</code>, before a certificate exists. <code>domain</code> and <code>domain_alias</code> are required; <code>san_domains</code> adds names; <code>wildcard: true</code> adds <code>*.&lt;domain&gt;</code>.</li>
+                <li><code>GET /api/certificates/&lt;domain&gt;/dns-alias-check</code>, for a certificate that exists. It reads the alias and the SANs from the certificate and answers <code>400</code> when the certificate does not use alias mode.</li>
+            </ul>
+            <pre><code>curl -X POST https://certmate.example.com/api/certificates/check-dns-alias \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"domain": "example.com", "domain_alias": "validation.example.org", "san_domains": ["www.example.com"]}'</code></pre>
+            <pre><code>{
+  "domain": "example.com",
+  "domain_alias": "validation.example.org",
+  "ok": false,
+  "checks": [
+    {
+      "source": "_acme-challenge.example.com",
+      "expected_target": "_acme-challenge.validation.example.org",
+      "found_targets": [],
+      "status": "missing",
+      "ok": false,
+      "error": null
+    }
+  ]
+}</code></pre>
+            <p>Each check has a <code>status</code>: <code>ok</code>, <code>missing</code> (no CNAME), <code>mismatch</code> (a CNAME to another target, listed in <code>found_targets</code>) or <code>error</code> (the lookup failed, and <code>error</code> says why). The top-level <code>ok</code> is true only when there is at least one check and every check is <code>ok</code>. Every name is checked against the caller's scope, so a scoped API key gets <code>403</code> for a name outside it.</p>
+            <p>The check resolves the CNAMEs over DNS-over-HTTPS at <code>cloudflare-dns.com</code>. If CertMate's outbound traffic goes through an allowlist, that host has to be on it.</p>
+
+            <h2>Troubleshooting</h2>
+            <ul>
+                <li><strong>The check reports <code>missing</code>.</strong> The CNAME is absent, or not yet visible. Check each provider that serves the domain: with multi-master DNS, every one of them must serve the CNAME.</li>
+                <li><strong>The check reports <code>mismatch</code>.</strong> The CNAME points elsewhere. A common cause is a target without the <code>_acme-challenge.</code> prefix: the target must be <code>_acme-challenge.&lt;alias&gt;</code>, while the alias field takes the name without it.</li>
+                <li><strong><code>DNS alias mode does not support this DNS provider yet</code>.</strong> The provider chosen for the request is not one the hook supports. Choose the account that controls the alias zone, which must be on the list above.</li>
+                <li><strong><code>&lt;provider&gt; DNS alias mode requires: ...</code>.</strong> The provider account is missing credential fields the hook needs. Complete it in Settings.</li>
+                <li><strong><code>Alias DNS provider '...' is not configured</code>.</strong> <code>alias_dns_provider</code> names a provider with no configured account. Configure it, or change the value with <code>PATCH</code>.</li>
+                <li><strong>A renewal fails with <code>Cannot renew ...: DNS alias provider account for ... is not configured</code>.</strong> The provider account that writes the alias zone was removed or renamed after issuance. Restore it, or point the certificate at another one with <code>PATCH</code>.</li>
+                <li><strong>The CA does not find the TXT record.</strong> The record may not have reached the alias zone's servers before the CA looked. Raise the propagation time for the alias zone's provider.</li>
+            </ul>
+
+            <h2>Next Steps</h2>
+            <ul>
+                <li><a href="dns-providers.html">DNS Providers</a>: configuring the account that writes the alias zone</li>
+                <li><a href="api-reference.html">API Reference</a>: authentication and the rest of the certificate API</li>
+                <li><a href="troubleshooting.html">Troubleshooting</a>: other issuance failures</li>
+                <li><a href="security.html">Security</a>: roles and scoped API keys</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributors</a></p>
+        </div>
+    </footer>
+    <script src="toc.js" defer></script>
+</body>
+</html>
