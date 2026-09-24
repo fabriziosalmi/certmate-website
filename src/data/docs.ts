@@ -174,6 +174,12 @@ export const DOC_PAGES: DocPage[] = [
     description:
       'Install and configure the certmate CLI and certmate-sdk Python client: every command and method, the endpoint each calls, exit codes, errors and jobs.',
   },
+  {
+    slug: 'sso',
+    title: 'Single Sign-On (OIDC) - CertMate Documentation',
+    description:
+      'Set up OpenID Connect SSO in CertMate: IdP redirect URI and discovery, role mapping from group claims, JIT users, email linking, and logout.',
+  },
 ];
 
 /** The published URL of a documentation page, absolute. */
