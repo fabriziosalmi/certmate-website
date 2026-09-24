@@ -133,56 +133,120 @@
         <section class="docs-hero" style="padding: 100px 0 60px;">
             <div class="container">
                 <h1 class="docs-title"><i class="fas fa-users"></i> Contributing to CertMate</h1>
-                <p class="docs-subtitle">Help us build the best SSL certificate management system</p>
+                <p class="docs-subtitle">How to set up a development checkout, run the tests, and get a pull request through the gates CertMate enforces.</p>
             </div>
         </section>
 
         <section class="doc-content">
-            <h2>🛠️ Types of Contributions</h2>
-        <ul>
-            <li><strong>Bug Reports</strong> - Help us identify and fix issues</li>
-            <li><strong>Feature Requests</strong> - Suggest new functionality</li>
-            <li><strong>Documentation</strong> - Improve guides and examples</li>
-            <li><strong>🧪 Testing</strong> - Test new features and edge cases</li>
-            <li><strong>💻 Code</strong> - Submit pull requests with improvements</li>
-        </ul>
+            <p>Contributions are welcome as pull requests to <a href="https://github.com/fabriziosalmi/certmate" target="_blank" rel="noopener noreferrer">fabriziosalmi/certmate</a>. Most of what a pull request has to satisfy is automated: the commands on this page are the ones CI runs, so running them locally is faster than waiting for the PR to fail.</p>
 
-        <h2>Quick Start for Contributors</h2>
-        <pre><code># Fork and clone the repository
-git clone https://github.com/YOUR_USERNAME/certmate.git
+            <h2>How to contribute</h2>
+            <ol>
+                <li>Fork the repository.</li>
+                <li>Create a feature branch: <code>git checkout -b feature/my-change</code>.</li>
+                <li>Commit your changes.</li>
+                <li>Push the branch.</li>
+                <li>Open a pull request.</li>
+            </ol>
+
+            <h2>Development setup</h2>
+            <pre><code>git clone https://github.com/fabriziosalmi/certmate.git
 cd certmate
-
-# Create development environment
-python3 -m venv venv
-source venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-
-# Run tests
-pytest
-
-# Start development server
+pip install -r requirements-test.txt
 python app.py</code></pre>
+            <p><code>requirements-test.txt</code> installs pytest and Playwright, plus <code>clients/certmate-sdk</code> and <code>clients/certmate-cli</code> in editable mode (the CLI depends on the SDK), so the end-to-end tests exercise the real clients against the server.</p>
+            <p>The linters are not in <code>requirements-test.txt</code>. CI pins them, and so should you:</p>
+            <pre><code>pip install flake8==7.3.0 bandit==1.9.4</code></pre>
 
-        <h2>Contribution Guidelines</h2>
-        <ol>
-            <li>Fork the repository</li>
-            <li>Create a feature branch (<code>git checkout -b feature/amazing-feature</code>)</li>
-            <li>Commit your changes (<code>git commit -m 'Add amazing feature'</code>)</li>
-            <li>Push to the branch (<code>git push origin feature/amazing-feature</code>)</li>
-            <li>Open a Pull Request</li>
-        </ol>
+            <h2>Running the tests</h2>
+            <pre><code>./run-tests.sh
+# or, equivalently:
+pytest -v --tb=short -m "not ui and not e2e"</code></pre>
+            <p>Keep the marker expression. A bare <code>pytest</code> runs the Playwright <code>ui</code> suite in the same process as everything else and reports failures unrelated to your change, and the <code>e2e</code> tests need a running instance. <code>make test</code> uses the same selection.</p>
+            <p>The UI suite runs on its own and needs Docker:</p>
+            <pre><code>pytest -m ui</code></pre>
+            <p>The e2e fixtures build the Docker image and manage a container for the session. Without Docker, point the suite at an instance you started yourself:</p>
+            <pre><code># Terminal 1
+gunicorn --bind 127.0.0.1:18888 --workers 1 --threads 8 --timeout 300 app:app
 
-        <h2>🗺️ Roadmap</h2>
-        <p>Check our <a href="https://github.com/fabriziosalmi/certmate-website/blob/main/ROADMAP.md" target="_blank" rel="noopener noreferrer">Roadmap</a> for planned features and priorities based on community feedback.</p>
+# Terminal 2
+CERTMATE_E2E_BASE_URL=http://localhost:18888 pytest -m "e2e and not ui"</code></pre>
+            <p>That instance must start from a clean data directory, because the e2e tests assume first-boot state. The real-issuance tests also need <code>CLOUDFLARE_API_TOKEN</code> and a <code>CERTMATE_TEST_DOMAIN</code> you control; they issue real Let's Encrypt certificates and skip when the token is absent.</p>
 
-        <h2>Community</h2>
-        <ul>
-            <li><a href="https://github.com/fabriziosalmi/certmate/discussions" target="_blank" rel="noopener noreferrer">GitHub Discussions</a></li>
-            <li><a href="https://github.com/fabriziosalmi/certmate/issues" target="_blank" rel="noopener noreferrer">Issue Tracker</a></li>
-            <li><a href="https://news.ycombinator.com/item?id=44427452" target="_blank" rel="noopener noreferrer">Hacker News Thread</a></li>
-        </ul>
+            <h2>Gates a pull request must pass</h2>
+            <table>
+                <thead>
+                    <tr><th>Gate</th><th>Command</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Syntax and bug-class lint (fails CI)</td><td><code>flake8 . --count --select=E9,F63,F7,F82,F811,F632,E711,E712,E713,E714,F401,F841,E722 --show-source</code></td></tr>
+                    <tr><td>Complexity budget (fails CI)</td><td><code>python scripts/check_complexity_budget.py</code></td></tr>
+                    <tr><td>Security scan (fails CI)</td><td><code>bandit -r modules/ app.py --severity-level medium</code></td></tr>
+                    <tr><td>Tests, with a 75% coverage floor on <code>modules/</code></td><td><code>pytest -m "not ui and not network" --cov=modules --cov-fail-under=75</code></td></tr>
+                    <tr><td>Theme tokens</td><td><code>python3 scripts/theme_codemod.py --check</code></td></tr>
+                    <tr><td>CSS bundle freshness</td><td><code>npm ci &amp;&amp; npm run css:build</code>, then commit <code>static/css/tailwind.min.css</code></td></tr>
+                    <tr><td>No emoji in release notes (<code>RELEASE_NOTES.md</code>, <code>docs/releases/</code>)</td><td><code>.github/workflows/lint-emoji.yml</code></td></tr>
+                    <tr><td>Image builds</td><td><code>docker build -t certmate:test .</code></td></tr>
+                </tbody>
+            </table>
+            <ul>
+                <li>The full style pass (<code>flake8 .</code> without <code>--select</code>) is informational: CI runs it with <code>--exit-zero</code>. Do not reformat unrelated files to quieten it.</li>
+                <li>The coverage floor is a ratchet. Raise it; never lower it to make a red build pass.</li>
+                <li>Every function may reach a cyclomatic complexity of 40. The functions already above that are listed in <code>scripts/check_complexity_budget.py</code> with their current value, and the check fails if a new function exceeds the limit without an entry, if a budgeted function gets worse, if one gets better without its entry coming down, or if an entry matches nothing. Prefer decomposing a function to adding an entry.</li>
+            </ul>
 
-        <p><strong>Thank you to all our <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributors</a>.</strong></p>
+            <h3>Editing templates or CSS</h3>
+            <p>Rebuild the CSS bundle and commit it: CI fails if the committed <code>static/css/tailwind.min.css</code> differs from a fresh build. Use the semantic theme tokens instead of raw <code>*-600 dark:*-400</code> colour pairs; <code>theme_codemod.py --check</code> enforces this.</p>
+
+            <h3>Editing docs</h3>
+            <p><code>tests/test_docs_navigation.py</code> fails if a page is no longer linked from its <code>index.md</code>, if an index points at a missing file, or if the README's documentation table drops a page. Translations live one directory below the English originals, so a relative link out of <code>docs/&lt;lang&gt;/</code> needs <code>../../</code>, not <code>../</code>.</p>
+
+            <h2>Getting a pull request merged</h2>
+            <p>Branch protection applies to everyone, admins included:</p>
+            <ul>
+                <li>Every review conversation must be resolved, including those opened by Copilot and CodeQL. Read them before resolving them.</li>
+                <li>CI must be green. Auto-merge is disabled, so a maintainer merges by hand.</li>
+            </ul>
+            <p><code>.github/required-checks.yml</code> lists every job that runs on a pull request as <strong>gating</strong> (the PR cannot merge without it) or <strong>advisory</strong> (it reports, with the reason it does not block written next to it). <code>tests/test_required_checks_registry.py</code> fails if a job is missing from that file. Read the advisory results too, for example <code>storage-live</code> and <code>acme-dns-live</code>, which boot real service containers.</p>
+            <p>The <code>ui</code> job runs only when a PR touches the frontend, as decided by <code>scripts/ui_paths_changed.py</code>; the required check is <code>ui-gate</code>, which always runs and treats a skipped <code>ui</code> job as a pass. If you add a frontend directory, add it to that script's <code>PATTERNS</code>.</p>
+            <p>If your change touches certificate issuance, a DNS provider or the ACME path, say so in the PR. <code>scripts/release.sh</code> detects those paths and requires a real certificate issued against Let's Encrypt staging before a release containing the change can be cut.</p>
+            <p>Do not add version strings by hand. <code>scripts/release.sh</code> bumps every user-facing copy and <code>tests/test_version_consistency.py</code> pins them; a new place that shows the version must be added to both.</p>
+
+            <h2>Code style</h2>
+            <ul>
+                <li>Match the conventions of the file you are editing.</li>
+                <li>Comments explain why, especially where the obvious implementation is wrong.</li>
+                <li>Use the present tense for what the code does, and the past tense (or a leading <code>Previously:</code>) for what it used to do wrongly, so a comment about a fixed defect is not read as current behaviour.</li>
+                <li>Add tests for new behaviour. For a bug fix, check that the test fails against the old code.</li>
+            </ul>
+            <pre><code># WRONG: reads as the current behaviour
+# The settings entry is written after the lock is released, so a renewal
+# can interleave and read the old provider.
+
+# RIGHT: the tense says which is which
+# Both writes happen under one lock. Previously the settings entry was
+# written after the lock was released, so a renewal could interleave and
+# read the old provider.</code></pre>
+
+            <h2>Reporting issues</h2>
+            <p>Open an issue on the <a href="https://github.com/fabriziosalmi/certmate/issues" target="_blank" rel="noopener noreferrer">issue tracker</a> with:</p>
+            <ul>
+                <li>steps to reproduce;</li>
+                <li>expected and actual behaviour;</li>
+                <li>the CertMate version (<code>GET /health</code>, or <code>certmate --version</code> for the CLI) and the environment: Docker tag, DNS provider, CA.</li>
+            </ul>
+            <p>Questions and ideas go to <a href="https://github.com/fabriziosalmi/certmate/discussions" target="_blank" rel="noopener noreferrer">GitHub Discussions</a>. Security issues do not go on the public tracker; follow the <a href="/security/">security policy</a>.</p>
+
+            <h2>Next Steps</h2>
+            <ul>
+                <li><a href="getting-started.html">Getting Started</a></li>
+                <li><a href="api-reference.html">API Reference</a></li>
+                <li><a href="docker-deployment.html">Docker Deployment</a></li>
+                <li><a href="security.html">Security</a></li>
+            </ul>
         </section>
     </main>
 

@@ -94,7 +94,7 @@ export const DOC_PAGES: DocPage[] = [
     slug: 'contributing',
     title: 'Contributing - CertMate Documentation',
     description:
-      'How to contribute to CertMate: fork and clone, set up a development environment, run the test suite, and what a pull request should carry.',
+      'Develop CertMate: setup, running the pytest suites, the lint, security, coverage and complexity gates CI enforces, and what a PR needs to merge.',
   },
   {
     slug: 'webhooks',

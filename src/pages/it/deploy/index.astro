@@ -3,6 +3,7 @@ import { Icon } from 'astro-icon/components';
 import { getCollection } from 'astro:content';
 import DocLayout from '~/layouts/DocLayout.astro';
 import { ui, localizedPath } from '~/i18n';
+import { PROVIDER_COUNT } from '~/data/site';
 
 const t = ui.it;
 const entries = (await getCollection('deploy'))
@@ -13,6 +14,55 @@ const entries = (await getCollection('deploy'))
 <DocLayout lang="it" path="/deploy" title={t.deployTitle} description={t.deployIntro}>
   <h1>{t.deployTitle}</h1>
   <p class="lead">{t.deployIntro}</p>
+
+  <h2>Come un certificato arriva alla piattaforma con CertMate</h2>
+  <p>
+    Emissione e consegna sono due passaggi distinti. CertMate ottiene il
+    certificato dalla CA via ACME, di norma dimostrando il controllo del dominio
+    con una challenge DNS-01 tramite l'API del tuo provider DNS (ne supporta
+    {PROVIDER_COUNT}), e lo rinnova 30 giorni prima della scadenza. Portare i
+    file sulla macchina o sul cluster che li usa si fa poi in uno di tre modi.
+  </p>
+  <ul>
+    <li>
+      <strong>Scaricarlo dall'URL di download.</strong>
+      <code>GET /api/certificates/&#123;domain&#125;/download</code> restituisce
+      uno ZIP con <code>cert.pem</code>, <code>chain.pem</code>,
+      <code>fullchain.pem</code> e <code>privkey.pem</code>;
+      <code>/download/&#123;cert|chain|fullchain|privkey|combined&#125;</code>
+      restituisce un solo file. Una API key con ruolo viewer scarica solo il
+      materiale pubblico; <code>privkey</code> e <code>combined</code> richiedono
+      il ruolo operator. È la strada giusta per un cron job o per un tool di
+      configuration management sull'host che termina il TLS. Vedi
+      l'<a href="/docs/api-reference.html">API reference</a> (in inglese).
+    </li>
+    <li>
+      <strong>Scriverlo in un Secret Kubernetes.</strong> Il deploy target
+      tipizzato <code>kubernetes-secret</code> applica catena completa e chiave a
+      un Secret <code>kubernetes.io/tls</code> con Server-Side Apply, all'emissione
+      e a ogni rinnovo. Si autentica con URL dell'API server e bearer token,
+      oppure con il service account quando CertMate gira nel cluster; senza
+      <code>kubectl</code>.
+    </li>
+    <li>
+      <strong>Eseguire un deploy hook.</strong> Un comando shell, eseguito con
+      <code>sh -c</code> dopo la creazione o il rinnovo di un certificato, con
+      dominio e percorsi dei file nelle variabili d'ambiente
+      <code>CERTMATE_*</code>. Gira dentro il container di CertMate, che ha
+      <code>sh</code>, <code>bash</code>, <code>curl</code> e <code>openssl</code>
+      ma non <code>docker</code>, <code>kubectl</code> né <code>ssh</code>: un
+      hook raggiunge gli altri sistemi via HTTP. Vedi
+      <a href="/docs/deploy-hooks.html">Deploy hooks</a> (in inglese).
+    </li>
+  </ul>
+  <p>
+    Un hook o un target che fallisce viene registrato nei log e nell'audit e
+    genera l'avviso <code>deploy_hook_failed</code>, ma non blocca l'operazione
+    sul certificato. Le guide qui sotto coprono il lato della piattaforma: da
+    dove legge il certificato e come fargli caricare quello rinnovato.
+  </p>
+
+  <h2>Guide</h2>
 
   <ul class="not-prose mt-8 grid gap-3 sm:grid-cols-2">
     {entries.map((e) => (
