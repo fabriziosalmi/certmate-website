@@ -400,13 +400,14 @@
                 <li>Set permissions: Zone → DNS:Edit + Zone:Read</li>
                 <li>Copy the generated token</li>
             </ol>
+            <p>Enter the token in Settings, DNS Providers, or set it in the environment. Cloudflare is the only DNS provider read from the environment; the variable sets the default Cloudflare account.</p>
             <pre><code># Environment variable
 CLOUDFLARE_TOKEN=your_cloudflare_api_token_here</code></pre>
 
             <h3>AWS Route53 Setup</h3>
             <ol>
                 <li>Create IAM user with Route53 permissions</li>
-                <li>Attach policy: <code>Route53FullAccess</code> or custom policy</li>
+                <li>Attach policy: <code>AmazonRoute53FullAccess</code> or custom policy</li>
             </ol>
             <pre><code>{
   "Version": "2012-10-17",
@@ -420,22 +421,26 @@ CLOUDFLARE_TOKEN=your_cloudflare_api_token_here</code></pre>
     "Resource": "*"
   }]
 }</code></pre>
-            <pre><code># Environment variables
-AWS_ACCESS_KEY_ID=your_access_key_id
-AWS_SECRET_ACCESS_KEY=your_secret_access_key
-AWS_DEFAULT_REGION=us-east-1</code></pre>
+            <p>Enter the credentials in Settings, DNS Providers, or through the API. <code>AWS_*</code> variables in the container are not read. The account fields:</p>
+            <pre><code>{
+  "access_key_id": "your_access_key_id",
+  "secret_access_key": "your_secret_access_key",
+  "region": "us-east-1"
+}</code></pre>
 
             <h3>Azure DNS Setup</h3>
             <pre><code># Create Service Principal
 az ad sp create-for-rbac --name "CertMate" \
   --role "DNS Zone Contributor" \
   --scopes "/subscriptions/{subscription-id}/resourceGroups/{resource-group}"</code></pre>
-            <pre><code># Environment variables
-AZURE_SUBSCRIPTION_ID=your_subscription_id
-AZURE_RESOURCE_GROUP=your_resource_group_name
-AZURE_TENANT_ID=your_tenant_id
-AZURE_CLIENT_ID=your_client_id
-AZURE_CLIENT_SECRET=your_client_secret</code></pre>
+            <p>Enter the service principal in Settings, DNS Providers, or through the API. <code>AZURE_*</code> variables in the container are not read. The account fields:</p>
+            <pre><code>{
+  "subscription_id": "your_subscription_id",
+  "resource_group": "your_resource_group_name",
+  "tenant_id": "your_tenant_id",
+  "client_id": "your_client_id",
+  "client_secret": "your_client_secret"
+}</code></pre>
 
             <h2>🏢 Multi-Account Configuration</h2>
             <p>For enterprise deployments, configure multiple accounts per DNS provider:</p>

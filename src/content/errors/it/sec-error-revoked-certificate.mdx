@@ -5,7 +5,7 @@ description: "Risolvi SEC_ERROR_REVOKED_CERTIFICATE di Firefox: la CA ha ritirat
 summary: "Il certificato non è scaduto: l'autorità che lo ha emesso lo ha ritirato. Firefox lo ha trovato revocato e non ti lascia passare."
 browsers: ["Firefox"]
 order: 10
-updated: "2026-09-16"
+updated: "2026-09-24"
 ---
 import Handshake from '~/components/Handshake.astro';
 
@@ -100,12 +100,20 @@ detiene, se la chiave vive in un archivio esterno, o se genuinamente non lo sa,
 invece di dare per scontato che una chiave esista solo perché esiste un
 certificato. Non scrive mai chiavi private nei backup condivisibili. Dove
 CertMate è esso stesso l'emittente, cioè quando gestisce la propria CA privata
-per certificati interni e client, gestisce direttamente la lista di revoca e un
-responder OCSP, quindi ritirare un certificato interno compromesso è
+per i certificati client, gestisce direttamente la lista di revoca e un
+responder OCSP, quindi ritirare un certificato client compromesso è
 un'operazione dentro lo strumento e non una lista che qualcuno mantiene a mano.
+Dalla v2.35.0 un deploy hook può essere impostato per girare anche su
+`revoked`, oltre che su emissione e rinnovo, così alla revoca può seguire
+quello che deve succedere dopo; scatta per i certificati client, l'unico tipo
+che CertMate revoca.
 
 Per i certificati emessi pubblicamente la revoca resta alla CA: nessun gestore
-di certificati può ritirare un certificato che non ha firmato.
+di certificati può ritirare un certificato che non ha firmato. Quello che
+CertMate può fare è accorgersi che uno revocato è ancora servito. La sua
+scansione di discovery, se abilitata, chiede all'OCSP, poi alla CRL, se il
+certificato servito da ciascun endpoint in elenco è stato revocato, e conserva
+la risposta nel record d'inventario di quell'endpoint.
 
 ## Errori correlati
 

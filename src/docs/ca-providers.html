@@ -152,6 +152,7 @@
                     <tr><td><code>actalis</code></td><td>Actalis</td><td>Required</td><td>No</td><td>DV</td></tr>
                     <tr><td><code>digicert</code></td><td>DigiCert</td><td>Required</td><td>Yes</td><td>DV, OV, EV</td></tr>
                     <tr><td><code>sslcom</code></td><td>SSL.com</td><td>Required</td><td>Yes</td><td>DV, OV, EV</td></tr>
+                    <tr><td><code>sectigo</code></td><td>Sectigo</td><td>Required</td><td>Yes, if the SCM account allows it</td><td>DV, OV</td></tr>
                     <tr><td><code>private_ca</code></td><td>Private CA</td><td>Optional</td><td>Yes</td><td>Private</td></tr>
                 </tbody>
             </table>
@@ -161,10 +162,21 @@ letsencrypt_staging  https://acme-staging-v02.api.letsencrypt.org/directory
 zerossl              https://acme.zerossl.com/v2/DV90
 google               https://dv.acme-v02.api.pki.goog/directory
 actalis              https://acme-api.actalis.com/acme/directory
-digicert             https://one.digicert.com/mpki/api/v1/acme/v2/directory
+digicert             https://one.digicert.com/mpki/api/v1/acme/v2/directory  (default; your setting wins)
 sslcom               https://acme.ssl.com/sslcom-dv-rsa
+sectigo              the URL of your SCM ACME account
 private_ca           the URL you configure</code></pre>
-            <p>For every entry except <code>private_ca</code>, the directory passed to certbot with <code>--server</code> is the built-in one above. Only the Private CA entry reads its directory URL from your settings.</p>
+            <p>The directory passed to certbot with <code>--server</code> depends on the entry:</p>
+            <ul>
+                <li><strong>Fixed</strong>: Let's Encrypt, its staging entry, ZeroSSL, Google Trust Services, Actalis and SSL.com always use the built-in directory above. Their settings forms do not ask for one.</li>
+                <li><strong>Default, overridable</strong>: DigiCert uses the ACME Directory URL saved in its settings, and the built-in one only when that field is empty.</li>
+                <li><strong>Yours only</strong>: Sectigo and Private CA have no built-in directory. Issuance fails with <code>&lt;CA name&gt; ACME URL not configured</code> when none is saved.</li>
+            </ul>
+
+            <h3 id="directory-https">Directory URLs must use https</h3>
+            <p>Since v2.35.0, a directory URL taken from your settings (DigiCert, Sectigo, Private CA) must use the <code>https</code> scheme, in any letter case. Issuance with an <code>http://</code> directory is refused with:</p>
+            <pre><code>&lt;CA name&gt; ACME Directory URL must use https. A directory fetched over plain HTTP cannot be trusted to be the one you meant.</code></pre>
+            <p>Any other value that does not start with <code>https://</code> is refused as <code>Invalid &lt;CA name&gt; ACME Directory URL format</code>.</p>
 
             <h3>Let's Encrypt</h3>
             <p>The default. When no CA is chosen on a certificate and <code>default_ca</code> is not set, CertMate uses <code>letsencrypt</code>. It needs no credentials, only an email address.</p>
@@ -183,12 +195,32 @@ private_ca           the URL you configure</code></pre>
             <p>Issue one certificate per hostname, or use a paid plan.</p>
 
             <h3>DigiCert</h3>
-            <p>Needs EAB credentials from DigiCert and an email. The settings form also has an <strong>ACME Directory URL</strong> field, prefilled with the DigiCert ONE directory. The connection test requires it to be non-empty, but issuance uses the built-in directory regardless of what the field holds. DigiCert publishes no public ACME staging directory.</p>
+            <p>Needs EAB credentials from DigiCert and an email. The settings form also has an <strong>ACME Directory URL</strong> field, prefilled with the DigiCert ONE directory. That directory is regional: an account outside the default region has its own directory URL, shown in CertCentral. Enter it in the field and issuance uses it; leave the default and the default is used. It must be an <code>https</code> URL. DigiCert publishes no public ACME staging directory.</p>
+
+            <h3>Sectigo</h3>
+            <p>Issues through a Sectigo Certificate Manager (SCM) ACME account. There is no shared Sectigo directory: each SCM ACME account has its own, so the settings form asks for it. Fields:</p>
+            <ul>
+                <li><strong>CA account</strong>: pick a saved account, or <strong>Add account...</strong> to create one.</li>
+                <li><strong>Account name</strong>: the key the account is saved under.</li>
+                <li><strong>ACME Directory URL (from SCM)</strong> (required): copy it from the SCM ACME account details. It must use <code>https</code>.</li>
+                <li><strong>EAB Key ID / KID</strong> and <strong>EAB HMAC Key</strong> (required): from the same account details.</li>
+                <li><strong>Email</strong>.</li>
+            </ul>
+            <p>Whether wildcards and OV are available depends on the SCM account and its profile.</p>
+            <p>Accounts are saved under <code>ca_providers.sectigo.accounts</code>, one entry per account name, each with its own <code>acme_url</code>, <code>eab_kid</code>, <code>eab_hmac</code> and <code>email</code>. To use a particular account for one certificate, send its name as <code>ca_account_id</code> to <code>POST /api/certificates/create</code>. Without it, CertMate uses the account named in <code>default_ca_accounts.sectigo</code>, then an account named <code>default</code>, then the first one saved. Asking for an account that does not exist is refused.</p>
+            <pre><code>curl -X POST http://localhost:8000/api/certificates/create \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "domain": "example.com",
+    "ca_provider": "sectigo",
+    "ca_account_id": "production-ov"
+  }'</code></pre>
 
             <h3>Private CA</h3>
             <p>Points CertMate at any ACME server you name: an internal CA such as step-ca or Boulder, or a public ACME CA that has no entry of its own. Fields:</p>
             <ul>
-                <li><strong>ACME Directory URL</strong> (required): the directory URL of your ACME server; use <code>https://</code>.</li>
+                <li><strong>ACME Directory URL</strong> (required): the directory URL of your ACME server. It must use <code>https</code> (see <a href="#directory-https">Directory URLs must use https</a>).</li>
                 <li><strong>CA Certificate (PEM format)</strong> (optional): the root that signed the ACME server's TLS certificate. Leave it empty when the server has a publicly trusted certificate.</li>
                 <li><strong>EAB Key ID</strong> and <strong>EAB HMAC Key</strong> (optional): sent only when both are set. If only one is set, CertMate logs a warning and registers without EAB.</li>
                 <li><strong>Email</strong> (required).</li>
@@ -221,6 +253,7 @@ private_ca           the URL you configure</code></pre>
             <ul>
                 <li><strong>Let's Encrypt and staging</strong>: checks that an email is present. It does not contact the CA.</li>
                 <li><strong>ZeroSSL, Google Trust Services, SSL.com, Actalis</strong>: checks that both EAB values and an email are present. It does not contact the CA.</li>
+                <li><strong>Sectigo</strong>: checks that the directory URL is present and uses <code>https</code>, and that both EAB values and an email are present. It does not contact Sectigo.</li>
                 <li><strong>DigiCert</strong>: checks that the directory URL, both EAB values and an email are present, and that the Key ID is at least 10 characters and the HMAC Key at least 32. It does not contact DigiCert.</li>
                 <li><strong>Private CA</strong>: the only test that makes a network request. It fetches the directory URL (10-second timeout, redirects not followed), using the CA certificate you supplied for TLS verification, and passes when the response is JSON containing <code>newAccount</code> or <code>keyChange</code>.</li>
             </ul>
@@ -253,7 +286,13 @@ private_ca           the URL you configure</code></pre>
     "ca_provider": "letsencrypt_staging"
   }'</code></pre>
             <p>The CA used is recorded in the certificate's metadata and returned as <code>ca_provider</code> in the response.</p>
-            <p>If the settings hold no entry at all for the chosen CA, CertMate does not stop: it logs <code>Could not get CA config, falling back to letsencrypt</code> and issues from Let's Encrypt (from staging, if the request was a staging one). Check the CA in the response when you use a CA for the first time.</p>
+            <p>Since v2.35.0, a request for a CA that has no saved configuration, or for a CA account that does not exist, is refused with <code>400</code>. CertMate does not issue from a different CA in its place. The error names the CA:</p>
+            <pre><code>CA provider 'digicert' is not configured on this instance, and issuing from a different CA is not a substitute for the one you asked for. Configure it in Settings, or request a CA that is configured.</code></pre>
+            <p>Let's Encrypt is the exception, because certbot's defaults are its configuration: a request for <code>letsencrypt</code> or <code>letsencrypt_staging</code> works with nothing saved, and a staging request stays on staging.</p>
+            <p>If you upgrade from an earlier version and have been requesting a CA you never configured, those requests now fail. Configure that CA in Settings, or request one that is configured.</p>
+
+            <h3>Which CA issued a certificate</h3>
+            <p>The <strong>CA</strong> column of the certificates table (shown on wide screens, and sortable) and the <strong>Issuing CA</strong> row of a certificate's detail panel name the CA it was issued with. The same value is <code>ca_provider</code> in the API response and in the certificate's metadata. Certificates issued before CertMate recorded the CA show <code>&mdash;</code> there rather than a guess.</p>
 
             <h3>CAA records</h3>
             <p>While you fill in the create form, CertMate checks the domain's CAA records against the chosen CA through <code>POST /api/certificates/check-caa</code>. The result is a warning only; issuance is never blocked on it, because CertMate's DNS resolver is not the one the CA uses. For a Private CA the check reports that it does not apply.</p>

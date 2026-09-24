@@ -133,14 +133,14 @@
         <section class="docs-hero" style="padding: 100px 0 60px;">
             <div class="container">
                 <h1 class="docs-title"><i class="fas fa-terminal"></i> Deploy Hooks</h1>
-                <p class="docs-subtitle">Shell commands CertMate runs after a certificate is issued or renewed: configuration, environment, maintenance windows, validation and history.</p>
+                <p class="docs-subtitle">Shell commands CertMate runs after a certificate is issued, renewed or revoked: configuration, environment, maintenance windows, validation and history.</p>
             </div>
         </section>
 
         <section class="doc-content">
             <h2>What a Deploy Hook Is</h2>
-            <p>A deploy hook is a shell command CertMate runs after a certificate is created or renewed, such as a web server reload. The command is passed to <code>sh -c</code> with a timeout; exit code 0 is success, anything else a failure.</p>
-            <p>Hooks fire automatically on two events only: <code>created</code> and <code>renewed</code>. Revoking a certificate does not run any hook.</p>
+            <p>A deploy hook is a shell command CertMate runs after a certificate is created, renewed or revoked, such as telling a load balancer to pick up the new certificate. The command is passed to <code>sh -c</code> with a timeout; exit code 0 is success, anything else a failure.</p>
+            <p>Hooks fire automatically on three events: <code>created</code>, <code>renewed</code> and, since v2.35.0, <code>revoked</code>. Only client certificates can be revoked through CertMate (<code>POST /api/client-certs/&lt;id&gt;/revoke</code>), so that is when a <code>revoked</code> hook fires, with <code>CERTMATE_DOMAIN</code> set to the client certificate's identifier. There is no revoke operation for a server certificate, so no hook fires for one.</p>
             <p>A failed hook does not block the certificate operation. It is recorded in the history and audit log, and CertMate publishes <code>deploy_hook_failed</code>, which the notifier delivers whatever event filter is set (see <a href="webhooks.html">Webhooks</a>).</p>
 
             <h2>Hook Fields</h2>
@@ -151,7 +151,7 @@
                 <li><code>command</code> (required): one shell command, at most 1024 characters, subject to <a href="#command-validation">Command Validation</a>.</li>
                 <li><code>enabled</code>: defaults to <code>true</code> if absent or not a boolean.</li>
                 <li><code>timeout</code>: seconds. Defaults to 30 and is clamped to between 1 and 300.</li>
-                <li><code>on_events</code>: a list containing <code>created</code>, <code>renewed</code> or both. If it is absent or not a list, it is set to <code>["created", "renewed"]</code>.</li>
+                <li><code>on_events</code>: a list of the events the hook runs on, from <code>created</code>, <code>renewed</code> and <code>revoked</code>. If it is absent or not a list, it is set to <code>["created", "renewed"]</code>: <code>revoked</code> has to be asked for. A hook written into <code>settings.json</code> by hand is not normalised, so without <code>on_events</code> it runs on no certificate event; it still runs when you run hooks by hand.</li>
                 <li><code>window</code>: an optional maintenance window, described below.</li>
             </ul>
             <p>Hooks live under the <code>deploy_hooks</code> settings key. <code>global_hooks</code> run for every domain; <code>domain_hooks</code> maps an exact domain name to hooks for that domain only, which run after the global ones. The top-level <code>enabled</code> flag is the master switch: when it is <code>false</code> or missing, no hook runs on certificate events.</p>
@@ -159,9 +159,9 @@
   "enabled": true,
   "global_hooks": [
     {
-      "id": "reload-nginx",
-      "name": "Reload nginx",
-      "command": "/usr/sbin/nginx -s reload",
+      "id": "tell-lb",
+      "name": "Tell the load balancer",
+      "command": "curl -fsS -X POST https://lb.internal/api/reload",
       "enabled": true,
       "timeout": 30,
       "on_events": ["created", "renewed"]
@@ -182,7 +182,7 @@
 
             <h2>Configuring Hooks</h2>
             <h3>In the web UI</h3>
-            <p>Open <strong>Settings</strong>, then the <strong>Deploy</strong> tab. Turn on <strong>Enable Deploy Hooks</strong>, then use <strong>Add Global Hook</strong>, or add a domain under <strong>Domain-Specific Hooks</strong> and add hooks to it. New hooks start enabled, with a 30-second timeout and both <strong>Created</strong> and <strong>Renewed</strong> ticked. Nothing is stored until you press <strong>Save Deploy Settings</strong>; a rejected hook fails the save with an error naming the hook and the reason.</p>
+            <p>Open <strong>Settings</strong>, then the <strong>Deploy</strong> tab. Turn on <strong>Enable Deploy Hooks</strong>, then use <strong>Add Global Hook</strong>, or add a domain under <strong>Domain-Specific Hooks</strong> and add hooks to it. Each hook offers <strong>Created</strong>, <strong>Renewed</strong> and <strong>Revoked</strong> checkboxes. New hooks start enabled, with a 30-second timeout and <strong>Created</strong> and <strong>Renewed</strong> ticked. Nothing is stored until you press <strong>Save Deploy Settings</strong>; a rejected hook fails the save with an error naming the hook and the reason.</p>
             <h3>Through the API</h3>
             <p>Both endpoints require the <code>admin</code> role.</p>
             <pre><code># Read the current configuration
@@ -201,10 +201,24 @@ curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/jso
                 <li><code>CERTMATE_KEY_PATH</code>: <code>&lt;cert_dir&gt;/&lt;domain&gt;/privkey.pem</code>. Not set when that file does not exist, as for a certificate issued from a <a href="csr-certificates.html">CSR</a>.</li>
                 <li><code>CERTMATE_FULLCHAIN_PATH</code>: <code>&lt;cert_dir&gt;/&lt;domain&gt;/fullchain.pem</code>.</li>
                 <li><code>CERTMATE_CHAIN_PATH</code>: <code>&lt;cert_dir&gt;/&lt;domain&gt;/chain.pem</code>, the intermediates without the leaf.</li>
-                <li><code>CERTMATE_EVENT</code>: <code>created</code>, <code>renewed</code>, <code>manual</code> or <code>test</code>.</li>
+                <li><code>CERTMATE_EVENT</code>: <code>created</code>, <code>renewed</code>, <code>revoked</code>, <code>manual</code> or <code>test</code>.</li>
                 <li><code>CERTMATE_DRY_RUN</code>: set to <code>1</code> only for a test run.</li>
             </ul>
-            <p><code>&lt;cert_dir&gt;</code> is the certificate directory, <code>certificates</code> under the install root unless <code>CERTMATE_CERT_DIR</code> moves it. The command runs as the CertMate process user, <code>certmate</code> in the Docker image, which includes <code>bash</code>.</p>
+            <p><code>&lt;cert_dir&gt;</code> is the certificate directory, <code>certificates</code> under the install root unless <code>CERTMATE_CERT_DIR</code> moves it. The command runs as the CertMate process user, <code>certmate</code> in the Docker image.</p>
+
+            <h2>Where a Hook Runs</h2>
+            <p>A hook runs inside the CertMate container, as the process that issued the certificate. It does not run on the Docker host, or on the machine you want to reload. A command such as <code>systemctl reload haproxy</code> runs in the container and exits 127, command not found.</p>
+            <p>The published image carries <code>sh</code>, <code>bash</code>, <code>curl</code> and <code>openssl</code> for a hook to use. It does not carry <code>ssh</code>, <code>scp</code>, <code>sftp</code>, <code>rsync</code>, <code>jq</code>, <code>nginx</code>, <code>systemctl</code> or <code>haproxy</code>. To act on another machine:</p>
+            <ul>
+                <li>Call it over the network. Most things worth reloading have an API, and <code>curl</code> is in the image.</li>
+                <li>Build your own image from CertMate's and install what your hook needs.</li>
+                <li>Mount a script into the container and call it. The script also runs in the container, so anything it invokes has to be there too.</li>
+            </ul>
+            <p>Examples that run in the published image:</p>
+            <pre><code>curl -fsS -X POST -H "Authorization: Bearer $DEPLOY_TOKEN" --data-binary "@$CERTMATE_FULLCHAIN_PATH" https://lb.internal/api/certs/$CERTMATE_DOMAIN
+
+openssl x509 -in "$CERTMATE_FULLCHAIN_PATH" -noout -subject -dates</code></pre>
+            <p>With <code>curl</code>, keep <code>-f</code>: without it <code>curl</code> exits 0 on an HTTP error, and the hook reports success for a deploy that did not happen.</p>
 
             <h2>Maintenance Windows</h2>
             <p>A certificate renews when it is due. A <code>window</code> on a hook does not change that. It only holds the deploy until the window is next open.</p>
@@ -252,14 +266,15 @@ curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/jso
                 <li>backticks, <code>$(</code>, or <code>${</code>. <code>${CERTMATE_NAME}</code> is allowed, but only with the closing brace directly after the name.</li>
                 <li><code>&amp;&amp;</code>, <code>||</code>, <code>;</code>, a carriage return or a newline</li>
                 <li><code>&gt;</code> followed by an absolute path, or <code>&lt;&lt;</code></li>
-                <li>the words <code>eval</code> or <code>source</code></li>
+                <li>the words <code>eval</code> or <code>source</code>, or <code>.</code> used as the <code>source</code> shorthand: a dot at the start of the command, or after a space or a pipe, followed by a space and an argument</li>
                 <li>the strings <code>settings.json</code>, <code>api_bearer_token</code>, <code>client_secret</code> or <code>vault_token</code>, or <code>.env</code> not followed by a letter or digit, in any case</li>
             </ul>
-            <p><code>$CERTMATE_NAME</code> references are allowed. A rejected save reads like <code>Global hook rejected: hook 'Reload nginx' command contains dangerous shell metacharacters</code>. When you need chaining or conditionals, put the logic in a script inside the container and call the script:</p>
+            <p><code>$CERTMATE_NAME</code> references are allowed, and so are a simple pipe, such as <code>curl ... | grep -q ok</code>, and a redirect to a relative path, such as <code>&gt; out.txt</code>. A rejected save reads like <code>Global hook rejected: hook 'Tell the load balancer' command contains dangerous shell metacharacters</code>. When you need chaining or conditionals, put the logic in a script inside the container and call the script:</p>
             <pre><code>#!/bin/sh
 set -eu
 [ -n "${CERTMATE_DRY_RUN:-}" ] &amp;&amp; exit 0
-/usr/sbin/nginx -t &amp;&amp; /usr/sbin/nginx -s reload</code></pre>
+openssl x509 -in "$CERTMATE_FULLCHAIN_PATH" -noout -checkend 0
+curl -fsS -X POST --data-binary "@$CERTMATE_FULLCHAIN_PATH" "https://lb.internal/api/certs/$CERTMATE_DOMAIN"</code></pre>
             <p>Only the <code>command</code> field is validated, not the script's contents.</p>
 
             <h2>History and Audit</h2>

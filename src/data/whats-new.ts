@@ -30,6 +30,17 @@ export interface UpdateCard {
 
 export const updates: UpdateCard[] = [
   {
+    badge: 'feature',
+    badgeLabel: 'v2.35.0',
+    icon: 'fa6-solid:scale-balanced',
+    title: 'v2.35.0 - what it said, and what it did',
+    description:
+      'Mostly CertMate made to do what its pages, forms and comments already said, plus native Sectigo ACME support contributed from outside. Three changes to read before upgrading: a request for a CA that is not configured now fails with 400 naming the CA, instead of being issued by another one; CERTMATE_CERT_DIR now moves the storage layer too, unless certificate_storage.cert_dir is set; and ACME directory URLs must be https. DigiCert\'s regional directory is used when you enter one. The audit log can be searched by operation, resource, user and status, a signed checkpoint is written on a clean shutdown, and the weekly digest is an audit entry. The certificates table says which CA issued each certificate, deploy hooks can run on revoked, a CSR-only certificate can rotate its key through reissue, and CertMate can be told which DNS resolvers to use. API contract 2.14.',
+    date: 'September 2026',
+    highlight: true,
+    href: releaseTag('v2.35.0'),
+  },
+  {
     badge: 'milestone',
     badgeLabel: 'v2.34.0',
     icon: 'fa6-solid:heart-pulse',
@@ -37,7 +48,6 @@ export const updates: UpdateCard[] = [
     description:
       'The largest surface change since 2.24, and one rule throughout: a check that cannot answer must say so. Domain registration expiry comes from RDAP, or WHOIS where a TLD has no RDAP, and a registry that does not publish a date gets none invented. Seven daily checks look at the name rather than the certificate: SPF, DMARC and MX, DNS blocklists, HSTS, the protective headers, and what a response discloses, with an opt-in eighth for hosts that still accept TLS 1.0 or 1.1. A blocklist that refuses the query is not read as clean: each list must prove it answers before it is trusted, and a check nobody could answer is unknown, never a pass. The TLS probe now verifies whether a served certificate was revoked, over OCSP or CRL, instead of assuming it was not; CAA records can be read before an order; certificate expiry warnings, which were never actually sent, now are; and a lapsing domain registration gets warnings of its own. API contract 2.11.',
     date: 'September 2026',
-    highlight: true,
     href: releaseTag('v2.34.0'),
   },
   {

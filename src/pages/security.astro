@@ -110,14 +110,17 @@ const disclosureRows = [
             Every certificate-lifecycle action &mdash; create, renew, reissue, deploy,
             auto-renew toggle, and unattended scheduled renewals &mdash; is appended to a
             SHA-256 hash chain, attributed to who or what acted (human, API token
-            or AI agent) and what triggered it. The instance periodically signs the
-            chain head with an Ed25519 key, and an export bundle carries the entries,
+            or AI agent) and what triggered it. The instance signs the chain head
+            with an Ed25519 key every 100 entries and again on a clean shutdown,
+            and an export bundle carries the entries,
             the manifest, the signature and the instance fingerprint.
           </p>
           <p class="mt-4 text-gray-600 dark:text-gray-300">
             The point is that you do not have to trust CertMate to trust the record.
-            A dependency-free verifier (Python standard library only) recomputes the
-            chain and checks the signature &mdash; run it against the live chain, or hand
+            A standalone verifier recomputes the chain with nothing but the Python
+            standard library, and checks the signature of an export with the
+            <code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm dark:bg-gray-800">cryptography</code>
+            package &mdash; run it against the live chain, or hand
             an auditor the signed bundle and your public key and let them verify it on
             their own machine, without ever running or reaching your instance.
           </p>
@@ -143,9 +146,10 @@ const disclosureRows = [
               &ldquo;tamper-proof&rdquo;, &ldquo;immutable&rdquo; or a &ldquo;blockchain&rdquo;.
               A third party who holds a signed export can prove which instance
               produced the record and that it was not edited. But the operator holds
-              the signing key and could re-sign a rewritten chain, and entries written
-              after the last signed checkpoint can still be dropped until the next
-              checkpoint seals them. Fully binding the operator requires shipping the
+              the signing key and could re-sign a rewritten chain. A clean shutdown
+              signs the tail, but after a crash, a SIGKILL or a power loss the entries
+              written since the last signed checkpoint can still be dropped until the
+              next checkpoint seals them. Fully binding the operator requires shipping the
               signed checkpoints to an external append-only sink &mdash; opt-in external
               anchoring, which is planned and not yet shipped. We would rather you know
               that than over-read the guarantee.

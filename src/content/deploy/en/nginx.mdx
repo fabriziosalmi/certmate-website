@@ -5,7 +5,7 @@ description: "How to issue, install and auto-renew a Let's Encrypt TLS certifica
 summary: "Issue a certificate, point Nginx at the full chain, and automate renewal so it reloads itself — without the classic 'renewed but still serving the old cert' trap."
 icon: "fa6-solid:server"
 order: 1
-updated: "2026-05-22"
+updated: "2026-09-24"
 ---
 
 ## Prerequisites
@@ -82,8 +82,11 @@ sudo certbot renew --deploy-hook "systemctl reload nginx"
 
 ## Do it the hands-off way
 
-CertMate issues and renews the certificate (HTTP-01 or DNS-01 across 24
-providers), then runs a deploy hook to push `fullchain.pem` + `privkey.pem` to
-this host and reload Nginx — so the served certificate is always current and the
-chain is never half-deployed. You manage it from a UI or REST API instead of
-per-host cron.
+CertMate issues and renews the certificate (HTTP-01, or DNS-01 across every
+supported provider) and writes `fullchain.pem` and `privkey.pem` together, so
+the chain is never half-deployed. Getting them onto this host and reloading
+Nginx is a deploy hook's job, and a hook runs inside the CertMate container,
+which has `curl` and `openssl` but no `ssh`, `scp` or `nginx`: the hook calls
+something on this host over the network, or runs from an image you build on
+CertMate's with the tools it needs. You manage it from a UI or REST API instead
+of per-host cron.

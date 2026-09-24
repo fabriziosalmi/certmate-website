@@ -5,7 +5,7 @@ description: "Risolvi NET::ERR_CERT_COMMON_NAME_INVALID — il certificato SSL n
 summary: "Il certificato è attendibile e in corso di validità, ma non elenca l'hostname richiesto dal browser tra i suoi Subject Alternative Name."
 browsers: ["Chrome", "Edge", "Brave", "Chromium"]
 order: 3
-updated: "2026-05-22"
+updated: "2026-09-24"
 ---
 
 ## Cosa significa
@@ -51,8 +51,8 @@ certbot certonly -d example.com -d www.example.com
 
 La causa tipica è la deriva degli hostname — un nuovo sottodominio che nessuno
 ha aggiunto alla lista dei SAN. CertMate gestisce l'intero insieme di SAN per
-certificato (wildcard inclusi via DNS-01) e ri-emette automaticamente quando
-l'insieme dei domini cambia, così il certificato servito corrisponde sempre a
+certificato (wildcard inclusi via DNS-01), e modificare quell'insieme
+ri-emette il certificato nello stesso passaggio, così il certificato servito corrisponde sempre a
 ciò che pubblichi.
 
 ## Errori correlati

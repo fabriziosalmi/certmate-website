@@ -148,6 +148,7 @@
                 <li>CertMate runs certbot in <code>--csr</code> mode against the same CA, DNS provider and credentials an ordinary request would use, and obtains the certificate.</li>
                 <li>CertMate stores the certificate, the chain and the CSR. It does not store a private key.</li>
                 <li>At renewal, CertMate submits the stored CSR to the CA again.</li>
+                <li>If the device rotates its key, submit the new CSR to the reissue endpoint (see <a href="#key-rotation">Key Rotation</a>).</li>
             </ol>
 
             <h2>Submitting a CSR</h2>
@@ -223,7 +224,20 @@
             </ul>
 
             <h2>Key Rotation</h2>
-            <p>If the device generates a new key, it needs a new CSR. The create call refuses a domain that already has a certificate (409), and the edit/reissue path does not accept a CSR. To switch to the new CSR, delete the certificate with <code>DELETE /api/certificates/&lt;domain&gt;</code> (admin role), then submit the new CSR with the create call. Deleting removes the files from disk; it does not revoke the certificate at the CA.</p>
+            <p>If the device generates a new key, it needs a new CSR. Since v2.35.0, submit it as <code>csr</code> to the reissue call, <code>POST /api/certificates/&lt;domain&gt;/reissue</code>, with the same <code>domain</code>. The endpoint requires the <code>operator</code> role.</p>
+            <pre><code>curl -X POST https://certmate.local/api/certificates/device.example.com/reissue \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "$(jq -n --arg csr "$(cat device-new.csr)" '{csr: $csr}')"</code></pre>
+            <ul>
+                <li>The old certificate keeps being served until the CA issues the new one, so there is no window without a certificate. If issuance fails, the response says the previous certificate is still in place.</li>
+                <li>When the new certificate is issued, the stored CSR and the <code>csr_fingerprint</code> in metadata are replaced, and later renewals use the new CSR.</li>
+                <li>The same rules as on create apply: <code>san_domains</code>, <code>key_type</code>, <code>key_size</code> and <code>elliptic_curve</code> must be omitted, and each name in the CSR is checked against the API key's <code>allowed_domains</code>. These checks return 400 with code <code>CERTIFICATE_REISSUE_REJECTED</code>, or 403 with <code>DOMAIN_OUT_OF_SCOPE</code>, before anything is written.</li>
+                <li>The certificate's names become the names in the CSR. SANs the current certificate has are replaced, not added to.</li>
+                <li>Omitted fields (<code>dns_provider</code>, <code>account_id</code>, <code>ca_provider</code>, <code>challenge_type</code>, <code>domain_alias</code>) keep the values the certificate was issued with. <code>async</code> works as on create.</li>
+            </ul>
+            <p>Reissue with a CSR is for a certificate that is already CSR-only. If the domain directory holds a <code>privkey.pem</code> managed by CertMate, the reissue fails with 422 and the existing certificate stays as it was.</p>
+            <p>Use reissue, not create: the create call refuses a domain that already has a certificate with 409 <code>CERTIFICATE_ALREADY_EXISTS</code>.</p>
 
             <h2>Deploy Hooks</h2>
             <p>A CSR-only certificate has no key to deploy.</p>
@@ -235,7 +249,7 @@
 
             <h2>Next Steps</h2>
             <ul>
-                <li><a href="api-reference.html">API Reference</a>: the create, renew and delete endpoints</li>
+                <li><a href="api-reference.html">API Reference</a>: the create, renew, reissue and delete endpoints</li>
                 <li><a href="deploy-hooks.html">Deploy Hooks</a>: writing the shell hook that delivers the certificate</li>
                 <li><a href="ca-providers.html">CA Providers</a>: choosing the CA the CSR is submitted to</li>
                 <li><a href="dns-providers.html">DNS Providers</a>: credentials for the DNS-01 challenge</li>

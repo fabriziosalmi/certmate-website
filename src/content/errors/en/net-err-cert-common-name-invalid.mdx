@@ -5,7 +5,7 @@ description: "Fix NET::ERR_CERT_COMMON_NAME_INVALID — the SSL certificate does
 summary: "The certificate is trusted and in date, but it doesn't list the hostname the browser asked for in its Subject Alternative Names."
 browsers: ["Chrome", "Edge", "Brave", "Chromium"]
 order: 3
-updated: "2026-05-22"
+updated: "2026-09-24"
 ---
 
 ## What it means
@@ -50,8 +50,8 @@ certbot certonly -d example.com -d www.example.com
 
 Hostname drift — a new subdomain that nobody added to the SAN list — is the
 usual cause. CertMate manages the full SAN set per certificate (including
-wildcards via DNS-01) and reissues automatically when the domain set changes,
-so the served certificate always matches what you publish.
+wildcards via DNS-01), and editing that set reissues the certificate in the
+same step, so the served certificate always matches what you publish.
 
 ## Related errors
 

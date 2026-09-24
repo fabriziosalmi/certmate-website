@@ -1,6 +1,6 @@
 ---
 import { Icon } from 'astro-icon/components';
-import { VERSION, PROVIDER_COUNT, GITHUB } from '~/data/site';
+import { VERSION, PROVIDER_COUNT, GITHUB, CA_COUNT, STORAGE_BACKEND_COUNT } from '~/data/site';
 
 // Hero leads with substance, not adjectives: what CertMate is, and the one
 // thing that sets it apart — an independently verifiable audit trail. The
@@ -61,7 +61,7 @@ import { VERSION, PROVIDER_COUNT, GITHUB } from '~/data/site';
           <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">DNS Providers</div>
         </div>
         <div>
-          <div class="text-3xl font-bold text-primary sm:text-4xl">14</div>
+          <div class="text-3xl font-bold text-primary sm:text-4xl">{CA_COUNT + STORAGE_BACKEND_COUNT}</div>
           <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">CA &amp; Storage Backends</div>
         </div>
         <div>

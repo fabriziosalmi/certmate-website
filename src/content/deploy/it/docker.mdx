@@ -5,7 +5,7 @@ description: "Fornire e rinnovare in automatico i certificati TLS per app Docker
 summary: "Porta il TLS attendibile nei container: monta il certificato, termina il TLS su un reverse proxy e rinnova senza ricostruire le immagini né metterci dentro le chiavi."
 icon: "fa6-brands:docker"
 order: 2
-updated: "2026-05-22"
+updated: "2026-09-24"
 ---
 
 ## Il principio: tieni i certificati fuori dall'immagine
@@ -72,6 +72,10 @@ echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/
 ## Il modo senza pensieri
 
 Puoi eseguire CertMate stesso come container (`docker run` / compose) per
-emettere e rinnovare certificati su ogni provider DNS supportato, e usare i suoi deploy hook
-per ricaricare il container del proxy nel momento in cui un certificato ruota —
-nessuna chiave nelle immagini, nessun restart manuale, gestito da UI o API REST.
+emettere e rinnovare certificati su ogni provider DNS supportato — nessuna
+chiave nelle immagini, gestito da UI o API REST. I suoi deploy hook girano
+dentro il container di CertMate, che contiene `sh`, `bash`, `curl` e `openssl`
+e non la CLI `docker`, quindi un hook non può fare `docker exec` nel proxy. Per
+ricaricare il proxy nel momento in cui un certificato ruota, fai chiamare
+all'hook qualcosa che possa farlo via rete, oppure costruisci una tua immagine
+su quella di CertMate con gli strumenti che servono all'hook.

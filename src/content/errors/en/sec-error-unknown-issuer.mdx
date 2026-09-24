@@ -5,7 +5,7 @@ description: "Fix Firefox's SEC_ERROR_UNKNOWN_ISSUER — the certificate issuer 
 summary: "Firefox can't connect the certificate to a trusted root. Almost always a missing intermediate certificate or an internal/self-signed CA Firefox doesn't know."
 browsers: ["Firefox"]
 order: 4
-updated: "2026-05-22"
+updated: "2026-09-24"
 ---
 
 ## What it means
@@ -55,8 +55,8 @@ to the Firefox enterprise policy / trust store via your MDM.
 
 Because Firefox won't paper over a missing intermediate the way an OS-cached
 store sometimes does, an incomplete chain *will* surface here first. CertMate
-always deploys `fullchain.pem` on issuance and renewal, so the intermediate is
-never dropped.
+always writes `fullchain.pem` on issuance and renewal and hands its path to
+deploy hooks as `CERTMATE_FULLCHAIN_PATH`, so the intermediate is never dropped.
 
 ## Related errors
 

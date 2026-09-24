@@ -178,17 +178,10 @@ cp .env.example .env</code></pre>
 # same token once to authorize creating the initial admin.
 API_BEARER_TOKEN=your_super_secure_api_token_here_change_this
 
-#  DNS Provider Configuration (choose one)
-# Option 1: Cloudflare (Recommended for beginners)
-CLOUDFLARE_TOKEN=your_cloudflare_api_token_here
-
-# Option 2: AWS Route53
-# AWS_ACCESS_KEY_ID=your_aws_access_key
-# AWS_SECRET_ACCESS_KEY=your_aws_secret_key
-
-# Option 3: Azure DNS
-# AZURE_SUBSCRIPTION_ID=your_azure_subscription_id
-# AZURE_TENANT_ID=your_tenant_id</code></pre>
+# DNS provider. Cloudflare is the only provider read from the environment:
+# this token sets the default Cloudflare account. Route53, Azure and the
+# rest are configured in Settings -&gt; DNS Providers or through the API.
+CLOUDFLARE_TOKEN=your_cloudflare_api_token_here</code></pre>
 
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i>
@@ -239,7 +232,7 @@ docker-compose logs -f certmate</code></pre>
             <h4>Using the Web Interface:</h4>
             <ol>
                 <li>Navigate to <code>http://localhost:8000</code></li>
-                <li>Go to Settings and configure your DNS provider</li>
+                <li>Go to Settings and configure your DNS provider, and the CA if you want one other than Let's Encrypt: since v2.35.0 a request for a CA that is not configured is refused rather than issued by Let's Encrypt</li>
                 <li>Add your domain (e.g. <code>example.com</code>)</li>
                 <li>Click "Create Certificate"</li>
             </ol>
@@ -267,14 +260,12 @@ pip install -r requirements.txt
 python app.py</code></pre>
 
             <h3>Kubernetes</h3>
-            <p>For container orchestration:</p>
-            <pre><code>kubectl apply -f kubernetes/deployment.yaml
-kubectl apply -f kubernetes/service.yaml
-kubectl apply -f kubernetes/ingress.yaml</code></pre>
+            <p>The repository ships a Helm chart in <code>charts/certmate</code>:</p>
+            <pre><code>helm install certmate ./charts/certmate --namespace certmate --create-namespace</code></pre>
 
             <div class="alert alert-warning">
                 <i class="fas fa-exclamation-triangle"></i>
-                <strong>Security Note:</strong> Always change the default API bearer token before deploying to production!
+                <strong>Security Note:</strong> Set <code>API_BEARER_TOKEN</code> yourself, or keep the port bound to localhost, before the instance is reachable from a network.
             </div>
 
             <h2>Authentication options</h2>

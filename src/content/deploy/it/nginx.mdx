@@ -5,7 +5,7 @@ description: "Emettere, installare e rinnovare in automatico un certificato Let'
 summary: "Emetti un certificato, punta Nginx alla catena completa e automatizza il rinnovo con reload — evitando la trappola classica del 'rinnovato ma serve ancora il vecchio'."
 icon: "fa6-solid:server"
 order: 1
-updated: "2026-05-22"
+updated: "2026-09-24"
 ---
 
 ## Prerequisiti
@@ -82,8 +82,11 @@ sudo certbot renew --deploy-hook "systemctl reload nginx"
 
 ## Il modo senza pensieri
 
-CertMate emette e rinnova il certificato (HTTP-01 o DNS-01 su ogni provider supportato), poi
-esegue un deploy hook per distribuire `fullchain.pem` + `privkey.pem` a questo
-host e ricaricare Nginx — così il certificato servito è sempre aggiornato e la
-catena non resta mai a metà. Lo gestisci da UI o API REST invece che con cron
+CertMate emette e rinnova il certificato (HTTP-01, o DNS-01 su ogni provider
+supportato) e scrive insieme `fullchain.pem` e `privkey.pem`, così la catena non
+resta mai a metà. Portarli su questo host e ricaricare Nginx è compito di un
+deploy hook, e un hook gira dentro il container di CertMate, che ha `curl` e
+`openssl` ma non `ssh`, `scp` o `nginx`: l'hook chiama qualcosa su questo host
+via rete, oppure gira da un'immagine che costruisci su quella di CertMate con
+gli strumenti che gli servono. Lo gestisci da UI o API REST invece che con cron
 host per host.

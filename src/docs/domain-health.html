@@ -154,7 +154,7 @@
                 <li>Through a forwarder, such as a corporate resolver, a caching proxy or Tailscale's MagicDNS, the refusal can arrive as a plain NXDOMAIN, which at the DNS level is identical to "not listed".</li>
                 <li>So CertMate first asks each list about its own test points: every DNSBL keeps <code>127.0.0.2</code> permanently listed and <code>127.0.0.1</code> permanently unlisted. A list that does not report <code>127.0.0.2</code> as listed is not asked about your domains and is named in <code>unanswered</code>. A list that reports <code>127.0.0.1</code> is answering everything (a hijacked or wildcarding resolver) and is dropped too.</li>
             </ul>
-            <p>What to do: the app's documentation says the fix is almost always to point CertMate at a resolver of your own rather than a public one.</p>
+            <p>What to do: point CertMate at a resolver of your own rather than a public one. From v2.35.0 that is a setting, <code>dns_resolver</code>, described under <a href="#choosing-the-resolver">Choosing the resolver</a>; the <code>unknown</code> detail names it. In v2.34.0 the only lever is the DNS of the host or container CertMate runs in.</p>
             <p>The rule holds for every check: a timed-out TXT lookup is <code>unknown</code>, not "no SPF record"; an unreachable host is <code>unknown</code>, not "no HSTS". And <code>weak_tls</code> is <code>unknown</code> when the CertMate runtime cannot offer TLS 1.0 or 1.1 at all, so the host was never asked; it is never reported as "refuses old TLS". Same trap, different cause.</p>
 
             <h2>Domain Registration Expiry</h2>
@@ -213,13 +213,18 @@
                 <li><code>failing</code>: listed on at least one list.</li>
                 <li><code>ok</code>: not listed, and every lookup was answered.</li>
                 <li><code>warning</code>: not listed where it could be checked, but some lookups went unanswered; <code>unanswered</code> names them.</li>
-                <li><code>unknown</code>: no list answered usefully, or the domain's addresses could not be resolved.</li>
+                <li><code>unknown</code>: no list answered usefully, nothing the domain resolves to could be asked about, or the domain's addresses could not be resolved.</li>
             </ul>
-            <p><strong>IPv6 addresses are not checked against the lists, and the result says so.</strong> The test points that prove a list is answering, <code>127.0.0.2</code> and <code>127.0.0.1</code>, only prove it answers about IPv4. Many lists do not serve IPv6, or serve it from a separate zone, so an empty answer about an IPv6 address cannot be told apart from a list that never looked. IPv6 addresses go in a separate <code>not_covered</code> field instead of being asked about. That is a limit of what the lists cover, not a lookup that failed, so it does not change the verdict:</p>
+            <p><strong>Some addresses are not asked about, and the result says so.</strong> They go in a separate <code>not_covered</code> field, one line per address with the reason. Two kinds land there:</p>
             <ul>
-                <li>a domain that no list names is <code>ok</code> whether it is IPv4-only or dual-stack; for a dual-stack domain the detail adds how many IPv6 addresses the lists do not cover;</li>
-                <li>an IPv6-only domain is <code>unknown</code>, and the detail says it is because nothing it resolves to could be asked about;</li>
-                <li>a list that refused, or a lookup that failed, still goes in <code>unanswered</code> and still makes the result <code>warning</code>, IPv6 present or not.</li>
+                <li>IPv6 addresses. The test points that prove a list is answering, <code>127.0.0.2</code> and <code>127.0.0.1</code>, only prove it answers about IPv4. Many lists do not serve IPv6, or serve it from a separate zone, so an empty answer about an IPv6 address cannot be told apart from a list that never looked.</li>
+                <li>Since v2.35.0, any address that is not public: private (RFC 1918), loopback, link-local, carrier-grade NAT (<code>100.64.0.0/10</code>) and any other address that is not globally routable. A blocklist lists hosts that send mail on the internet and has nothing to say about <code>10.0.0.0/8</code>. Not asking also keeps internal addresses from being sent to the four list operators.</li>
+            </ul>
+            <p>That is a limit of what the lists cover, not a lookup that failed, so it does not change the verdict:</p>
+            <ul>
+                <li>a domain that no list names is <code>ok</code>, whether or not some of its addresses were not covered; the detail adds how many were not asked about;</li>
+                <li>a domain that resolves only to addresses the lists do not cover, all IPv6 or all internal, is <code>unknown</code>, because nothing was asked. On split-horizon DNS, a name that resolves to <code>10.x</code> from where CertMate runs is reported <code>unknown</code>, not clean;</li>
+                <li>a list that refused, or a lookup that failed, still goes in <code>unanswered</code> and still turns what would be <code>ok</code> into <code>warning</code> (or <code>unknown</code> if no lookup was answered at all), whatever else the domain resolves to.</li>
             </ul>
 
             <h3>Response Headers</h3>
@@ -256,6 +261,23 @@
   }'</code></pre>
             <p><code>check_mail</code> covers SPF, DMARC and MX; <code>check_headers</code> covers the three header checks. An extra name that is not a domain, or for registration not under a public suffix, returns 400.</p>
             <p>Domain health runs daily at 06:30, between the 06:00 registration check and the 07:00 expiry warnings. A name is checked again only after 20 hours, and one run checks at most 200 names. <code>POST /api/inventory/scan</code> (Scan now) also runs both checks, after discovery and the CT poll, when they are enabled.</p>
+
+            <h3 id="choosing-the-resolver">Choosing the resolver</h3>
+            <p>Since v2.35.0, CertMate can be told which nameservers to ask for the DNS lookups it makes itself: the SPF, DMARC, MX and blocklist lookups, the addresses the blocklist check asks about, and the CAA check (the warning on the create form before an issuance, and the explanation after a failed one). The header and TLS checks still reach hosts through the system's resolver. Without the setting, CertMate uses the system's resolver: <code>/etc/resolv.conf</code>, Docker's <code>--dns</code>, or the pod's <code>dnsConfig</code>, exactly as in v2.34.0.</p>
+            <p>An admin sets it in the <strong>DNS resolvers</strong> field of the Discovery configuration panel on <code>/inventory</code>, one address per line, or with <code>POST /api/inventory/config</code>:</p>
+            <pre><code>curl -X POST https://certmate.example.com/api/inventory/config \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"dns_resolver": {"nameservers": ["10.0.0.53", "10.0.0.54:5353"]}}'</code></pre>
+            <p>Or in the environment: <code>CERTMATE_DNS_RESOLVERS=10.0.0.53,10.0.0.54</code>. When both are set, the stored setting wins, so what the interface shows is what CertMate uses.</p>
+            <ul>
+                <li>Addresses only, not hostnames: resolving a nameserver's name would need the resolver being replaced.</li>
+                <li>A port may follow the address: <code>10.0.0.53:5353</code>, or <code>[2001:db8::1]:5353</code> for IPv6.</li>
+                <li>An entry that is not an address, or a port outside 1-65535, returns 400. An invalid value in <code>CERTMATE_DNS_RESOLVERS</code> is ignored and the system resolver is used.</li>
+                <li>Leaving it empty keeps the system resolver.</li>
+                <li>A change applies from the next domain health run; no restart is needed.</li>
+            </ul>
+            <p><code>GET /api/inventory/config</code> returns the nameservers in use under <code>dns_resolver</code>, including ones that come from the environment.</p>
 
             <h2>API</h2>
             <table>

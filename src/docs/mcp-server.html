@@ -178,7 +178,7 @@ npm install</code></pre>
             <h2>Configuration</h2>
             <p>The server reads four environment variables:</p>
             <ul>
-                <li><code>CERTMATE_URL</code>: the base URL of your CertMate instance. Default <code>http://localhost:8000</code>. A trailing slash is removed.</li>
+                <li><code>CERTMATE_URL</code>: the base URL of your CertMate instance. Default <code>http://localhost:8000</code>. A trailing slash is removed. When CertMate runs on another host, use an <code>https://</code> URL, because the token is sent with every request.</li>
                 <li><code>CERTMATE_TOKEN</code>: the API bearer token. Required. Without it, every tool call returns <code>Error: CERTMATE_TOKEN environment variable is not defined.</code></li>
                 <li><code>CERTMATE_AGENT_SESSION</code>: optional. The session id sent on every call in the <code>X-CertMate-Agent-Session</code> header. If unset, a new UUID is generated each time the process starts. Set it to correlate a run with an external orchestrator's id.</li>
                 <li><code>CERTMATE_AGENT_ID</code>: optional. A label for this deployment, sent as <code>X-CertMate-Agent-Id</code>. Default <code>certmate-mcp-server</code>.</li>
@@ -206,11 +206,12 @@ npm install</code></pre>
                 <li><code>operator</code> for an agent that creates, renews, reissues or downloads certificates.</li>
                 <li><code>admin</code> only if it must run deploy hooks, list DNS accounts, read diagnostics or delete certificates.</li>
             </ul>
-            <p>An operator key can be limited to specific domains with <code>allowed_domains</code>. A domain-scoped key cannot read, change or poll jobs for domains outside its scope. Admin keys cannot be domain-scoped: CertMate rejects the request with <code>Admin keys cannot be domain-scoped; use the operator role for scoped access</code>. A key can never be created with a higher role than the key or user creating it.</p>
+            <p>A viewer or operator key can be limited to specific domains with <code>allowed_domains</code>. A domain-scoped key cannot read, change or poll jobs for domains outside its scope. Admin keys cannot be domain-scoped: CertMate rejects the request with <code>Admin keys cannot be domain-scoped; use the operator role for scoped access</code>. A key can never be created with a higher role than the key or user creating it.</p>
 
             <h2>What an Agent Can and Cannot Change</h2>
             <ul>
                 <li>Create, renew and update run asynchronously. The server always sends <code>async: true</code>, and CertMate answers with HTTP 202, a <code>job_id</code> and <code>status: "queued"</code>. Poll with <code>certmate_get_job</code>; the job moves through <code>queued</code> and <code>running</code> and ends as <code>succeeded</code> or <code>failed</code>. If the issuance queue is full, CertMate returns 429 with the code <code>ISSUANCE_QUEUE_FULL</code>.</li>
+                <li>Since v2.35.0, a <code>ca_provider</code> that is not configured on the instance is refused, not substituted: the create job ends as <code>failed</code> with an error that names the CA, and no certificate is issued from another CA. Let's Encrypt and Let's Encrypt staging need no saved configuration. A failed create job does not emit <code>certificate_failed</code>, so the agent's own report is the signal.</li>
                 <li><code>certmate_update_certificate</code> cannot change the primary domain; it is the certificate's identity. Omit <code>sans</code> to keep the current SAN set, pass an empty array to drop all SANs, and pass <code>domain_alias: ""</code> to clear the alias.</li>
                 <li><code>certmate_set_auto_renew</code> requires a real boolean. If the model sends the string <code>"false"</code>, the server refuses the call with <code>enabled must be true or false</code> instead of forwarding it.</li>
                 <li><code>certmate_deploy_certificate</code> runs every enabled deploy hook for the domain with <code>CERTMATE_EVENT=manual</code>; the hooks' event filters are ignored.</li>

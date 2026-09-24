@@ -168,7 +168,7 @@
 
             <h3>Filtering</h3>
             <p>There are two filters, and an event must pass both. <strong>Notify on Events</strong> at the top of the page applies to every channel; <strong>Events (leave empty for all)</strong> on each webhook applies to that webhook. An empty list means all events.</p>
-            <p>The UI offers six events to filter on: created, renewed, expiring, revoked, failed and domain expiring. <code>deploy_hook_failed</code> and <code>certificate_deploy_incomplete</code> are delivered whatever either filter says, so a filter cannot silence a failed deployment. <code>certificate_deployed</code> has no checkbox, so a non-empty filter set in the UI drops it; to receive it with a filter in place, add it to the <code>events</code> list through the API.</p>
+            <p>Both filters offer the same seven events: <code>certificate_created</code>, <code>certificate_renewed</code>, <code>certificate_deployed</code>, <code>certificate_expiring</code>, <code>certificate_revoked</code>, <code>certificate_failed</code> and <code>domain_expiring</code>. <code>deploy_hook_failed</code> and <code>certificate_deploy_incomplete</code> have no checkbox because they are delivered whatever either filter says, so a filter cannot silence a failed deployment.</p>
 
             <h3>Expiry warnings</h3>
             <ul>
@@ -247,7 +247,8 @@ def verify(secret, header, body, max_age=300):
             <p>When the configuration is read back, credential fields are returned as <code>********</code>: fields whose names contain token, secret, password, key, credential, hmac or authorization, the webhook URL, and every custom header value. Saving a form that still holds <code>********</code> keeps the stored value.</p>
 
             <h2>Delivery Log</h2>
-            <p>Each delivery, after its retries, is appended to <code>webhook_deliveries.jsonl</code> in CertMate's data directory, which keeps the most recent 1,000 entries. An entry records the time, webhook name and type, event, URL, HTTP status, success, number of attempts, error and duration in milliseconds. Email deliveries are logged in the same file.</p>
+            <p>Each delivery, after its retries, is appended to <code>webhook_deliveries.jsonl</code> in CertMate's data directory, which keeps the most recent 1,000 entries. An entry records the time, webhook name and type, event, the origin of the URL, HTTP status, success, number of attempts, error and duration in milliseconds. It does not record headers, tokens, the Basic password or the request body. Email deliveries are logged in the same file.</p>
+            <p>The origin is the scheme, host and port, such as <code>https://hooks.slack.com</code>. The path, query and any <code>user:password@</code> part are not kept, because for Slack, Discord, ntfy and Gotify the path of the webhook URL is the credential. A URL with no scheme or host is recorded as <code>(unparseable)</code>. <code>GET /api/webhooks/deliveries</code> reduces the URL of every entry it returns to its origin in the same way.</p>
             <p>In the UI, <strong>Recent Deliveries</strong> below the webhook list shows the latest 50 entries.</p>
 
             <h2>API</h2>

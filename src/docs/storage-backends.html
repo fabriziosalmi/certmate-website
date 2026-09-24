@@ -140,7 +140,7 @@
             <p>Settings, metadata, backups and runtime state stay on local disk even when certificates also live in a remote backend.</p>
 
             <h2>Default: Local Filesystem</h2>
-            <p>The default backend is <code>local_filesystem</code>. Certificates are written under the directory named by <code>cert_dir</code>, which defaults to <code>certificates</code>:</p>
+            <p>The default backend is <code>local_filesystem</code>. It writes to CertMate's certificate directory: <code>CERTMATE_CERT_DIR</code> when that is set, otherwise <code>certificates</code> under the install root. A <code>certificate_storage.cert_dir</code> in <code>settings.json</code> overrides that, unless its value is <code>certificates</code>: the shipped defaults write that value into every settings file, so it is read as "not chosen".</p>
             <pre><code>certificates/
   example.com/
     cert.pem
@@ -150,6 +150,14 @@
     metadata.json     # mode 0600</code></pre>
             <p>Private keys and <code>metadata.json</code> are written with mode 0600, the other PEM files with 0644. Each file is written to a temporary file with its final mode already set, then renamed over the destination, so a crash mid-write does not leave a truncated key or certificate, and the key is never readable under a looser mode.</p>
 
+            <h3>Upgrading: CERTMATE_CERT_DIR moves the storage layer too</h3>
+            <p>Since v2.35.0, the local storage backend follows <code>CERTMATE_CERT_DIR</code>. Before, the variable moved where certificates are issued, while the storage layer kept reading and writing a relative <code>certificates/</code> directory resolved against the working directory the process was started in. The certificate listing reads through the storage layer first, so such an instance had a second tree under its working directory.</p>
+            <ul>
+                <li>If <code>certificate_storage.cert_dir</code> in <code>settings.json</code> names a directory other than <code>certificates</code>, nothing changes: that directory is still used.</li>
+                <li>If you set <code>CERTMATE_CERT_DIR</code> and left <code>certificate_storage.cert_dir</code> at its default, the storage layer now uses <code>CERTMATE_CERT_DIR</code>. Confirm your certificates are listed as expected after the upgrade. A <code>certificates/</code> directory under the working directory CertMate was started from is no longer read or written.</li>
+                <li>If you did not set <code>CERTMATE_CERT_DIR</code>, the storage layer uses <code>certificates</code> under the install root, an absolute path, rather than one resolved against the working directory. When CertMate is started from its install directory, that is the same place.</li>
+            </ul>
+
             <h2>Supported Backends</h2>
             <p>The backend is chosen by the <code>certificate_storage.backend</code> key in <code>settings.json</code>. Each remote backend reads its settings from a sub-object with the same name.</p>
             <table>
@@ -157,7 +165,7 @@
                     <tr><th>Backend value</th><th>Required fields</th><th>Optional fields (default)</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td><code>local_filesystem</code></td><td>none</td><td><code>cert_dir</code> (<code>certificates</code>)</td></tr>
+                    <tr><td><code>local_filesystem</code></td><td>none</td><td><code>cert_dir</code> (CertMate's certificate directory)</td></tr>
                     <tr><td><code>azure_keyvault</code></td><td><code>vault_url</code>, <code>tenant_id</code>, <code>client_id</code>, <code>client_secret</code></td><td><code>storage_mode</code> (<code>secrets</code>)</td></tr>
                     <tr><td><code>aws_secrets_manager</code></td><td><code>access_key_id</code>, <code>secret_access_key</code></td><td><code>region</code> (<code>us-east-1</code>)</td></tr>
                     <tr><td><code>hashicorp_vault</code></td><td><code>vault_url</code>, <code>vault_token</code></td><td><code>mount_point</code> (<code>secret</code>), <code>engine_version</code> (<code>v2</code>)</td></tr>
@@ -220,7 +228,7 @@ pip install -r requirements-storage-all.txt        # all of the above</code></pr
             <p>A masked secret value sent back unchanged (<code>********</code>) does not overwrite the stored credential.</p>
 
             <h3>When a backend fails to start</h3>
-            <p>If the configured backend cannot be built (for example, a required field is empty or the backend value is unknown), CertMate logs the error and falls back to the local filesystem. <code>GET /api/health</code> then reports <code>"storage": "fallback_to_local (configured backend: azure_keyvault)"</code> (with the name of your backend) and an overall status of <code>degraded</code>.</p>
+            <p>If the configured backend cannot be built (for example, a required field is empty or the backend value is unknown), CertMate logs the error and falls back to the local filesystem, in CertMate's certificate directory. <code>GET /api/health</code> then reports <code>"storage": "fallback_to_local (configured backend: azure_keyvault)"</code> (with the name of your backend) and an overall status of <code>degraded</code>.</p>
 
             <h2>Migrating Between Backends</h2>
             <p><code>POST /api/storage/migrate</code> (admin), also the <strong>Migrate Certificates</strong> button in the Storage settings, copies certificates from one backend to another. It lists every domain in the source, reads each one, and stores it in the target. It does not delete anything from the source, and it does not change the saved backend.</p>
