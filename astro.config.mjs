@@ -4,6 +4,7 @@ import tailwind from '@astrojs/tailwind';
 import sitemap from '@astrojs/sitemap';
 import mdx from '@astrojs/mdx';
 import icon from 'astro-icon';
+import rehypeErrorLinks from './src/lib/rehype-error-links.mjs';
 // The documentation pages are published by src/pages/docs/[slug].html.ts,
 // which is an endpoint rather than a page route; the sitemap integration
 // discovers pages, so it does not see them. They are listed from the same
@@ -55,7 +56,9 @@ export default defineConfig({
         return item;
       },
     }),
-    mdx(),
+    // Inline error codes in the error and deploy pages link to their page.
+    // See src/lib/rehype-error-links.mjs.
+    mdx({ rehypePlugins: [rehypeErrorLinks] }),
     // astro-icon inlines an SVG for every <Icon name="fa6-solid:X" />
     // call at build time. Only the icons we use end up in the output
     // — drops the entire Font Awesome CDN dependency (76 KB of
