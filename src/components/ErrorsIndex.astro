@@ -1,0 +1,110 @@
+---
+import { getCollection } from 'astro:content';
+import { localizedPath, type Locale } from '~/i18n';
+
+interface Props {
+  lang: Locale;
+}
+const { lang } = Astro.props;
+
+// The index was one flat list of 33 codes in red, ordered by how common each
+// error is. A reader arrives with one client in front of them; the codes are
+// now grouped by where they appear, from each entry's own `browsers` field,
+// and a filter narrows the list as they type.
+const GROUPS = {
+  en: {
+    chromium: 'Chrome, Edge and other Chromium browsers',
+    firefox: 'Firefox',
+    clients: 'curl, OpenSSL and programming languages',
+    filter: 'Filter errors',
+    placeholder: 'e.g. DATE_INVALID, expired, curl',
+    none: 'No error matches.',
+  },
+  it: {
+    chromium: 'Chrome, Edge e gli altri browser Chromium',
+    firefox: 'Firefox',
+    clients: 'curl, OpenSSL e linguaggi di programmazione',
+    filter: 'Filtra gli errori',
+    placeholder: 'es. DATE_INVALID, scaduto, curl',
+    none: 'Nessun errore corrisponde.',
+  },
+}[lang];
+
+const entries = (await getCollection('errors'))
+  .filter((e) => e.id.startsWith(`${lang}/`))
+  .sort((a, b) => a.data.order - b.data.order);
+
+const family = (browsers: string[]) =>
+  browsers.includes('Chrome') ? 'chromium' : browsers.includes('Firefox') ? 'firefox' : 'clients';
+
+const groups = (['chromium', 'firefox', 'clients'] as const).map((key) => ({
+  key,
+  title: GROUPS[key],
+  items: entries.filter((e) => family(e.data.browsers) === key),
+}));
+const unplaced = entries.length - groups.reduce((n, g) => n + g.items.length, 0);
+if (unplaced !== 0) throw new Error(`ErrorsIndex: ${unplaced} ${lang} entries fell outside every group`);
+---
+
+<div class="not-prose mt-8" data-errors-index>
+  <div hidden data-errors-filter-wrap>
+    <label for="errors-filter" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">{GROUPS.filter}</label>
+    <input
+      id="errors-filter"
+      type="search"
+      autocomplete="off"
+      placeholder={GROUPS.placeholder}
+      class="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-400"
+    />
+    <p class="mt-3 hidden text-sm text-gray-600 dark:text-gray-300" data-errors-none>{GROUPS.none}</p>
+  </div>
+
+  {groups.map((g) => (
+    <section class="mt-10" aria-labelledby={`group-${g.key}`} data-errors-group>
+      <h2 id={`group-${g.key}`} class="mb-4 text-xl font-bold text-gray-900 dark:text-white">
+        {g.title} <span class="text-base font-normal text-gray-500 dark:text-gray-400">({g.items.length})</span>
+      </h2>
+      <ul class="grid gap-3">
+        {g.items.map((e) => (
+          <li data-errors-item data-search={`${e.data.errorCode} ${e.data.summary} ${e.data.browsers.join(' ')}`.toLowerCase()}>
+            <a
+              href={localizedPath(lang, `/errors/${e.id.replace(/^[a-z]+\//, '')}`)}
+              class="block rounded-lg border border-gray-200 p-4 transition-colors hover:border-primary dark:border-gray-700"
+            >
+              <span class="font-mono text-sm font-semibold text-gray-900 dark:text-white">{e.data.errorCode}</span>
+              <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">{e.data.summary}</p>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+</div>
+
+<script>
+  // Progressive: without this script the filter stays hidden and the grouped
+  // list is the page.
+  const root = document.querySelector('[data-errors-index]');
+  const wrap = root?.querySelector<HTMLElement>('[data-errors-filter-wrap]');
+  const input = root?.querySelector<HTMLInputElement>('#errors-filter');
+  const none = root?.querySelector<HTMLElement>('[data-errors-none]');
+  if (root && wrap && input && none) {
+    wrap.hidden = false;
+    const items = [...root.querySelectorAll<HTMLElement>('[data-errors-item]')];
+    const groups = [...root.querySelectorAll<HTMLElement>('[data-errors-group]')];
+    input.addEventListener('input', () => {
+      const words = input.value.toLowerCase().split(/\s+/).filter(Boolean);
+      for (const item of items) {
+        const text = item.dataset.search ?? '';
+        item.hidden = !words.every((w) => text.includes(w));
+      }
+      let shown = 0;
+      for (const group of groups) {
+        const visible = group.querySelectorAll('[data-errors-item]:not([hidden])').length;
+        group.hidden = visible === 0;
+        shown += visible;
+      }
+      none.classList.toggle('hidden', shown > 0);
+    });
+  }
+</script>
