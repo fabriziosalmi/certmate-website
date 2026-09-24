@@ -1,0 +1,288 @@
+---
+title: "Run CertMate on Kubernetes with Helm"
+platform: "Helm"
+description: "Install CertMate on Kubernetes with its Helm chart: values, secrets, storage, backups, upgrades, and how renewed certificates reach your workloads."
+summary: "Install CertMate itself in a cluster with the official chart: the values that matter, why it runs as exactly one replica, and how renewals land in your workloads' TLS Secrets."
+icon: "fa6-solid:ship"
+order: 5
+updated: "2026-09-24"
+---
+
+This page is about running CertMate itself in a cluster. For how Ingress reads
+a TLS certificate, and when cert-manager is the better fit, see
+[Deploy TLS certificates on Kubernetes](/deploy/kubernetes/).
+
+## Prerequisites
+
+- Helm 3.8 or later. The chart is published as an OCI artifact on GHCR, so
+  there is no `helm repo add` step.
+- A storage class that can provision a ReadWriteOnce volume, or an existing
+  claim you manage.
+
+## 1. Install
+
+```bash
+helm install certmate oci://ghcr.io/fabriziosalmi/charts/certmate \
+  --namespace certmate --create-namespace
+kubectl -n certmate port-forward svc/certmate 8000:8000
+```
+
+Then open `http://localhost:8000`. The chart version is the CertMate version:
+`--version 2.35.0` deploys CertMate 2.35.0, and leaving it out takes the newest.
+There is no separate chart version to keep in step.
+
+## 2. One replica, always
+
+CertMate's renewal scheduler runs inside the web process, and gunicorn runs a
+single worker on purpose. A second replica would be a second scheduler renewing
+against the same certificate store, and a second writer on the same volume. The
+chart refuses it at template time:
+
+```bash
+helm install certmate ... --set replicaCount=2
+# Error: ... certmate: replicaCount must be 1. ...
+```
+
+Scale the resources, not the replicas. For the same reason the Deployment uses
+the `Recreate` strategy: a ReadWriteOnce volume cannot be mounted by the new pod
+while the old one holds it, so an upgrade has a few seconds of downtime.
+
+## 3. The values that matter
+
+A values file for a real install:
+
+```yaml
+image:
+  tag: "2.35.0"            # defaults to the chart's appVersion
+
+secrets:
+  existingSecret: certmate-secrets
+
+persistence:
+  size: 2Gi
+  backups:
+    separateClaim: true
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1536Mi
+
+env:
+  behindProxy: true        # correct when traffic arrives via Ingress
+  gunicornTimeout: 300     # DNS-01 can take minutes on slow providers
+  letsencryptEmail: ops@example.com
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: certmate.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - hosts: ["certmate.example.com"]
+      secretName: certmate-tls
+```
+
+```bash
+helm install certmate oci://ghcr.io/fabriziosalmi/charts/certmate \
+  --version 2.35.0 --namespace certmate --create-namespace -f values.yaml
+```
+
+The `certmate-tls` Secret for CertMate's own hostname can be written by
+CertMate itself, with the deploy target in section 7, once it has issued a
+certificate for `certmate.example.com`. Until then, reach it with
+`kubectl port-forward`.
+
+**Resources.** The chart defaults to a 512Mi memory limit. Certbot and its DNS
+plugins run as subprocesses in the same container and add a memory spike during
+issuance, so for an instance managing dozens of certificates the CertMate docs
+recommend the 512Mi request and 1536Mi limit shown above. If the pod restarts
+while creating a certificate, raise the memory limit first.
+
+**Persistence.** Certificates, the settings store, the inventory, the audit
+chain and the logs live on one claim under separate subPaths (`/app/certificates`,
+`/app/data`, `/app/logs`). The chart will not render with persistence disabled
+unless `persistence.existingClaim` names a volume you manage. The claim carries
+`helm.sh/resource-policy: keep`, so `helm uninstall` leaves your certificates
+behind; deleting them is a deliberate `kubectl delete pvc`.
+
+## 4. The API token and other secrets
+
+`values.yaml` is not a secret store. Create the Secret yourself and point the
+chart at it:
+
+```bash
+kubectl -n certmate create secret generic certmate-secrets \
+  --from-literal=API_BEARER_TOKEN="$(openssl rand -hex 32)" \
+  --from-literal=SECRET_KEY="$(openssl rand -hex 32)" \
+  --from-literal=CERTMATE_BACKUP_PASSPHRASE='a long passphrase you keep elsewhere' \
+  --from-literal=CLOUDFLARE_TOKEN='...'
+```
+
+Every key in that Secret reaches the container as an environment variable, so
+DNS provider credentials go here too. The reference is not optional: if
+`existingSecret` names a Secret that does not exist, the pod fails to start
+instead of starting without its credentials.
+
+Set `API_BEARER_TOKEN` before you enable the Ingress. Until an operator
+credential exists (this token, a local admin user, or SSO), CertMate stays in
+setup mode so it can be bootstrapped, and in setup mode it does not ask callers
+for credentials.
+
+The chart restarts the pod when a Secret it generated changes. It cannot see
+inside `existingSecret`, so after rotating it, restart the Deployment yourself
+or run a controller such as Reloader:
+
+```bash
+kubectl -n certmate rollout restart deployment/certmate
+```
+
+## 5. Backups that leave the volume
+
+By default `/app/backups` is a subPath of the same claim as the data it exists
+to recover, so one volume loss takes both. `persistence.backups.separateClaim:
+true` gives backups their own claim; `persistence.backups.existingClaim` points
+it at a volume on different storage.
+
+To copy archives out of the cluster, enable the CronJob. The image and the
+arguments are yours; the chart mounts the backup volume read-only so the copy
+cannot damage what it copies, and runs it as the same non-root user as CertMate:
+
+```yaml
+persistence:
+  backups:
+    separateClaim: true
+    offsite:
+      enabled: true
+      schedule: "17 3 * * *"
+      image: rclone/rclone:1.71.2
+      command:              # passed as arguments to the image's entrypoint
+        - copy
+        - /app/backups/unified
+        - remote:certmate-backups
+      env:
+        - name: RCLONE_CONFIG_REMOTE_TYPE
+          value: s3
+        - name: RCLONE_CONFIG_REMOTE_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef: {name: certmate-offsite, key: access-key}
+        # ...and the rest of the remote's settings
+```
+
+The job's pod mounts the same claim as CertMate. With a ReadWriteOnce claim it
+can only start on the node where CertMate is running.
+
+A copied archive restores the instance only if `CERTMATE_BACKUP_PASSPHRASE` was
+set when it was written. Without it, automatic backups mask the secrets. See
+[Backup and Recovery](/docs/backup-recovery.html).
+
+## 6. Upgrade
+
+```bash
+helm upgrade certmate oci://ghcr.io/fabriziosalmi/charts/certmate \
+  --version 2.35.0 --namespace certmate -f values.yaml
+```
+
+The old pod stops before the new one starts (`Recreate`), and the volume is
+kept across the upgrade.
+
+## 7. Getting renewed certificates into your workloads
+
+A shell deploy hook runs inside the CertMate container, which has no `kubectl`.
+Use the typed **Kubernetes Secret** deploy target instead: at issuance and at
+every renewal it writes the certificate's `fullchain.pem` and `privkey.pem` into
+a `kubernetes.io/tls` Secret as `tls.crt` and `tls.key`, with one Server-Side
+Apply request that creates or updates it. The Secret is labelled
+`app.kubernetes.io/managed-by: certmate`.
+
+With `in_cluster: true`, CertMate reads the API server address, token and CA
+from the service account mounted in its pod. The chart creates that service
+account (`certmate` for a release named `certmate`) but no RBAC, so grant it
+`create` and `patch` on Secrets in each namespace it writes to:
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: certmate-tls-writer
+  namespace: web
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: certmate-tls-writer
+  namespace: web
+subjects:
+  - kind: ServiceAccount
+    name: certmate
+    namespace: certmate
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: certmate-tls-writer
+```
+
+Targets have no editor in Settings → Deploy; configure them through the admin
+API. Include `"enabled": true`, which is the deploy master switch:
+
+```bash
+curl -X POST http://localhost:8000/api/deploy/config \
+  -H "Authorization: Bearer $API_BEARER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "enabled": true,
+    "targets": [{
+      "id": "web-tls",
+      "name": "example.com to web/example-tls",
+      "type": "kubernetes-secret",
+      "enabled": true,
+      "on_events": ["created", "renewed"],
+      "domains": ["example.com"],
+      "config": {
+        "secret_name": "example-tls",
+        "namespace": "web",
+        "in_cluster": true
+      }
+    }]
+  }'
+```
+
+Without `namespace`, the Secret goes to CertMate's own namespace. A `targets`
+list in the request replaces the saved one, so send every target each time.
+
+Publish the current certificate now rather than waiting for the next renewal:
+
+```bash
+curl -X POST http://localhost:8000/api/certificates/example.com/deploy \
+  -H "Authorization: Bearer $API_BEARER_TOKEN"
+```
+
+A target that fails is logged, written to the audit log and raises the
+`deploy_hook_failed` alert, and never blocks the certificate operation. Targets
+also accept the same maintenance windows as shell hooks; see
+[Deploy Hooks](/docs/deploy-hooks.html).
+
+A certificate issued from a CSR has no private key on the CertMate side, so a
+typed target cannot publish it.
+
+## OpenShift
+
+The image's writable directories belong to group 0 with setgid, so an assigned
+UID works. Clear the values that would conflict with the SCC:
+
+```bash
+helm install certmate oci://ghcr.io/fabriziosalmi/charts/certmate \
+  --namespace certmate --create-namespace \
+  --set podSecurityContext.runAsUser=null \
+  --set podSecurityContext.fsGroup=null
+```
