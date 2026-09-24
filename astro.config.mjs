@@ -72,6 +72,12 @@ export default defineConfig({
       },
     }),
   ],
+  // Code in the error and deploy pages. github-dark drew comments #6A737D on
+  // #24292E, 3.0:1, which Lighthouse flagged on every page with a commented
+  // command; github-dark-default draws them #8B949E on #0D1117.
+  markdown: {
+    shikiConfig: { theme: 'github-dark-default' },
+  },
   build: {
     inlineStylesheets: 'auto',
   },
