@@ -1,0 +1,111 @@
+---
+title: "NET::ERR_CERT_NAME_CONSTRAINT_VIOLATION"
+errorCode: "NET::ERR_CERT_NAME_CONSTRAINT_VIOLATION"
+description: "Fix Chrome's NET::ERR_CERT_NAME_CONSTRAINT_VIOLATION: a CA key Chromium limits to certain domains signed a name outside them, and what it is not."
+summary: "The chain includes a CA key that Chromium itself restricts to certain domains, and the certificate names a host outside them. Violating a private CA's own name constraints produces a different error."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 25
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+Chromium shows `NET::ERR_CERT_NAME_CONSTRAINT_VIOLATION` with the description
+*"Server's certificate violates name constraints."* The details say the server
+*"could not prove"* it is the site you asked for, and that its certificate
+*"might have been issued fraudulently"*.
+
+The error does not come from the X.509 name constraints extension, whatever
+the name suggests. After a chain has verified, Chromium compares the public
+key of every certificate in it with a short list of CA keys it limits to
+certain domains. That list is built into Chromium. In the current source it
+has one real entry: the French government root `IGC/A`
+(`O=PM/SGDN, OU=DCSSI`), allowed to vouch only for names under `.fr` and the
+French overseas domains (`.gp`, `.gf`, `.mq`, `.re`, `.yt`, `.pm`, `.bl`,
+`.mf`, `.wf`, `.pf`, `.nc`, `.tf`). The other entry is a test key limited to
+`.example.com`.
+
+If a key on the list is in the chain, every DNS name in the certificate must
+end in one of its domains. The common name is used when the certificate has
+no SAN. Two kinds of name are skipped: IP addresses, and names that are not
+under a public suffix, such as internal hostnames.
+
+A private CA that carries its own `nameConstraints` extension and signs a name
+outside it fails differently. Chromium's verifier rejects that chain while
+building it, and reports `NET::ERR_CERT_INVALID`. Firefox reports the same case
+as `SEC_ERROR_CERT_NOT_IN_NAME_SPACE`.
+
+When a certificate has several faults, Chromium reports the most serious. An
+invalid, revoked, untrusted or wrongly named certificate shows that error
+instead of this one. An expired certificate does not: this code outranks
+`NET::ERR_CERT_DATE_INVALID`, so fixing it can reveal an expiry behind it.
+
+<Handshake
+  caption="Where NET::ERR_CERT_NAME_CONSTRAINT_VIOLATION is raised"
+  steps={[
+    { from: 'Chrome', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Chrome', label: 'ServerHello, Certificate (leaf + intermediates)' },
+    { from: 'Chrome', label: 'Builds the chain to a trusted root and matches the hostname: succeeds' },
+    { from: 'Chrome', label: "Compares the chain's CA keys with its built-in list of domain-limited keys" },
+    { from: 'Chrome', to: 'Server', label: 'A listed key signed a name outside its domains: connection refused (NET::ERR_CERT_NAME_CONSTRAINT_VIOLATION)', fails: true },
+  ]}
+/>
+
+## Common causes
+
+- **A certificate under the IGC/A hierarchy names a host outside French
+  domains**, on a machine where that root is trusted. A `.com` or `.org` name
+  in such a certificate is enough, even if the hostname you visited is a
+  `.fr` one.
+- **A test environment using Chromium's test key.** Only relevant if you are
+  running Chromium's own test certificates.
+
+If you expected this error from a private CA with name constraints and got
+`NET::ERR_CERT_INVALID` instead, that is the behaviour described above, not a
+second problem.
+
+## How to fix it
+
+**1. List the served chain, with subject and issuer of each certificate:**
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com -showcerts 2>/dev/null \
+  | awk '/BEGIN CERTIFICATE/{n++} n{print > ("cert" n ".pem")}'
+for f in cert*.pem; do
+  openssl x509 -in "$f" -noout -subject -issuer
+done
+```
+
+The root itself is often not sent. An issuer naming `IGC/A` on the last
+certificate is the sign to look for.
+
+**2. List every name the leaf covers:**
+
+```bash
+openssl x509 -in cert1.pem -noout -ext subjectAltName
+```
+
+Every name under a public suffix has to end in one of the domains above.
+
+**3. Change the certificate, not the browser.** Serve the names outside those
+domains from a certificate issued by a different CA. Or issue a certificate
+from the same hierarchy that carries only names inside them.
+
+## Prevent it from recurring
+
+CertMate's built-in CA signs client certificates only, and its root carries
+no name constraints. Server certificates from a private CA reach CertMate
+through the `private_ca` provider, which talks ACME to a CA you run. If that
+CA has a `nameConstraints` extension, CertMate does not check requested names
+against it. A name outside those constraints, once issued, fails in
+browsers as `NET::ERR_CERT_INVALID` or `SEC_ERROR_CERT_NOT_IN_NAME_SPACE`,
+not with this code. Keep the SAN list of each certificate inside what your CA
+may sign. [CA Providers](/docs/ca-providers.html) covers the `private_ca`
+setup.
+
+## Related errors
+
+- `NET::ERR_CERT_COMMON_NAME_INVALID`: the certificate does not name the host you visited, and outranks this error.
+- `NET::ERR_CERT_AUTHORITY_INVALID`: the chain does not reach a trusted root at all.
+- `NET::ERR_CERT_WEAK_SIGNATURE_ALGORITHM`: another check on a chain that otherwise verifies.

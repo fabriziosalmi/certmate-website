@@ -1,0 +1,112 @@
+---
+title: "NET::ERR_CERT_WEAK_SIGNATURE_ALGORITHM"
+errorCode: "NET::ERR_CERT_WEAK_SIGNATURE_ALGORITHM"
+description: "Risolvi NET::ERR_CERT_WEAK_SIGNATURE_ALGORITHM di Chrome: un certificato della catena è firmato con SHA-1. Perché Chrome oggi mostra NET::ERR_CERT_INVALID."
+summary: "Un certificato inviato dal server, la foglia o un intermedio, è firmato con SHA-1. La soluzione è un certificato firmato con SHA-256 o superiore; il Chromium attuale segnala lo stesso problema come NET::ERR_CERT_INVALID."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 23
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+Chromium mostra `NET::ERR_CERT_WEAK_SIGNATURE_ALGORITHM` con la descrizione
+*"Server's certificate is signed using a weak signature algorithm."* I
+dettagli nominano l'algoritmo che intende: un certificato *"signed using a
+weak signature algorithm (such as SHA-1)"*. La foglia o un intermedio inviato
+dal server è stato firmato con `sha1WithRSAEncryption` o `ecdsa-with-SHA1`. La
+firma della radice non viene controllata, quindi un'autofirma SHA-1 su una
+radice attendibile non conta.
+
+Il codice che vedi dipende dalla build di Chromium. Il verificatore di
+certificati di Chromium rifiuta le firme SHA-1 senza eccezioni, e una firma
+rifiutata rende non valido l'intero certificato: Chromium lo segnala come
+`NET::ERR_CERT_INVALID`. Il codice per la firma debole esiste ancora, ma i
+commenti nel sorgente di Chromium lo definiscono quasi inutilizzato. Da una
+modifica del marzo 2026 il controllo SHA-1 di Chromium non lo imposta più.
+Prima di allora lo stato di firma debole veniva aggiunto *insieme* a quello di
+certificato non valido, e `NET::ERR_CERT_INVALID` ha la precedenza. Questo
+codice compariva quindi nella pagina solo dove il verificatore sottostante
+accettava SHA-1 e il controllo aggiuntivo di Chromium lo intercettava dopo. Il
+sorgente di Chromium cita come caso le versioni di Android precedenti alla 10.
+Su iOS lo stato viene ancora impostato, insieme a quello di certificato non
+valido, che anche lì ha la precedenza.
+
+Qualunque dei due codici tu veda, il certificato ha lo stesso difetto e la
+stessa soluzione.
+
+<Handshake
+  caption="Dove viene sollevato NET::ERR_CERT_WEAK_SIGNATURE_ALGORITHM"
+  steps={[
+    { from: 'Chrome', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Chrome', label: 'ServerHello, Certificate (foglia + intermedi)' },
+    { from: 'Chrome', label: "Legge l'algoritmo di firma di ogni certificato tranne la radice" },
+    { from: 'Chrome', to: 'Server', label: 'Trovata una firma SHA-1: connessione rifiutata (NET::ERR_CERT_WEAK_SIGNATURE_ALGORITHM)', fails: true },
+  ]}
+/>
+
+## Cause comuni
+
+- **La foglia è firmata con SHA-1.** Una CA interna configurata anni fa che
+  non ha mai cambiato digest, oppure il certificato che un dispositivo genera
+  da sé al primo avvio.
+- **Nel file della catena c'è ancora un vecchio intermedio.** La foglia va
+  bene, ma il file inviato dal server contiene anche un intermedio di una
+  gerarchia che firmava con SHA-1.
+- **Qualcosa nel mezzo firma di nuovo la connessione.** Un proxy o un prodotto
+  di sicurezza che ispeziona il TLS presenta al browser un proprio
+  certificato. Se il certificato inviato dal server è pulito e una sola rete
+  vede ancora l'errore, guarda cosa c'è su quella rete.
+
+Firefox segnala una firma SHA-1 come
+`SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED`.
+
+## Come risolverlo
+
+**1. Guarda l'algoritmo di firma di ogni certificato inviato dal server.**
+Questo divide la catena servita in un file per certificato e stampa soggetto
+e algoritmo di ciascuno:
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com -showcerts 2>/dev/null \
+  | awk '/BEGIN CERTIFICATE/{n++} n{print > ("cert" n ".pem")}'
+for f in cert*.pem; do
+  openssl x509 -in "$f" -noout -subject
+  openssl x509 -in "$f" -noout -text | grep -m1 'Signature Algorithm'
+done
+```
+
+`cert1.pem` è la foglia. Qualunque `sha1With...` o `ecdsa-with-SHA1` nell'elenco
+indica il certificato da sostituire.
+
+**2. Sostituisci il certificato che la contiene.** Per la foglia serve un
+nuovo certificato da una CA che firmi con SHA-256 o superiore. Se la CA che
+firma è la tua, il digest si imposta nella sua configurazione, e i certificati
+già emessi vanno emessi di nuovo. Per un intermedio, sostituisci il file della
+catena con quello da cui la CA emette oggi e ricarica il server.
+
+**3. Se la catena servita è pulita, prova da un'altra rete.** Esegui il passo 1
+dalla macchina che mostra l'errore e da una che non lo mostra. Emittenti
+diversi significano che il certificato viene sostituito lungo il percorso.
+
+## Evitare che si ripresenti
+
+CertMate non sceglie l'algoritmo di firma di un certificato ottenuto via ACME:
+lo firma la CA, e il digest lo sceglie lei.
+
+Quello che CertMate può fare è mostrarti dove SHA-1 viene ancora servito. Con
+la discovery degli endpoint attiva, ogni scansione registra il certificato
+servito da ciascun `host:port` configurato, con il suo algoritmo di firma. Il
+report di prontezza crittografica (`/inventory/crypto-report` nella UI,
+`GET /api/inventory/crypto-report` nell'API) classifica come `weak` ogni
+algoritmo di firma che contiene SHA-1 o MD5. Legge solo la foglia servita,
+quindi un intermedio SHA-1 non vi compare: per quel caso c'è il passo 1.
+[Certificate Discovery](/docs/certificate-discovery.html) descrive la
+scansione e il report.
+
+## Errori correlati
+
+- `NET::ERR_CERT_AUTHORITY_INVALID`: la catena non arriva a una radice attendibile, un difetto diverso da come è firmata.
+- `NET::ERR_CERT_NAME_CONSTRAINT_VIOLATION`: un altro controllo che Chromium esegue dopo aver costruito la catena.
+- `ERR_SSL_KEY_USAGE_INCOMPATIBLE`: il certificato è firmato bene ma marcato per l'uso sbagliato.

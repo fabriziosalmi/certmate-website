@@ -1,0 +1,112 @@
+---
+title: "ERR_SSL_KEY_USAGE_INCOMPATIBLE"
+errorCode: "ERR_SSL_KEY_USAGE_INCOMPATIBLE"
+description: "Fix Chrome's ERR_SSL_KEY_USAGE_INCOMPATIBLE: the certificate's keyUsage lacks the bit the key exchange needs, usually digitalSignature. Reissue it."
+summary: "The server's certificate has a keyUsage extension, and the bit this TLS key exchange needs is not in it. Chromium stops the handshake. The fix is a certificate issued with the right keyUsage."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 24
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+Chromium defines `ERR_SSL_KEY_USAGE_INCOMPATIBLE` as *"The server's
+certificate has a keyUsage extension incompatible with the negotiated TLS key
+exchange method."* It is raised during the handshake, by the TLS library, and
+not by certificate verification. That is why it appears on Chrome's generic
+*"This site can’t be reached"* page, with no `NET::` prefix, and not on the
+certificate warning page.
+
+The rule is short. If the leaf certificate has a `keyUsage` extension, it must
+contain the bit for the key exchange in use:
+
+| Connection | Bit required |
+|---|---|
+| TLS 1.3, any certificate | `digitalSignature` |
+| TLS 1.2 with (EC)DHE key exchange | `digitalSignature` |
+| TLS 1.2 with RSA key exchange | `keyEncipherment` |
+
+A certificate with no `keyUsage` extension at all passes. So does one that
+lists several bits, as long as the required one is among them.
+
+<Handshake
+  caption="Where ERR_SSL_KEY_USAGE_INCOMPATIBLE is raised"
+  steps={[
+    { from: 'Chrome', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Chrome', label: 'ServerHello, Certificate' },
+    { from: 'Chrome', label: "Reads the leaf's keyUsage extension" },
+    { from: 'Chrome', to: 'Server', label: 'The bit this key exchange needs is missing: handshake aborted (ERR_SSL_KEY_USAGE_INCOMPATIBLE)', fails: true },
+  ]}
+/>
+
+## Common causes
+
+- **An RSA certificate marked `keyEncipherment` only.** That bit covers RSA
+  key exchange and nothing else. TLS 1.3 and every (EC)DHE suite need
+  `digitalSignature`, so the certificate fails on all of those connections.
+- **An ECDSA certificate marked `keyAgreement` without `digitalSignature`.**
+  Chromium never uses RSA key exchange with an ECDSA key, so for ECDSA the
+  required bit is always `digitalSignature`.
+- **A certificate profile written by hand.** An internal CA template, a
+  device's certificate generator, or an OpenSSL config with a single
+  `keyUsage` value.
+- **Other clients accept it.** This is why it survives testing. With an RSA
+  certificate marked `keyEncipherment` only, `openssl s_client` from
+  OpenSSL 3.6 completes a TLS 1.3 handshake, and
+  `openssl verify -purpose sslserver` reports it OK. Firefox's certificate
+  check accepts any one of `digitalSignature`, `keyEncipherment` or
+  `keyAgreement`, whatever the key exchange. The same certificate can pass
+  all three and fail in Chromium.
+
+## How to fix it
+
+**1. Read the leaf's keyUsage and key type:**
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/null \
+  | openssl x509 -noout -ext keyUsage
+echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/null \
+  | openssl x509 -noout -text | grep 'Public Key Algorithm'
+```
+
+If the extension is present and `Digital Signature` is not in it, that is the
+fault on any TLS 1.3 connection.
+
+**2. See what was negotiated.** The `New,` line gives the protocol and cipher:
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/null | grep 'New,'
+```
+
+**3. Reissue the certificate with a keyUsage that fits the key.** For an ECDSA
+key, `digitalSignature`. For an RSA key, `digitalSignature, keyEncipherment`.
+With OpenSSL, as an extension line in the signing config:
+
+```
+keyUsage = critical, digitalSignature, keyEncipherment
+```
+
+The fix is in the certificate, not in the server. The server cannot change
+what the certificate says.
+
+## Prevent it from recurring
+
+The `keyUsage` extension is written by the CA that signs the certificate.
+CertMate does not set it and does not read it back; its probe does not report
+it.
+
+What CertMate chooses is the key. The *Default Certificate Key* in Settings
+is RSA 2048 unless changed. It can be RSA 2048, 3072 or 4096, or ECDSA on
+P-256 or P-384, and a certificate can override it. The choice is passed to
+certbot as `--key-type` with `--rsa-key-size` or `--elliptic-curve`. With a
+public ACME CA, the extension on the result is whatever that CA's profile
+sets. With the `private_ca` provider, CertMate talks ACME to a CA you run,
+and that CA's profile is yours. Check it once for each key type you intend to
+use, before switching the default.
+
+## Related errors
+
+- `SEC_ERROR_INADEQUATE_KEY_USAGE`: Firefox's key-usage error, which applies a looser rule to the leaf.
+- `ERR_SSL_PROTOCOL_ERROR`: the generic handshake failure, when the cause has no code of its own.
+- `NET::ERR_CERT_WEAK_SIGNATURE_ALGORITHM`: the certificate is marked correctly but signed with SHA-1.

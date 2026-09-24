@@ -21,11 +21,25 @@
     "evidence": "NET_ERROR(SSL_CLIENT_AUTH_CERT_NEEDED, -110)"
   },
   {
+    "code": "ERR_SSL_KEY_USAGE_INCOMPATIBLE",
+    "symbol": "ERR_SSL_KEY_USAGE_INCOMPATIBLE",
+    "emittedBy": "Chromium (Chrome, Edge, Brave, Opera, Vivaldi)",
+    "source": "chromium/net/base/net_error_list.h",
+    "evidence": "NET_ERROR(SSL_KEY_USAGE_INCOMPATIBLE, -181)"
+  },
+  {
     "code": "ERR_SSL_PROTOCOL_ERROR",
     "symbol": "ERR_SSL_PROTOCOL_ERROR",
     "emittedBy": "Chromium (Chrome, Edge, Brave, Opera, Vivaldi)",
     "source": "chromium/net/base/net_error_list.h",
     "evidence": "NET_ERROR(SSL_PROTOCOL_ERROR, -107)"
+  },
+  {
+    "code": "ERR_SSL_UNRECOGNIZED_NAME_ALERT",
+    "symbol": "ERR_SSL_UNRECOGNIZED_NAME_ALERT",
+    "emittedBy": "Chromium (Chrome, Edge, Brave, Opera, Vivaldi)",
+    "source": "chromium/net/base/net_error_list.h",
+    "evidence": "NET_ERROR(SSL_UNRECOGNIZED_NAME_ALERT, -159)"
   },
   {
     "code": "ERR_SSL_VERSION_OR_CIPHER_MISMATCH",
@@ -70,6 +84,13 @@
     "evidence": "NET_ERROR(CERT_DATE_INVALID, -201)"
   },
   {
+    "code": "NET::ERR_CERT_NAME_CONSTRAINT_VIOLATION",
+    "symbol": "ERR_CERT_NAME_CONSTRAINT_VIOLATION",
+    "emittedBy": "Chromium (Chrome, Edge, Brave, Opera, Vivaldi)",
+    "source": "chromium/net/base/net_error_list.h",
+    "evidence": "NET_ERROR(CERT_NAME_CONSTRAINT_VIOLATION, -212)"
+  },
+  {
     "code": "NET::ERR_CERT_REVOKED",
     "symbol": "ERR_CERT_REVOKED",
     "emittedBy": "Chromium (Chrome, Edge, Brave, Opera, Vivaldi)",
@@ -82,6 +103,13 @@
     "emittedBy": "Chromium (Chrome, Edge, Brave, Opera, Vivaldi)",
     "source": "chromium/net/base/net_error_list.h",
     "evidence": "NET_ERROR(CERT_UNABLE_TO_CHECK_REVOCATION, -205)"
+  },
+  {
+    "code": "NET::ERR_CERT_WEAK_SIGNATURE_ALGORITHM",
+    "symbol": "ERR_CERT_WEAK_SIGNATURE_ALGORITHM",
+    "emittedBy": "Chromium (Chrome, Edge, Brave, Opera, Vivaldi)",
+    "source": "chromium/net/base/net_error_list.h",
+    "evidence": "NET_ERROR(CERT_WEAK_SIGNATURE_ALGORITHM, -208)"
   },
   {
     "code": "PKIX path building failed",
@@ -103,6 +131,13 @@
     "emittedBy": "NSS (Firefox, Thunderbird)",
     "source": "gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
     "evidence": "The certificate issuer’s certificate has expired. Check your system date and time."
+  },
+  {
+    "code": "SEC_ERROR_INADEQUATE_KEY_USAGE",
+    "symbol": "SEC_ERROR_INADEQUATE_KEY_USAGE",
+    "emittedBy": "NSS (Firefox, Thunderbird)",
+    "source": "gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
+    "evidence": "Certificate key usage inadequate for attempted operation."
   },
   {
     "code": "SEC_ERROR_REVOKED_CERTIFICATE",
@@ -208,6 +243,27 @@
     "emittedBy": "Go (crypto/x509)",
     "source": "go/src/crypto/x509/verify.go",
     "evidence": "s := \"x509: certificate signed by unknown authority\""
+  },
+  {
+    "code": "NET::ERR_CERT_INVALID",
+    "symbol": "ERR_CERT_INVALID",
+    "emittedBy": "Chromium (Chrome, Edge, Brave, Opera, Vivaldi)",
+    "source": "chromium/net/base/net_error_list.h",
+    "evidence": "NET_ERROR(CERT_INVALID, -207)"
+  },
+  {
+    "code": "SEC_ERROR_CERT_NOT_IN_NAME_SPACE",
+    "symbol": "SEC_ERROR_CERT_NOT_IN_NAME_SPACE",
+    "emittedBy": "NSS (Firefox, Thunderbird)",
+    "source": "gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
+    "evidence": "The Certifying Authority for this certificate is not permitted to issue a certificate with this name."
+  },
+  {
+    "code": "SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED",
+    "symbol": "SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED",
+    "emittedBy": "NSS (Firefox, Thunderbird)",
+    "source": "gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
+    "evidence": "The certificate was signed using a signature algorithm that is disabled because it is not secure."
   },
   {
     "code": "SELF_SIGNED_CERT_IN_CHAIN",
