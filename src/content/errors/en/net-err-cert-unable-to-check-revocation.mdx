@@ -1,0 +1,137 @@
+---
+title: "NET::ERR_CERT_UNABLE_TO_CHECK_REVOCATION"
+errorCode: "NET::ERR_CERT_UNABLE_TO_CHECK_REVOCATION"
+description: "Fix NET::ERR_CERT_UNABLE_TO_CHECK_REVOCATION: a managed Chrome must check revocation for a private CA and cannot reach the OCSP responder or CRL."
+summary: "Chromium was required to confirm that the certificate is not revoked, and no OCSP responder or CRL gave it an answer. On current Chromium that requirement comes from an administrator policy and applies to private CAs."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 20
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+Chromium shows `NET::ERR_CERT_UNABLE_TO_CHECK_REVOCATION` with the description
+*"Server's certificate cannot be checked."* The details explain that the server
+*"could not prove"* it is the site you asked for, because its certificate
+*"might be revoked"*.
+
+The certificate itself is fine as far as Chromium could tell. What is missing
+is an answer to whether it has been revoked, and in this configuration Chromium
+is not allowed to carry on without one.
+
+That configuration is narrow. With default settings Chromium makes no live
+OCSP or CRL requests at all. An administrator can turn them on with the
+`EnableOnlineRevocationChecks` policy, but that mode is soft-fail: an
+unreachable responder is ignored. The only mode in which a failed check stops
+the connection is the `RequireOnlineRevocationChecksForLocalAnchors` policy,
+available on Windows, macOS, Linux and ChromeOS, and it applies only when the
+chain ends at a root that is not one of the browser's public roots: a private
+or enterprise CA installed on the machine.
+
+So on current Chromium, this error means three things are true at once: the
+browser is managed with that policy, the site uses a private CA, and no
+revocation source answered.
+
+<Handshake
+  caption="Where NET::ERR_CERT_UNABLE_TO_CHECK_REVOCATION is raised"
+  steps={[
+    { from: 'Chrome', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Chrome', label: 'Certificate chain ending at a private root' },
+    { from: 'Chrome', label: 'Builds a path to the locally installed root: succeeds' },
+    { from: 'Chrome', label: 'Policy requires a revocation answer: tries the OCSP and CRL URLs in each certificate below the root' },
+    { from: 'Chrome', to: 'Server', label: 'No URL gave a definite answer: connection refused (NET::ERR_CERT_UNABLE_TO_CHECK_REVOCATION)', fails: true },
+  ]}
+/>
+
+Chromium checks every certificate in the chain except the root, so the
+missing answer can belong to an intermediate rather than the leaf. For the
+leaf, a valid OCSP response stapled by the server counts before any fetch is
+made.
+
+Unlike `NET::ERR_CERT_REVOKED`, Chromium does not class this error as fatal,
+so the interstitial can offer to proceed where overrides are allowed. The
+policy that produced it was set by someone who wanted it enforced.
+
+## Common causes
+
+- **The OCSP or CRL host is not reachable from the client.** It resolves only
+  on the internal network, the VPN is down, a proxy or firewall blocks it, or
+  split DNS gives the laptop a different answer from the server room.
+- **The responder answers with something Chromium cannot use.** An error page
+  instead of an OCSP response, or a response or CRL that does not settle the
+  question for this certificate. Chromium moves on to the next URL and, with
+  none left, reports this error.
+- **The responder or CRL server is too slow**, and the fetch fails or
+  verification runs out of time before an answer arrives.
+
+If the certificate names no usable URL at all, the same policy produces a
+different error, which says the certificate has no revocation mechanism. Chromium only counts `http://`
+OCSP and CRL URLs (an `https://` one would need a certificate check of its
+own), and it skips CRL distribution points that cover only some revocation
+reasons or name a separate CRL issuer. And because this code ranks below every
+other certificate error but that one, it only appears when nothing else is
+wrong.
+
+## How to fix it
+
+**1. See what the certificate points at.** Check the leaf and each
+intermediate:
+
+```bash
+echo | openssl s_client -connect intranet.example.com:443 -servername intranet.example.com -showcerts 2>/dev/null \
+  | awk '/BEGIN CERTIFICATE/{n++} n{print > ("cert" n ".pem")}'
+for f in cert*.pem; do
+  echo "== $f"
+  openssl x509 -in "$f" -noout -subject -ocsp_uri -ext crlDistributionPoints
+done
+```
+
+**2. Fetch those URLs from the affected machine**, not from the server. The
+question is whether the *client* can reach them:
+
+```bash
+curl -sS -o /dev/null -w '%{http_code} %{size_download} bytes\n' http://crl.example.internal/ca.crl
+```
+
+**3. Confirm the responder answers correctly** for the leaf:
+
+```bash
+openssl ocsp -issuer cert2.pem -cert cert1.pem \
+  -url "$(openssl x509 -in cert1.pem -noout -ocsp_uri)" | grep 'cert1.pem'
+```
+
+**4. Fix the path, not the browser.** Publish the CRL or run the responder on a
+plain `http://` name every managed client can resolve and reach, or have the
+server staple OCSP responses so the leaf does not depend on the client's
+network. If the CA embeds unreachable URLs, reissue from it with reachable
+ones: the URLs are baked into certificates that already exist.
+
+## Prevent it from recurring
+
+CertMate does not configure your browsers or your CA's distribution points.
+What it can do is run the same kind of check from its side and tell you
+precisely when it fails.
+
+The revocation check in certificate discovery, and `POST /api/probe` for a
+single host, ask the OCSP responder a certificate names and fall back to its
+CRL, over plain `http://` only, as Chromium does. When no verified answer
+comes back the result is `unavailable`, never good, with the reason in `error`
+and every URL tried, with its outcome, in `attempts`. A responder that timed out, a CRL
+past its `nextUpdate` and a signature that does not verify each read
+differently there, which is the diagnosis this error does not give you.
+[Revocation Checking](/docs/revocation.html) lists every status and reason.
+
+Three limits matter for private CAs. The check runs from CertMate's network,
+so a good answer there does not prove that a laptop off the VPN can reach the
+same responder. CertMate refuses private and loopback addresses unless you opt
+in, with *Allow private/loopback targets* in the discovery settings or
+`CERTMATE_PROBE_ALLOW_PRIVATE` for `POST /api/probe`; until then an internal
+responder reads as `unavailable`. And it checks the leaf certificate only,
+where Chromium also checks the intermediates.
+
+## Related errors
+
+- `NET::ERR_CERT_REVOKED`: the check succeeded, and the answer was revoked.
+- `SEC_ERROR_REVOKED_CERTIFICATE`: Firefox found the certificate revoked.
+- `NET::ERR_CERT_AUTHORITY_INVALID`: the private root is not installed at all, so the chain fails before revocation is reached.
