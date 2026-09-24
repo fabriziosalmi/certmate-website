@@ -3,6 +3,7 @@ import { Icon } from 'astro-icon/components';
 import { getCollection } from 'astro:content';
 import DocLayout from '~/layouts/DocLayout.astro';
 import { ui, localizedPath } from '~/i18n';
+import { PROVIDER_COUNT } from '~/data/site';
 
 const t = ui.en;
 const entries = (await getCollection('deploy'))
@@ -13,6 +14,53 @@ const entries = (await getCollection('deploy'))
 <DocLayout lang="en" path="/deploy" title={t.deployTitle} description={t.deployIntro}>
   <h1>{t.deployTitle}</h1>
   <p class="lead">{t.deployIntro}</p>
+
+  <h2>How a certificate reaches a platform with CertMate</h2>
+  <p>
+    Issuance and delivery are separate steps. CertMate obtains the certificate
+    from the CA over ACME, usually proving control of the domain with a DNS-01
+    challenge through the API of your DNS provider ({PROVIDER_COUNT} are
+    supported), and renews it 30 days before it expires. Getting the files onto
+    the machine or cluster that serves them is then done in one of three ways.
+  </p>
+  <ul>
+    <li>
+      <strong>Pull it with the download URL.</strong>
+      <code>GET /api/certificates/&#123;domain&#125;/download</code> returns a ZIP
+      with <code>cert.pem</code>, <code>chain.pem</code>, <code>fullchain.pem</code>
+      and <code>privkey.pem</code>;
+      <code>/download/&#123;cert|chain|fullchain|privkey|combined&#125;</code>
+      returns a single file. A viewer API key can fetch the public material
+      only; <code>privkey</code> and <code>combined</code> need the operator
+      role. This suits a cron job or a configuration-management run on the host
+      that terminates TLS. See the <a href="/docs/api-reference.html">API reference</a>.
+    </li>
+    <li>
+      <strong>Write it into a Kubernetes Secret.</strong> The
+      <code>kubernetes-secret</code> typed deploy target applies the full chain
+      and key to a <code>kubernetes.io/tls</code> Secret with Server-Side Apply,
+      on issuance and on every renewal. It authenticates with an API server URL
+      and bearer token, or with the service account when CertMate runs in the
+      cluster; no <code>kubectl</code> is involved.
+    </li>
+    <li>
+      <strong>Run a deploy hook.</strong> A shell command, run with
+      <code>sh -c</code> after a certificate is created or renewed, with the
+      domain and file paths in <code>CERTMATE_*</code> environment variables.
+      It runs inside the CertMate container, which has <code>sh</code>,
+      <code>bash</code>, <code>curl</code> and <code>openssl</code> but not
+      <code>docker</code>, <code>kubectl</code> or <code>ssh</code>, so a hook
+      reaches other systems over HTTP. See <a href="/docs/deploy-hooks.html">Deploy hooks</a>.
+    </li>
+  </ul>
+  <p>
+    A hook or target that fails is logged, audited and raises the
+    <code>deploy_hook_failed</code> alert; it does not block the certificate
+    operation. The guides below cover the platform side: where each one reads
+    its certificate and how to make it pick up a renewed one.
+  </p>
+
+  <h2>Guides</h2>
 
   <ul class="not-prose mt-8 grid gap-3 sm:grid-cols-2">
     {entries.map((e) => (

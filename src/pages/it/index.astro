@@ -7,16 +7,26 @@
  * so all of them pointed at a 404 (#29). This is the hub those links meant.
  *
  * Deliberately a directory, not a translation of the English homepage: what
- * exists in Italian is the SSL error reference and the deploy guides, and
- * promising more than that would be its own kind of broken link.
+ * exists in Italian is the SSL error reference, the deploy guides and the
+ * comparison page, and promising more than that would be its own kind of
+ * broken link. The product documentation is linked as what it is, English.
  */
 import { Icon } from 'astro-icon/components';
 import { getCollection } from 'astro:content';
 import DocLayout from '~/layouts/DocLayout.astro';
 import { ui, localizedPath } from '~/i18n';
 import { GITHUB, PROVIDER_COUNT } from '~/data/site';
+import * as docs from '~/data/docs';
 
 const t = ui.it;
+
+// Italian documentation pages, when they exist. Read through the namespace so
+// this page builds whether or not DOC_PAGES_IT has landed yet; with none, the
+// section below links the English documentation and says it is English.
+const itDocs = ((docs as Record<string, unknown>).DOC_PAGES_IT ?? []) as docs.DocPage[];
+const itDocLinks = itDocs
+  .filter((d) => d.slug !== 'index')
+  .map((d) => ({ href: `/it/docs/${d.slug}.html`, name: d.title.split(' - ')[0] }));
 
 const errors = (await getCollection('errors')).filter((e) => e.id.startsWith('it/'));
 const deploys = (await getCollection('deploy')).filter((e) => e.id.startsWith('it/'));
@@ -36,6 +46,13 @@ const sections = [
     body: t.deployIntro,
     count: `${deploys.length} guide`,
   },
+  {
+    href: localizedPath('it', '/cert-manager-alternative'),
+    icon: 'fa6-solid:scale-balanced',
+    title: 'CertMate vs cert-manager, Caddy, Traefik e certbot',
+    body: 'Cosa fa meglio ciascuno strumento e quando serve un gestore di certificati standalone con interfaccia web e API.',
+    count: 'confronto',
+  },
 ];
 ---
 
@@ -47,8 +64,8 @@ const sections = [
 >
   <h1>CertMate in italiano</h1>
   <p class="lead">
-    Riferimento sugli errori SSL/TLS e guide al deploy dei certificati. Il resto
-    del sito e la documentazione del prodotto sono in inglese.
+    Riferimento sugli errori SSL/TLS, guide al deploy dei certificati e un
+    confronto con gli strumenti alternativi. Il resto del sito è in inglese.
   </p>
 
   <ul class="not-prose mt-8 grid gap-3 sm:grid-cols-2">
@@ -71,10 +88,60 @@ const sections = [
 
   <h2>Cos'è CertMate</h2>
   <p>
-    Un gestore di certificati TLS open source e self-hosted: emette i certificati
-    con Let's Encrypt (e altre CA ACME), li rinnova 30 giorni prima della
-    scadenza e li distribuisce dove servono, con oltre {PROVIDER_COUNT} provider
-    DNS supportati e una API REST.
+    CertMate è un gestore di certificati TLS open source, con licenza MIT, che
+    installi sulla tua infrastruttura. Ottiene i certificati via ACME, di norma
+    con una challenge DNS-01 tramite l'API del tuo provider DNS (ne supporta
+    {PROVIDER_COUNT}), e li rinnova 30 giorni prima della scadenza.
+  </p>
+  <ul>
+    <li>
+      <strong>CA:</strong> Let's Encrypt e ZeroSSL, Google Trust Services,
+      DigiCert, SSL.com e Sectigo (ACME con EAB), Actalis, oppure una CA privata
+      compatibile ACME che gestisci tu, come step-ca. Per i certificati client
+      ha una CA integrata.
+    </li>
+    <li>
+      <strong>Inventario:</strong> individua anche i certificati che non ha
+      emesso e li tiene in un unico inventario: dove sono serviti, chi li ha
+      emessi, quando scadono.
+    </li>
+    <li>
+      <strong>Consegna:</strong> URL di download, Secret Kubernetes o deploy
+      hook, descritti nella pagina
+      <a href={localizedPath('it', '/deploy')}>Deploy dei certificati TLS</a>.
+    </li>
+    <li>
+      <strong>Accesso e tracciabilità:</strong> API REST e CLI
+      (<code>certmate-cli</code>), ruoli e API key con scope, login OIDC/SSO
+      accanto a quello locale, e un audit trail a prova di manomissione di ogni
+      operazione.
+    </li>
+  </ul>
+  <p>
+    CertMate gira come istanza singola: il pianificatore dei rinnovi vive nel
+    processo web, quindi una seconda replica sarebbe un secondo pianificatore
+    sullo stesso archivio di certificati.
+  </p>
+
+  <h2>Documentazione</h2>
+  {itDocLinks.length > 0 && (
+    <>
+      <p>Pagine della documentazione disponibili in italiano:</p>
+      <ul>
+        {itDocLinks.map((d) => (
+          <li><a href={d.href}>{d.name}</a></li>
+        ))}
+      </ul>
+    </>
+  )}
+  <p>
+    {itDocLinks.length > 0
+      ? 'Il resto della documentazione è in inglese.'
+      : 'La documentazione del prodotto è in inglese.'}
+    Il punto di partenza è
+    <a href="/docs/getting-started.html">Getting Started</a>; per la consegna
+    dei certificati servono <a href="/docs/deploy-hooks.html">Deploy hooks</a>
+    e l'<a href="/docs/api-reference.html">API reference</a>.
   </p>
   <p class="not-prose mt-6 flex flex-wrap gap-3">
     <a
