@@ -112,25 +112,10 @@
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <img src="../assets/certmate_logo.png" alt="CertMate Logo" class="brand-logo">
-                <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
-            </div>
-            <div class="nav-menu">
-                <a href="../index.html#features" class="nav-link">Features</a>
-                <a href="../index.html#providers" class="nav-link">DNS Providers</a>
-                <a href="index.html" class="nav-link active">Documentation</a>
-                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
-                    <i class="fab fa-github"></i> GitHub
-                </a>
-            </div>
-        </div>
-    </nav>
+    <!-- SITE_HEADER: the site header, rendered by src/lib/docs-shell.ts -->
 
     <main id="main-content">
-        <section class="docs-hero" style="padding: 100px 0 60px;">
+        <section class="docs-hero">
             <div class="container">
                 <h1 class="docs-title"><i class="fas fa-right-to-bracket"></i> Single Sign-On (OIDC)</h1>
                 <p class="docs-subtitle">How to sign in to CertMate through an OpenID Connect identity provider, map its groups to CertMate roles, and control which accounts it creates or links.</p>
@@ -319,11 +304,7 @@
         </section>
     </main>
 
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributors</a></p>
-        </div>
-    </footer>
+    <!-- SITE_FOOTER: the site footer, rendered by src/lib/docs-shell.ts -->
     <script src="toc.js" defer></script>
 </body>
 </html>
