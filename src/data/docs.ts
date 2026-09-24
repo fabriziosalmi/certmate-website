@@ -156,6 +156,12 @@ export const DOC_PAGES: DocPage[] = [
     description:
       'How CertMate checks whether a served certificate is revoked: OCSP first, CRL fallback, verified answers only, and why unavailable is never good.',
   },
+  {
+    slug: 'monitoring',
+    title: 'Monitoring - CertMate Documentation',
+    description:
+      "CertMate's /health and /health/ready endpoints, the Prometheus metrics at /metrics, the eight shipped alert rules and the Grafana dashboard to import.",
+  },
 ];
 
 /** The published URL of a documentation page, absolute. */
