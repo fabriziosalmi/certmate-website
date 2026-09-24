@@ -34,13 +34,22 @@ const entries = (await getCollection('errors'))
   .filter((e) => e.id.startsWith(`${lang}/`))
   .sort((a, b) => a.data.order - b.data.order);
 
-const family = (browsers: string[]) =>
-  browsers.includes('Chrome') ? 'chromium' : browsers.includes('Firefox') ? 'firefox' : 'clients';
+// The first client an entry names that is a browser engine decides its
+// section; everything else is a command-line tool or a language runtime.
+const FAMILY_OF: Record<string, 'chromium' | 'firefox'> = { Chrome: 'chromium', Firefox: 'firefox' };
+const family = (browsers: string[]) => browsers.map((b) => FAMILY_OF[b]).find(Boolean) ?? 'clients';
 
 const groups = (['chromium', 'firefox', 'clients'] as const).map((key) => ({
   key,
   title: GROUPS[key],
-  items: entries.filter((e) => family(e.data.browsers) === key),
+  items: entries
+    .filter((e) => family(e.data.browsers) === key)
+    .map((e) => ({
+      code: e.data.errorCode,
+      summary: e.data.summary,
+      href: localizedPath(lang, `/errors/${e.id.split('/')[1]}`),
+      search: [e.data.errorCode, e.data.summary, ...e.data.browsers].join(' ').toLowerCase(),
+    })),
 }));
 const unplaced = entries.length - groups.reduce((n, g) => n + g.items.length, 0);
 if (unplaced !== 0) throw new Error(`ErrorsIndex: ${unplaced} ${lang} entries fell outside every group`);
@@ -66,13 +75,13 @@ if (unplaced !== 0) throw new Error(`ErrorsIndex: ${unplaced} ${lang} entries fe
       </h2>
       <ul class="grid gap-3">
         {g.items.map((e) => (
-          <li data-errors-item data-search={`${e.data.errorCode} ${e.data.summary} ${e.data.browsers.join(' ')}`.toLowerCase()}>
+          <li data-errors-item data-search={e.search}>
             <a
-              href={localizedPath(lang, `/errors/${e.id.replace(/^[a-z]+\//, '')}`)}
+              href={e.href}
               class="block rounded-lg border border-gray-200 p-4 transition-colors hover:border-primary dark:border-gray-700"
             >
-              <span class="font-mono text-sm font-semibold text-gray-900 dark:text-white">{e.data.errorCode}</span>
-              <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">{e.data.summary}</p>
+              <span class="font-mono text-sm font-semibold text-gray-900 dark:text-white">{e.code}</span>
+              <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">{e.summary}</p>
             </a>
           </li>
         ))}

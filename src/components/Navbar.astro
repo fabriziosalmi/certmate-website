@@ -1,6 +1,6 @@
 ---
 import { Icon } from 'astro-icon/components';
-import { NAV_LINKS, NAV_EXTERNAL, isCurrentSection, navLabel, type NavLocale } from '~/data/nav';
+import { NAV_LINKS, NAV_EXTERNAL_LINKS, isCurrentSection, navLabel, type NavLocale } from '~/data/nav';
 
 interface Props {
   lang?: NavLocale;
@@ -63,7 +63,7 @@ const t = (key: Parameters<typeof navLabel>[1]) => navLabel(lang, key);
         );
       })}
       <li aria-hidden="true" class="mx-1 h-5 w-px bg-gray-200 dark:bg-gray-700" />
-      {NAV_EXTERNAL.map((link) => (
+      {NAV_EXTERNAL_LINKS.map((link) => (
         <li>
           <a
             href={link.href}
@@ -133,7 +133,7 @@ const t = (key: Parameters<typeof navLabel>[1]) => navLabel(lang, key);
         );
       })}
       <li aria-hidden="true" class="mx-3 my-1 h-px bg-gray-200 dark:bg-gray-700" />
-      {NAV_EXTERNAL.map((link) => (
+      {NAV_EXTERNAL_LINKS.map((link) => (
         <li>
           <a
             href={link.href}
@@ -160,7 +160,7 @@ const t = (key: Parameters<typeof navLabel>[1]) => navLabel(lang, key);
       const next = document.documentElement.classList.toggle('dark') ? 'dark' : 'light';
       try {
         localStorage.setItem('theme', next);
-      } catch (_) {
+      } catch {
         // Storage blocked (private window, site data off): the theme still
         // flips for this page, it just is not remembered.
       }

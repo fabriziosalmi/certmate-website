@@ -26,8 +26,9 @@ const badgeClasses: Record<string, string> = {
 const tag = u.href?.match(/\/releases\/tag\/([^/?#]+)$/)?.[1];
 const id = (tag ?? u.badgeLabel).toLowerCase().replace(/[^a-z0-9.]+/g, '-');
 
+const DATE_FORMAT: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' };
 const when = u.released
-  ? new Date(`${u.released}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+  ? new Date(`${u.released}T12:00:00Z`).toLocaleDateString('en-GB', DATE_FORMAT)
   : u.date;
 ---
 

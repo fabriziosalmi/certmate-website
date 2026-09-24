@@ -271,31 +271,156 @@ for (const [name, list] of [['DOC_PAGES', DOC_PAGES], ['DOC_PAGES_IT', DOC_PAGES
 export type DocCard = { name: string; blurb: string; icon: string; tone: string };
 
 export const DOC_CARDS: Record<string, DocCard> = {
-  'getting-started': { name: 'Getting Started', blurb: 'Docker Compose quick start, or a systemd service without Docker', icon: 'fa6-solid:rocket', tone: 'getting-started' },
-  'dns-providers': { name: 'DNS Providers', blurb: 'Configuration guides for all {{PROVIDER_COUNT}} supported DNS providers including multi-account setup', icon: 'fa6-solid:cloud', tone: 'dns-providers' },
-  'api-reference': { name: 'API Reference', blurb: 'Complete REST API documentation with examples and authentication details', icon: 'fa6-solid:code', tone: 'api' },
-  'docker-deployment': { name: 'Docker Deployment', blurb: 'Image tags, docker run and Compose, environment, volumes, upgrades and health checks', icon: 'fa6-brands:docker', tone: 'docker' },
-  'storage-backends': { name: 'Storage Backends', blurb: 'Local layout, Azure Key Vault, AWS Secrets Manager, Vault, Infisical, S3, migration', icon: 'fa6-solid:database', tone: 'storage' },
-  'backup-recovery': { name: 'Backup & Recovery', blurb: 'What a backup holds, the passphrase, retention, and restoring through the UI or API', icon: 'fa6-solid:floppy-disk', tone: 'backup' },
-  'security': { name: 'Security Best Practices', blurb: 'Authentication, authorization, file permissions, and compliance guidelines', icon: 'fa6-solid:shield-halved', tone: 'security' },
-  'troubleshooting': { name: 'Troubleshooting', blurb: 'From the symptom to the cause: startup, DNS-01, rate limits, 401s, renewals, hooks', icon: 'fa6-solid:wrench', tone: 'troubleshooting' },
-  'webhooks': { name: 'Webhooks', blurb: 'Events, payload templates, authentication, HMAC signatures, retries and the API', icon: 'fa6-solid:plug', tone: 'api' },
-  'deploy-hooks': { name: 'Deploy Hooks', blurb: 'Shell commands run after issue or renewal, with maintenance windows and history', icon: 'fa6-solid:terminal', tone: 'docker' },
-  'ca-providers': { name: 'CA Providers', blurb: 'Supported ACME CAs, EAB, staging, Private CA setup, and choosing a CA per certificate', icon: 'fa6-solid:certificate', tone: 'security' },
-  'certificate-discovery': { name: 'Certificate Discovery', blurb: 'Record certificates CertMate observes on hosts and in CT logs, and query the API', icon: 'fa6-solid:magnifying-glass', tone: 'dns-providers' },
-  'csr-certificates': { name: 'CSR-Only Certificates', blurb: 'Certificates from a device CSR; the private key never reaches CertMate', icon: 'fa6-solid:file-signature', tone: 'storage' },
-  'mcp-server': { name: 'MCP Server', blurb: 'Connect an AI assistant to CertMate: tools, roles, setup and audit', icon: 'fa6-solid:robot', tone: 'getting-started' },
-  'domain-health': { name: 'Domain Health', blurb: 'Registration expiry, mail records, blocklists, headers and old TLS, with honest unknowns', icon: 'fa6-solid:heart-pulse', tone: 'troubleshooting' },
-  'compliance': { name: 'Compliance Evidence', blurb: 'Audit trail evidence for NIS2, AI Act and ISO 42001, and its stated limits', icon: 'fa6-solid:scale-balanced', tone: 'backup' },
-  'client-certificates': { name: 'Client Certificates', blurb: 'Private CA for mTLS and VPN: issue, download, renew and revoke client certificates', icon: 'fa6-solid:id-card', tone: 'security' },
-  'revocation': { name: 'Revocation Checking', blurb: 'OCSP then CRL, verified answers only; what good, unknown and unavailable mean', icon: 'fa6-solid:ban', tone: 'troubleshooting' },
-  'monitoring': { name: 'Monitoring', blurb: 'Health and readiness probes, Prometheus metrics, alert rules and a Grafana dashboard', icon: 'fa6-solid:chart-line', tone: 'api' },
-  'dns-01-delegation': { name: 'DNS-01 Delegation', blurb: 'CNAME _acme-challenge into a zone CertMate can write, for DNS it cannot manage', icon: 'fa6-solid:share-nodes', tone: 'dns-providers' },
-  'cli-sdk': { name: 'CLI and Python SDK', blurb: 'The certmate command and Python SDK: commands, endpoints, models, errors, jobs', icon: 'fa6-solid:keyboard', tone: 'getting-started' },
-  'sso': { name: 'Single Sign-On (OIDC)', blurb: 'Sign in through an OIDC IdP, map its groups to roles, control provisioning', icon: 'fa6-solid:right-to-bracket', tone: 'security' },
-  'custom-dns-script': { name: 'Custom Script DNS Provider', blurb: 'Bring your own DNS API: a script creates the TXT record, CertMate does the rest', icon: 'fa6-solid:code', tone: 'dns-providers' },
-  'notifications': { name: 'Notifications', blurb: 'Email, Slack, Discord, Telegram, ntfy, Gotify and webhook alerts; weekly digest', icon: 'fa6-solid:bell', tone: 'backup' },
-  'contributing': { name: 'Contributing', blurb: 'Dev setup, test commands, the CI gates a pull request must pass, merge rules', icon: 'fa6-solid:users', tone: 'contributing' },
+  'getting-started': {
+    name: 'Getting Started',
+    blurb: 'Docker Compose quick start, or a systemd service without Docker',
+    icon: 'fa6-solid:rocket',
+    tone: 'getting-started',
+  },
+  'dns-providers': {
+    name: 'DNS Providers',
+    blurb: 'Configuration guides for all {{PROVIDER_COUNT}} supported DNS providers including multi-account setup',
+    icon: 'fa6-solid:cloud',
+    tone: 'dns-providers',
+  },
+  'api-reference': {
+    name: 'API Reference',
+    blurb: 'Complete REST API documentation with examples and authentication details',
+    icon: 'fa6-solid:code',
+    tone: 'api',
+  },
+  'docker-deployment': {
+    name: 'Docker Deployment',
+    blurb: 'Image tags, docker run and Compose, environment, volumes, upgrades and health checks',
+    icon: 'fa6-brands:docker',
+    tone: 'docker',
+  },
+  'storage-backends': {
+    name: 'Storage Backends',
+    blurb: 'Local layout, Azure Key Vault, AWS Secrets Manager, Vault, Infisical, S3, migration',
+    icon: 'fa6-solid:database',
+    tone: 'storage',
+  },
+  'backup-recovery': {
+    name: 'Backup & Recovery',
+    blurb: 'What a backup holds, the passphrase, retention, and restoring through the UI or API',
+    icon: 'fa6-solid:floppy-disk',
+    tone: 'backup',
+  },
+  'security': {
+    name: 'Security Best Practices',
+    blurb: 'Authentication, authorization, file permissions, and compliance guidelines',
+    icon: 'fa6-solid:shield-halved',
+    tone: 'security',
+  },
+  'troubleshooting': {
+    name: 'Troubleshooting',
+    blurb: 'From the symptom to the cause: startup, DNS-01, rate limits, 401s, renewals, hooks',
+    icon: 'fa6-solid:wrench',
+    tone: 'troubleshooting',
+  },
+  'webhooks': {
+    name: 'Webhooks',
+    blurb: 'Events, payload templates, authentication, HMAC signatures, retries and the API',
+    icon: 'fa6-solid:plug',
+    tone: 'api',
+  },
+  'deploy-hooks': {
+    name: 'Deploy Hooks',
+    blurb: 'Shell commands run after issue or renewal, with maintenance windows and history',
+    icon: 'fa6-solid:terminal',
+    tone: 'docker',
+  },
+  'ca-providers': {
+    name: 'CA Providers',
+    blurb: 'Supported ACME CAs, EAB, staging, Private CA setup, and choosing a CA per certificate',
+    icon: 'fa6-solid:certificate',
+    tone: 'security',
+  },
+  'certificate-discovery': {
+    name: 'Certificate Discovery',
+    blurb: 'Record certificates CertMate observes on hosts and in CT logs, and query the API',
+    icon: 'fa6-solid:magnifying-glass',
+    tone: 'dns-providers',
+  },
+  'csr-certificates': {
+    name: 'CSR-Only Certificates',
+    blurb: 'Certificates from a device CSR; the private key never reaches CertMate',
+    icon: 'fa6-solid:file-signature',
+    tone: 'storage',
+  },
+  'mcp-server': {
+    name: 'MCP Server',
+    blurb: 'Connect an AI assistant to CertMate: tools, roles, setup and audit',
+    icon: 'fa6-solid:robot',
+    tone: 'getting-started',
+  },
+  'domain-health': {
+    name: 'Domain Health',
+    blurb: 'Registration expiry, mail records, blocklists, headers and old TLS, with honest unknowns',
+    icon: 'fa6-solid:heart-pulse',
+    tone: 'troubleshooting',
+  },
+  'compliance': {
+    name: 'Compliance Evidence',
+    blurb: 'Audit trail evidence for NIS2, AI Act and ISO 42001, and its stated limits',
+    icon: 'fa6-solid:scale-balanced',
+    tone: 'backup',
+  },
+  'client-certificates': {
+    name: 'Client Certificates',
+    blurb: 'Private CA for mTLS and VPN: issue, download, renew and revoke client certificates',
+    icon: 'fa6-solid:id-card',
+    tone: 'security',
+  },
+  'revocation': {
+    name: 'Revocation Checking',
+    blurb: 'OCSP then CRL, verified answers only; what good, unknown and unavailable mean',
+    icon: 'fa6-solid:ban',
+    tone: 'troubleshooting',
+  },
+  'monitoring': {
+    name: 'Monitoring',
+    blurb: 'Health and readiness probes, Prometheus metrics, alert rules and a Grafana dashboard',
+    icon: 'fa6-solid:chart-line',
+    tone: 'api',
+  },
+  'dns-01-delegation': {
+    name: 'DNS-01 Delegation',
+    blurb: 'CNAME _acme-challenge into a zone CertMate can write, for DNS it cannot manage',
+    icon: 'fa6-solid:share-nodes',
+    tone: 'dns-providers',
+  },
+  'cli-sdk': {
+    name: 'CLI and Python SDK',
+    blurb: 'The certmate command and Python SDK: commands, endpoints, models, errors, jobs',
+    icon: 'fa6-solid:keyboard',
+    tone: 'getting-started',
+  },
+  'sso': {
+    name: 'Single Sign-On (OIDC)',
+    blurb: 'Sign in through an OIDC IdP, map its groups to roles, control provisioning',
+    icon: 'fa6-solid:right-to-bracket',
+    tone: 'security',
+  },
+  'custom-dns-script': {
+    name: 'Custom Script DNS Provider',
+    blurb: 'Bring your own DNS API: a script creates the TXT record, CertMate does the rest',
+    icon: 'fa6-solid:code',
+    tone: 'dns-providers',
+  },
+  'notifications': {
+    name: 'Notifications',
+    blurb: 'Email, Slack, Discord, Telegram, ntfy, Gotify and webhook alerts; weekly digest',
+    icon: 'fa6-solid:bell',
+    tone: 'backup',
+  },
+  'contributing': {
+    name: 'Contributing',
+    blurb: 'Dev setup, test commands, the CI gates a pull request must pass, merge rules',
+    icon: 'fa6-solid:users',
+    tone: 'contributing',
+  },
 };
 
 /**
@@ -305,16 +430,42 @@ export const DOC_CARDS: Record<string, DocCard> = {
  */
 export const DOC_GROUPS: { title: string; slugs: string[] }[] = [
   { title: 'Get started', slugs: ['getting-started', 'docker-deployment'] },
-  { title: 'DNS and certificate authorities', slugs: ['dns-providers', 'dns-01-delegation', 'custom-dns-script', 'ca-providers'] },
-  { title: 'Certificates', slugs: ['csr-certificates', 'client-certificates', 'certificate-discovery', 'revocation', 'domain-health'] },
-  { title: 'Running CertMate', slugs: ['storage-backends', 'backup-recovery', 'monitoring', 'notifications', 'troubleshooting'] },
+  {
+    title: 'DNS and certificate authorities',
+    slugs: [
+      'dns-providers',
+      'dns-01-delegation',
+      'custom-dns-script',
+      'ca-providers',
+    ],
+  },
+  {
+    title: 'Certificates',
+    slugs: [
+      'csr-certificates',
+      'client-certificates',
+      'certificate-discovery',
+      'revocation',
+      'domain-health',
+    ],
+  },
+  {
+    title: 'Running CertMate',
+    slugs: [
+      'storage-backends',
+      'backup-recovery',
+      'monitoring',
+      'notifications',
+      'troubleshooting',
+    ],
+  },
   { title: 'Security and access', slugs: ['security', 'sso', 'compliance'] },
   { title: 'Integrations', slugs: ['api-reference', 'cli-sdk', 'webhooks', 'deploy-hooks', 'mcp-server'] },
   { title: 'Contributing', slugs: ['contributing'] },
 ];
 
 /** Every page but the index, in DOC_GROUPS order. */
-export const DOC_READING_ORDER: string[] = DOC_GROUPS.flatMap((g) => g.slugs);
+export const DOC_READING_ORDER_SLUGS: string[] = DOC_GROUPS.flatMap((g) => g.slugs);
 
 // A page missing from the groups would be missing from the index, and one
 // grouped twice would be carded twice. Refuse both here, with the card each
@@ -322,13 +473,17 @@ export const DOC_READING_ORDER: string[] = DOC_GROUPS.flatMap((g) => g.slugs);
 {
   const published = new Set(DOC_PAGES.map((p) => p.slug).filter((s) => s !== 'index'));
   const grouped = new Set<string>();
-  for (const slug of DOC_READING_ORDER) {
+  for (const slug of DOC_READING_ORDER_SLUGS) {
     if (grouped.has(slug)) throw new Error(`src/data/docs.ts: DOC_GROUPS lists '${slug}' twice`);
-    if (!published.has(slug)) throw new Error(`src/data/docs.ts: DOC_GROUPS lists '${slug}', which is not in DOC_PAGES`);
+    if (!published.has(slug)) {
+      throw new Error(`src/data/docs.ts: DOC_GROUPS lists '${slug}', which is not in DOC_PAGES`);
+    }
     if (!DOC_CARDS[slug]) throw new Error(`src/data/docs.ts: '${slug}' has no entry in DOC_CARDS`);
     grouped.add(slug);
   }
   for (const slug of published) {
-    if (!grouped.has(slug)) throw new Error(`src/data/docs.ts: '${slug}' is in DOC_PAGES but in no DOC_GROUPS section`);
+    if (!grouped.has(slug)) {
+      throw new Error(`src/data/docs.ts: '${slug}' is in DOC_PAGES but in no DOC_GROUPS section`);
+    }
   }
 }
