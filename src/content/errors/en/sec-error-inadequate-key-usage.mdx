@@ -1,0 +1,108 @@
+---
+title: "SEC_ERROR_INADEQUATE_KEY_USAGE"
+errorCode: "SEC_ERROR_INADEQUATE_KEY_USAGE"
+description: "Fix Firefox's SEC_ERROR_INADEQUATE_KEY_USAGE: the certificate's keyUsage does not allow TLS, or an intermediate may not sign certificates. No exception."
+summary: "Firefox found a keyUsage extension that forbids what the certificate is being used for: a leaf that may not be used for TLS, or an intermediate that may not sign certificates. There is no button to accept it."
+browsers: ["Firefox"]
+order: 27
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+Firefox reports `SEC_ERROR_INADEQUATE_KEY_USAGE` with the message
+*"Certificate key usage inadequate for attempted operation."* A certificate's
+`keyUsage` extension lists what its key may be used for, and one of the
+certificates in the chain does not allow the use Firefox needs.
+
+For the server's own certificate, Firefox tries the chain up to three times.
+It requires `digitalSignature`, then `keyEncipherment`, then `keyAgreement`,
+and fails only if none of the three is present. For every certificate above
+it that has the extension, `keyCertSign` is required. A certificate with no
+`keyUsage` extension passes this check.
+
+A malformed extension fails too: an empty bit string, or padding bits that
+DER requires to be zero and are not. That is a sign of a hand-rolled
+certificate generator rather than a policy decision.
+
+Firefox does not let you add an exception for this error: the page has no
+button to accept the risk and continue. The certificate has to change.
+
+One case is reported under another name. If the certificate is self-signed
+and fails this check, Firefox reports `MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT`
+instead.
+
+<Handshake
+  caption="Where SEC_ERROR_INADEQUATE_KEY_USAGE is raised"
+  steps={[
+    { from: 'Firefox', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Firefox', label: 'ServerHello, Certificate (leaf + intermediates)' },
+    { from: 'Firefox', label: 'Builds the chain: leaf needs digitalSignature, keyEncipherment or keyAgreement; each issuer needs keyCertSign' },
+    { from: 'Firefox', to: 'Server', label: 'No allowed use is present: connection refused (SEC_ERROR_INADEQUATE_KEY_USAGE)', fails: true },
+  ]}
+/>
+
+## Common causes
+
+- **The leaf was issued from the wrong template.** A `keyUsage` of only
+  `nonRepudiation`, `dataEncipherment`, or `keyCertSign, cRLSign`, from an
+  internal CA profile meant for signing documents or for sub-CAs.
+- **An intermediate without `keyCertSign`.** A certificate between the leaf
+  and the root has a `keyUsage` extension that does not let it sign
+  certificates.
+- **A malformed extension**, written by a generator that encodes the bit
+  string itself.
+
+Chromium applies a stricter rule to the leaf. Firefox accepts any one of the
+three bits, whatever the key exchange. Chromium requires the bit the
+negotiated key exchange uses, which is `digitalSignature` for any TLS 1.3
+connection. A certificate that Firefox accepts can still fail in Chromium
+with `ERR_SSL_KEY_USAGE_INCOMPATIBLE`.
+
+## How to fix it
+
+**1. Print the keyUsage of every certificate the server sends:**
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com -showcerts 2>/dev/null \
+  | awk '/BEGIN CERTIFICATE/{n++} n{print > ("cert" n ".pem")}'
+for f in cert*.pem; do
+  openssl x509 -in "$f" -noout -subject -ext keyUsage,basicConstraints
+done
+```
+
+`cert1.pem` is the leaf. It should list `Digital Signature`, and for an RSA
+key usually `Key Encipherment` too. Each certificate after it should say
+`CA:TRUE` and, if it has a `keyUsage` line, `Certificate Sign`.
+
+**2. Reissue whichever one is wrong.** A leaf needs a new certificate from a
+profile with `digitalSignature` (plus `keyEncipherment` for RSA). With
+OpenSSL, as an extension line in the signing config:
+
+```
+keyUsage = critical, digitalSignature, keyEncipherment
+```
+
+A wrong intermediate means the chain file is wrong: replace it with the
+intermediate the CA publishes for your certificate, then reload the server.
+
+**3. Test in both browsers.** A leaf with `keyEncipherment` only passes here
+and fails in Chromium on any TLS 1.3 connection. Issued with
+`digitalSignature`, it passes both.
+
+## Prevent it from recurring
+
+The `keyUsage` extension is written by the CA that signs the certificate.
+CertMate does not set it on the certificates it obtains over ACME, and does
+not read it back. With a public ACME CA the extension is that CA's choice.
+With the `private_ca` provider, CertMate talks ACME to a CA you run, and the
+profile that writes the extension is yours. Check it for each key type you
+issue. CertMate's *Default Certificate Key* is RSA 2048 unless changed, and
+can be RSA 2048, 3072 or 4096 or ECDSA P-256 or P-384.
+
+## Related errors
+
+- `ERR_SSL_KEY_USAGE_INCOMPATIBLE`: Chromium's key-usage error, with a stricter rule for the leaf.
+- `MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT`: what Firefox reports instead when the certificate is self-signed.
+- `MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY`: a CA certificate served as the site's own certificate.

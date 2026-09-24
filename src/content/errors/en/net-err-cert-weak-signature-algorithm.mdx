@@ -1,0 +1,110 @@
+---
+title: "NET::ERR_CERT_WEAK_SIGNATURE_ALGORITHM"
+errorCode: "NET::ERR_CERT_WEAK_SIGNATURE_ALGORITHM"
+description: "Fix Chrome's NET::ERR_CERT_WEAK_SIGNATURE_ALGORITHM: a certificate in the chain is signed with SHA-1. Why current Chrome says NET::ERR_CERT_INVALID."
+summary: "A certificate the server sent, the leaf or an intermediate, is signed with SHA-1. The fix is a certificate signed with SHA-256 or better; current Chromium reports the same problem as NET::ERR_CERT_INVALID."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 23
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+Chromium shows `NET::ERR_CERT_WEAK_SIGNATURE_ALGORITHM` with the description
+*"Server's certificate is signed using a weak signature algorithm."* The
+details name the algorithm it means: a certificate *"signed using a weak
+signature algorithm (such as SHA-1)"*. Either the leaf or an intermediate the
+server sent was signed with `sha1WithRSAEncryption` or `ecdsa-with-SHA1`. The
+root's own signature is not checked, so a SHA-1 self-signature on a trusted
+root does not count.
+
+Which code you see depends on the Chromium build. Chromium's own certificate
+verifier refuses SHA-1 signatures outright, and a signature it refuses makes
+the whole certificate invalid, which it reports as `NET::ERR_CERT_INVALID`.
+Chromium still has the weak-signature code, but its own comments call it
+mostly unused. Since a change in March 2026, Chromium's SHA-1 check no longer
+sets it. Before that, the weak-signature status was added *alongside* the
+invalid one, and `NET::ERR_CERT_INVALID` outranks it. So this code was the one
+on the page only where the verifier underneath accepted SHA-1 and Chromium's
+extra check caught it afterwards. The Chromium source names Android versions
+before 10 as such a case. On iOS the status is still set, together with the
+invalid one, which again outranks it.
+
+Whichever of the two codes you get, the certificate has the same fault and the
+same fix.
+
+<Handshake
+  caption="Where NET::ERR_CERT_WEAK_SIGNATURE_ALGORITHM is raised"
+  steps={[
+    { from: 'Chrome', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Chrome', label: 'ServerHello, Certificate (leaf + intermediates)' },
+    { from: 'Chrome', label: 'Reads the signature algorithm of every certificate except the root' },
+    { from: 'Chrome', to: 'Server', label: 'A SHA-1 signature is found: connection refused (NET::ERR_CERT_WEAK_SIGNATURE_ALGORITHM)', fails: true },
+  ]}
+/>
+
+## Common causes
+
+- **The leaf was signed with SHA-1.** An internal CA that was set up years ago
+  and never changed its digest, or the certificate a device generates for
+  itself on first boot.
+- **An old intermediate is still in the chain file.** The leaf is fine, but
+  the file the server sends also carries an intermediate from a hierarchy that
+  signed with SHA-1.
+- **Something in between re-signs the connection.** A TLS-inspecting proxy or
+  security product presents its own certificate to the browser. If the
+  certificate the server sends is clean and one network still sees this
+  error, look at what sits on that network.
+
+Firefox reports a SHA-1 signature as
+`SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED`.
+
+## How to fix it
+
+**1. See the signature algorithm of every certificate the server sends.**
+This splits the served chain into one file per certificate and prints the
+subject and algorithm of each:
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com -showcerts 2>/dev/null \
+  | awk '/BEGIN CERTIFICATE/{n++} n{print > ("cert" n ".pem")}'
+for f in cert*.pem; do
+  openssl x509 -in "$f" -noout -subject
+  openssl x509 -in "$f" -noout -text | grep -m1 'Signature Algorithm'
+done
+```
+
+`cert1.pem` is the leaf. Any `sha1With...` or `ecdsa-with-SHA1` in the list is
+the certificate to replace.
+
+**2. Replace the certificate that carries it.** For the leaf, that means a new
+certificate from a CA that signs with SHA-256 or better. If the signing CA is
+your own, its configuration is where the digest is set, and the certificates
+it already issued have to be issued again. For an intermediate, replace the
+chain file with the one the CA issues from today and reload the server.
+
+**3. If the served chain is clean, check from another network.** Run step 1
+from the machine that shows the error and from one that does not. Different
+issuers mean the certificate is being replaced in transit.
+
+## Prevent it from recurring
+
+CertMate does not pick the signature algorithm of a certificate it obtains
+over ACME: the CA signs it and chooses the digest.
+
+What CertMate can do is show you where SHA-1 is still being served. With
+endpoint discovery enabled, each sweep records the certificate every
+configured `host:port` serves, with its signature algorithm. The
+cryptographic readiness report (`/inventory/crypto-report` in the UI,
+`GET /api/inventory/crypto-report` in the API) classes any signature
+algorithm containing SHA-1 or MD5 as `weak`. It reads the served leaf only,
+so a SHA-1 intermediate does not appear in it; step 1 above covers that case.
+[Certificate Discovery](/docs/certificate-discovery.html) describes the
+sweep and the report.
+
+## Related errors
+
+- `NET::ERR_CERT_AUTHORITY_INVALID`: the chain does not reach a trusted root, a different fault from how it is signed.
+- `NET::ERR_CERT_NAME_CONSTRAINT_VIOLATION`: another check Chromium runs after the chain is built.
+- `ERR_SSL_KEY_USAGE_INCOMPATIBLE`: the certificate is well signed but marked for the wrong use.

@@ -1,0 +1,112 @@
+---
+title: "SEC_ERROR_INADEQUATE_KEY_USAGE"
+errorCode: "SEC_ERROR_INADEQUATE_KEY_USAGE"
+description: "Risolvi SEC_ERROR_INADEQUATE_KEY_USAGE di Firefox: il keyUsage non consente TLS, o un intermedio non può firmare certificati. Nessuna eccezione possibile."
+summary: "Firefox ha trovato un'estensione keyUsage che vieta l'uso richiesto: una foglia che non può essere usata per TLS, o un intermedio che non può firmare certificati. Non c'è un pulsante per accettarlo."
+browsers: ["Firefox"]
+order: 27
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+Firefox segnala `SEC_ERROR_INADEQUATE_KEY_USAGE` con il messaggio
+*"Certificate key usage inadequate for attempted operation."*: l'uso previsto
+per la chiave del certificato non basta per l'operazione tentata.
+L'estensione `keyUsage` di un certificato elenca per cosa può essere usata la
+sua chiave, e uno dei certificati della catena non consente l'uso che serve a
+Firefox.
+
+Per il certificato del server, Firefox prova la catena fino a tre volte.
+Richiede `digitalSignature`, poi `keyEncipherment`, poi `keyAgreement`, e
+fallisce solo se nessuno dei tre è presente. Per ogni certificato sopra di
+esso che ha l'estensione è richiesto `keyCertSign`. Un certificato senza
+estensione `keyUsage` supera questo controllo.
+
+Fallisce anche un'estensione malformata: una stringa di bit vuota, o bit di
+riempimento che DER vuole a zero e non lo sono. È il segno di un generatore di
+certificati fatto in casa, non di una scelta di policy.
+
+Firefox non permette di aggiungere un'eccezione per questo errore: la pagina
+non ha un pulsante per accettare il rischio e continuare. Il certificato deve
+cambiare.
+
+Un caso viene riportato con un altro nome. Se il certificato è autofirmato e
+fallisce questo controllo, Firefox segnala invece
+`MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT`.
+
+<Handshake
+  caption="Dove viene sollevato SEC_ERROR_INADEQUATE_KEY_USAGE"
+  steps={[
+    { from: 'Firefox', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Firefox', label: 'ServerHello, Certificate (foglia + intermedi)' },
+    { from: 'Firefox', label: 'Costruisce la catena: la foglia richiede digitalSignature, keyEncipherment o keyAgreement; ogni emittente richiede keyCertSign' },
+    { from: 'Firefox', to: 'Server', label: 'Nessun uso consentito è presente: connessione rifiutata (SEC_ERROR_INADEQUATE_KEY_USAGE)', fails: true },
+  ]}
+/>
+
+## Cause comuni
+
+- **La foglia è stata emessa dal modello sbagliato.** Un `keyUsage` con solo
+  `nonRepudiation`, `dataEncipherment`, o `keyCertSign, cRLSign`, da un
+  profilo di una CA interna pensato per firmare documenti o per sub-CA.
+- **Un intermedio senza `keyCertSign`.** Un certificato tra la foglia e la
+  radice ha un'estensione `keyUsage` che non gli permette di firmare
+  certificati.
+- **Un'estensione malformata**, scritta da un generatore che codifica da sé la
+  stringa di bit.
+
+Chromium applica alla foglia una regola più severa. Firefox accetta uno
+qualunque dei tre bit, qualunque sia lo scambio di chiavi. Chromium richiede
+il bit usato dallo scambio di chiavi negoziato, che per ogni connessione
+TLS 1.3 è `digitalSignature`. Un certificato che Firefox accetta può comunque
+fallire in Chromium con `ERR_SSL_KEY_USAGE_INCOMPATIBLE`.
+
+## Come risolverlo
+
+**1. Stampa il keyUsage di ogni certificato inviato dal server:**
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com -showcerts 2>/dev/null \
+  | awk '/BEGIN CERTIFICATE/{n++} n{print > ("cert" n ".pem")}'
+for f in cert*.pem; do
+  openssl x509 -in "$f" -noout -subject -ext keyUsage,basicConstraints
+done
+```
+
+`cert1.pem` è la foglia. Deve riportare `Digital Signature`, e per una chiave
+RSA di solito anche `Key Encipherment`. Ogni certificato dopo di essa deve
+riportare `CA:TRUE` e, se ha una riga `keyUsage`, `Certificate Sign`.
+
+**2. Riemetti quello sbagliato.** Una foglia richiede un nuovo certificato da
+un profilo con `digitalSignature` (più `keyEncipherment` per RSA). Con
+OpenSSL, come riga di estensione nella configurazione di firma:
+
+```
+keyUsage = critical, digitalSignature, keyEncipherment
+```
+
+Un intermedio sbagliato significa che il file della catena è sbagliato:
+sostituiscilo con l'intermedio che la CA pubblica per il tuo certificato, poi
+ricarica il server.
+
+**3. Prova in entrambi i browser.** Una foglia con solo `keyEncipherment`
+passa qui e fallisce in Chromium su qualunque connessione TLS 1.3. Emessa con
+`digitalSignature`, passa in entrambi.
+
+## Evitare che si ripresenti
+
+L'estensione `keyUsage` la scrive la CA che firma il certificato. CertMate
+non la imposta sui certificati che ottiene via ACME, e non la rilegge. Con una
+CA ACME pubblica l'estensione è una scelta di quella CA. Con il provider
+`private_ca`, CertMate parla ACME con una CA gestita da te, e il profilo che
+scrive l'estensione è tuo. Controllalo per ogni tipo di chiave che emetti. La
+*Default Certificate Key* di CertMate è RSA 2048 se non la cambi, e può essere
+RSA 2048, 3072 o 4096 oppure ECDSA P-256 o P-384.
+
+## Errori correlati
+
+- `ERR_SSL_KEY_USAGE_INCOMPATIBLE`: l'errore di key usage di Chromium, con una regola più severa sulla foglia.
+- `MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT`: quello che Firefox segnala al suo posto quando il certificato è autofirmato.
+- `MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY`: un certificato di CA servito come certificato del sito.

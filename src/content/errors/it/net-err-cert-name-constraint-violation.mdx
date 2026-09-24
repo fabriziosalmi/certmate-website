@@ -1,0 +1,114 @@
+---
+title: "NET::ERR_CERT_NAME_CONSTRAINT_VIOLATION"
+errorCode: "NET::ERR_CERT_NAME_CONSTRAINT_VIOLATION"
+description: "Risolvi NET::ERR_CERT_NAME_CONSTRAINT_VIOLATION di Chrome: una chiave di CA che Chromium limita a certi domini ha firmato un nome fuori da essi."
+summary: "La catena contiene una chiave di CA che Chromium stesso limita a certi domini, e il certificato nomina un host fuori da quei domini. Violare i name constraints di una CA privata produce un errore diverso."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 25
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+Chromium mostra `NET::ERR_CERT_NAME_CONSTRAINT_VIOLATION` con la descrizione
+*"Server's certificate violates name constraints."* I dettagli dicono che il
+server *"could not prove"*, non ha potuto dimostrare, di essere il sito che hai
+chiesto, e che il suo certificato *"might have been issued fraudulently"*,
+potrebbe essere stato emesso in modo fraudolento.
+
+Nonostante il nome, l'errore non viene dall'estensione X.509 name
+constraints. Dopo la verifica della catena, Chromium confronta la chiave
+pubblica di ogni certificato della catena con un breve elenco di chiavi di CA
+che limita a certi domini. L'elenco è compilato dentro Chromium. Nel sorgente
+attuale ha una sola voce reale: la radice del governo francese `IGC/A`
+(`O=PM/SGDN, OU=DCSSI`), autorizzata a garantire solo nomi sotto `.fr` e i
+domini francesi d'oltremare (`.gp`, `.gf`, `.mq`, `.re`, `.yt`, `.pm`, `.bl`,
+`.mf`, `.wf`, `.pf`, `.nc`, `.tf`). L'altra voce è una chiave di test limitata
+a `.example.com`.
+
+Se nella catena c'è una chiave dell'elenco, ogni nome DNS del certificato deve
+terminare con uno dei suoi domini. Quando il certificato non ha SAN si usa il
+common name. Due tipi di nome vengono saltati: gli indirizzi IP e i nomi che
+non stanno sotto un suffisso pubblico, come gli hostname interni.
+
+Una CA privata che porta una propria estensione `nameConstraints` e firma un
+nome al di fuori fallisce in un altro modo. Il verificatore di Chromium
+rifiuta quella catena mentre la costruisce, e segnala
+`NET::ERR_CERT_INVALID`. Firefox segnala lo stesso caso come
+`SEC_ERROR_CERT_NOT_IN_NAME_SPACE`.
+
+Quando un certificato ha più difetti, Chromium riporta il più grave. Un
+certificato non valido, revocato, non attendibile o con il nome sbagliato
+mostra quell'errore al posto di questo. Uno scaduto no: questo codice ha la
+precedenza su `NET::ERR_CERT_DATE_INVALID`, quindi correggerlo può far
+emergere una scadenza nascosta dietro.
+
+<Handshake
+  caption="Dove viene sollevato NET::ERR_CERT_NAME_CONSTRAINT_VIOLATION"
+  steps={[
+    { from: 'Chrome', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Chrome', label: 'ServerHello, Certificate (foglia + intermedi)' },
+    { from: 'Chrome', label: "Costruisce la catena fino a una radice attendibile e verifica il nome host: riesce" },
+    { from: 'Chrome', label: "Confronta le chiavi di CA della catena con il proprio elenco di chiavi limitate a certi domini" },
+    { from: 'Chrome', to: 'Server', label: 'Una chiave in elenco ha firmato un nome fuori dai suoi domini: connessione rifiutata (NET::ERR_CERT_NAME_CONSTRAINT_VIOLATION)', fails: true },
+  ]}
+/>
+
+## Cause comuni
+
+- **Un certificato della gerarchia IGC/A nomina un host fuori dai domini
+  francesi**, su una macchina dove quella radice è attendibile. Basta un nome
+  `.com` o `.org` nel certificato, anche se l'hostname visitato è un `.fr`.
+- **Un ambiente di test che usa la chiave di test di Chromium.** Riguarda solo
+  chi usa i certificati di test di Chromium.
+
+Se ti aspettavi questo errore da una CA privata con name constraints e hai
+ottenuto `NET::ERR_CERT_INVALID`, è il comportamento descritto sopra, non un
+secondo problema.
+
+## Come risolverlo
+
+**1. Elenca la catena servita, con soggetto ed emittente di ogni certificato:**
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com -showcerts 2>/dev/null \
+  | awk '/BEGIN CERTIFICATE/{n++} n{print > ("cert" n ".pem")}'
+for f in cert*.pem; do
+  openssl x509 -in "$f" -noout -subject -issuer
+done
+```
+
+Spesso la radice non viene inviata. Il segnale da cercare è un emittente che
+nomina `IGC/A` sull'ultimo certificato.
+
+**2. Elenca tutti i nomi coperti dalla foglia:**
+
+```bash
+openssl x509 -in cert1.pem -noout -ext subjectAltName
+```
+
+Ogni nome sotto un suffisso pubblico deve terminare con uno dei domini sopra.
+
+**3. Cambia il certificato, non il browser.** Servi i nomi fuori da quei
+domini con un certificato emesso da un'altra CA. Oppure emetti dalla stessa
+gerarchia un certificato che contenga solo nomi al loro interno.
+
+## Evitare che si ripresenti
+
+La CA integrata di CertMate firma solo certificati client, e la sua radice
+non porta name constraints. I certificati server da una CA privata arrivano a
+CertMate tramite il provider `private_ca`, che parla ACME con una CA gestita
+da te. Se quella CA ha un'estensione `nameConstraints`, CertMate non confronta
+con essa i nomi richiesti. Un nome fuori da quei vincoli, una volta emesso,
+fallisce nei browser come `NET::ERR_CERT_INVALID` o
+`SEC_ERROR_CERT_NOT_IN_NAME_SPACE`, non con questo codice. Tieni l'elenco SAN
+di ogni certificato dentro ciò che la tua CA può firmare.
+[CA Providers](/docs/ca-providers.html) descrive la configurazione di
+`private_ca`.
+
+## Errori correlati
+
+- `NET::ERR_CERT_COMMON_NAME_INVALID`: il certificato non nomina l'host visitato, e ha la precedenza su questo errore.
+- `NET::ERR_CERT_AUTHORITY_INVALID`: la catena non arriva affatto a una radice attendibile.
+- `NET::ERR_CERT_WEAK_SIGNATURE_ALGORITHM`: un altro controllo su una catena che per il resto si verifica.

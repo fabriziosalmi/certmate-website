@@ -1,0 +1,117 @@
+---
+title: "ERR_SSL_KEY_USAGE_INCOMPATIBLE"
+errorCode: "ERR_SSL_KEY_USAGE_INCOMPATIBLE"
+description: "Risolvi ERR_SSL_KEY_USAGE_INCOMPATIBLE di Chrome: al keyUsage del certificato manca il bit richiesto dallo scambio di chiavi, di solito digitalSignature."
+summary: "Il certificato del server ha un'estensione keyUsage, e il bit che serve a questo scambio di chiavi TLS non c'è. Chromium interrompe l'handshake. La soluzione è un certificato emesso con il keyUsage giusto."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 24
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+Chromium definisce `ERR_SSL_KEY_USAGE_INCOMPATIBLE` come *"The server's
+certificate has a keyUsage extension incompatible with the negotiated TLS key
+exchange method."*: il certificato del server ha un'estensione keyUsage
+incompatibile con il metodo di scambio di chiavi negoziato. L'errore nasce
+durante l'handshake, nella libreria TLS, e non nella verifica del certificato.
+Per questo compare nella pagina di errore generica di Chrome (in inglese
+*"This site can’t be reached"*), senza il prefisso `NET::`, e non nella pagina
+di avviso sui certificati.
+
+La regola è breve. Se il certificato foglia ha un'estensione `keyUsage`, deve
+contenere il bit dello scambio di chiavi in uso:
+
+| Connessione | Bit richiesto |
+|---|---|
+| TLS 1.3, qualunque certificato | `digitalSignature` |
+| TLS 1.2 con scambio di chiavi (EC)DHE | `digitalSignature` |
+| TLS 1.2 con scambio di chiavi RSA | `keyEncipherment` |
+
+Un certificato senza alcuna estensione `keyUsage` passa. Passa anche uno che
+elenca più bit, purché ci sia quello richiesto.
+
+<Handshake
+  caption="Dove viene sollevato ERR_SSL_KEY_USAGE_INCOMPATIBLE"
+  steps={[
+    { from: 'Chrome', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Chrome', label: 'ServerHello, Certificate' },
+    { from: 'Chrome', label: "Legge l'estensione keyUsage della foglia" },
+    { from: 'Chrome', to: 'Server', label: 'Manca il bit richiesto da questo scambio di chiavi: handshake interrotto (ERR_SSL_KEY_USAGE_INCOMPATIBLE)', fails: true },
+  ]}
+/>
+
+## Cause comuni
+
+- **Un certificato RSA marcato solo `keyEncipherment`.** Quel bit copre lo
+  scambio di chiavi RSA e nient'altro. TLS 1.3 e ogni suite (EC)DHE richiedono
+  `digitalSignature`, quindi il certificato fallisce su tutte queste
+  connessioni.
+- **Un certificato ECDSA marcato `keyAgreement` senza `digitalSignature`.**
+  Chromium non usa mai lo scambio di chiavi RSA con una chiave ECDSA, quindi
+  per ECDSA il bit richiesto è sempre `digitalSignature`.
+- **Un profilo di certificato scritto a mano.** Un modello di una CA interna,
+  il generatore di certificati di un dispositivo, o una configurazione OpenSSL
+  con un solo valore di `keyUsage`.
+- **Altri client lo accettano.** Per questo sopravvive ai test. Con un
+  certificato RSA marcato solo `keyEncipherment`, `openssl s_client` di
+  OpenSSL 3.6 completa un handshake TLS 1.3, e
+  `openssl verify -purpose sslserver` lo dà per buono. Il controllo sui
+  certificati di Firefox accetta uno qualunque tra `digitalSignature`,
+  `keyEncipherment` e `keyAgreement`, qualunque sia lo scambio di chiavi. Lo
+  stesso certificato può superare tutti e tre e fallire in Chromium.
+
+## Come risolverlo
+
+**1. Leggi il keyUsage e il tipo di chiave della foglia:**
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/null \
+  | openssl x509 -noout -ext keyUsage
+echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/null \
+  | openssl x509 -noout -text | grep 'Public Key Algorithm'
+```
+
+Se l'estensione è presente e `Digital Signature` non c'è, è questo il difetto
+su qualunque connessione TLS 1.3.
+
+**2. Guarda cosa è stato negoziato.** La riga `New,` riporta protocollo e
+cipher:
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/null | grep 'New,'
+```
+
+**3. Riemetti il certificato con un keyUsage adatto alla chiave.** Per una
+chiave ECDSA, `digitalSignature`. Per una chiave RSA,
+`digitalSignature, keyEncipherment`. Con OpenSSL, come riga di estensione
+nella configurazione di firma:
+
+```
+keyUsage = critical, digitalSignature, keyEncipherment
+```
+
+La correzione sta nel certificato, non nel server. Il server non può cambiare
+quello che il certificato dichiara.
+
+## Evitare che si ripresenti
+
+L'estensione `keyUsage` la scrive la CA che firma il certificato. CertMate non
+la imposta e non la rilegge; la sua sonda non la riporta.
+
+Quello che CertMate sceglie è la chiave. La *Default Certificate Key* nelle
+impostazioni è RSA 2048 se non la cambi. Può essere RSA 2048, 3072 o 4096,
+oppure ECDSA su P-256 o P-384, e ogni certificato può sovrascriverla. La
+scelta arriva a certbot come `--key-type` con `--rsa-key-size` o
+`--elliptic-curve`. Con una CA ACME pubblica, l'estensione sul risultato è
+quella che mette il profilo di quella CA. Con il provider `private_ca`,
+CertMate parla ACME con una CA che gestisci tu, e il profilo di quella CA è
+tuo. Controllalo una volta per ogni tipo di chiave che intendi usare, prima di
+cambiare il valore predefinito.
+
+## Errori correlati
+
+- `SEC_ERROR_INADEQUATE_KEY_USAGE`: l'errore di key usage di Firefox, con una regola più permissiva sulla foglia.
+- `ERR_SSL_PROTOCOL_ERROR`: il fallimento generico dell'handshake, quando la causa non ha un codice proprio.
+- `NET::ERR_CERT_WEAK_SIGNATURE_ALGORITHM`: il certificato è marcato correttamente ma firmato con SHA-1.

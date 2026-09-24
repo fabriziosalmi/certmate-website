@@ -1,0 +1,117 @@
+---
+title: "ERR_SSL_UNRECOGNIZED_NAME_ALERT"
+errorCode: "ERR_SSL_UNRECOGNIZED_NAME_ALERT"
+description: "Fix Chrome's ERR_SSL_UNRECOGNIZED_NAME_ALERT: the server refused the hostname the browser sent in SNI. Missing vhost, wrong server, or an IP address."
+summary: "The server answered the browser's first message with a fatal unrecognized_name alert: it has no site for the hostname the browser asked for. No certificate was sent, so this is a server configuration problem."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 26
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+Chromium defines `ERR_SSL_UNRECOGNIZED_NAME_ALERT` as *"The SSL server sent us
+a fatal unrecognized_name alert."* The browser's `ClientHello` carries the
+hostname it wants in the Server Name Indication (SNI) extension. The server
+replied with TLS alert 112, `unrecognized_name`, at fatal level, and closed
+the connection. It has no site configured for that name, or it refuses
+connections that carry no name.
+
+The handshake stops before the server sends a certificate. Nothing about any
+certificate was checked. The error appears on Chrome's generic
+*"This site can’t be reached"* page, without a `NET::` prefix, because it is a
+connection failure and not a certificate error.
+
+Only the fatal form counts. The same alert sent as a warning, in reply to the
+`ClientHello`, is ignored and the handshake continues.
+
+Chromium sends SNI for every hostname and never for an IP address. Opening
+`https://203.0.113.10/` sends no name at all.
+
+<Handshake
+  caption="Where ERR_SSL_UNRECOGNIZED_NAME_ALERT is raised"
+  steps={[
+    { from: 'Chrome', to: 'Server', label: 'ClientHello (server_name: www.example.com)' },
+    { from: 'Server', label: 'Looks for a site configured for www.example.com: none, and the fallback refuses' },
+    { from: 'Server', to: 'Chrome', label: 'Alert: fatal, unrecognized_name (112): connection closed (ERR_SSL_UNRECOGNIZED_NAME_ALERT)', fails: true },
+  ]}
+/>
+
+## Common causes
+
+- **The name is not configured on the server that answered.** A new
+  subdomain whose DNS record went live before its virtual host, a typo in the
+  `server_name`, or a virtual host listening on a different address or port
+  from the one DNS points to.
+- **DNS points to a different server.** An old host, or a load balancer that
+  has not been told about the name.
+- **The site was opened by IP address.** No SNI is sent, and a server that
+  requires one refuses.
+- **The server is refusing unknown names on purpose.** In nginx, a server
+  block with `ssl_reject_handshake on;` makes exactly this happen. If it is the
+  default server for a `listen` socket, every name without its own
+  `server_name` on that socket gets the fatal `unrecognized_name` alert,
+  and so does a connection with no SNI. That setting is often right: it
+  stops the server handing out a certificate for an unrelated site. The fix is
+  then to add the name, not to remove the catch-all.
+
+## How to fix it
+
+**1. Reproduce it outside the browser.** Send the exact name:
+
+```bash
+openssl s_client -connect example.com:443 -servername www.example.com </dev/null
+```
+
+With OpenSSL 3, a refused name ends in a line containing
+`tlsv1 unrecognized name` and `SSL alert number 112`. To see what the server
+does with no name, as with a visit by IP address:
+
+```bash
+openssl s_client -connect example.com:443 -noservername </dev/null
+```
+
+**2. Check that the name goes to the server you configured:**
+
+```bash
+dig +short www.example.com
+```
+
+If the address is not the server you have been editing, the fix is in DNS or
+on the other server.
+
+**3. Look for the name in the server configuration.** On nginx:
+
+```bash
+nginx -T 2>/dev/null | grep -nE 'listen|server_name|ssl_reject_handshake'
+```
+
+The name must appear in a `server_name` of a block that listens on the address
+and port the client reaches. That block also needs a certificate that covers
+the name.
+
+**4. Add the name, reload, and repeat step 1.**
+
+## Prevent it from recurring
+
+SNI is the server's job. CertMate issues the certificate and runs deploy
+hooks, but it does not write virtual hosts.
+
+What CertMate does is notice a name that the server refuses. Its deployment
+check connects to the certificate's domain, or to the probe host set for it,
+with that name as SNI, and compares the certificate served with the one it
+issued. When the server refuses the name, the check reports
+`probe_status: unreachable` with the reason `Could not probe <host>:` followed
+by the TLS error, rather than a match. `POST /api/probe` takes a `host`
+and a `server_name`, so it can try one name against one server. It returns
+`error_class: tls_error` and the TLS library's message when the handshake
+fails. The deployment check covers the one name it probes. For the other
+names on a certificate, run the probe once per name after adding it.
+[Certificate Discovery](/docs/certificate-discovery.html) documents the probe.
+
+## Related errors
+
+- `ERR_SSL_PROTOCOL_ERROR`: the generic handshake failure, when the server's refusal has no code of its own.
+- `NET::ERR_CERT_COMMON_NAME_INVALID`: the server accepted the name but sent a certificate that does not cover it.
+- `SSL_ERROR_BAD_CERT_DOMAIN`: the Firefox equivalent of that mismatch.
