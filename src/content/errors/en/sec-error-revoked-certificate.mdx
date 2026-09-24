@@ -5,7 +5,7 @@ description: "Fix Firefox's SEC_ERROR_REVOKED_CERTIFICATE: the CA withdrew the c
 summary: "The certificate has not expired: the authority that issued it has withdrawn it. Firefox found it on a revocation list and will not let you past."
 browsers: ["Firefox"]
 order: 10
-updated: "2026-09-16"
+updated: "2026-09-24"
 ---
 import Handshake from '~/components/Handshake.astro';
 
@@ -98,13 +98,19 @@ CertMate records the state of the private key for each certificate: whether it
 holds it, whether the key lives in an external store, or whether it genuinely
 does not know, rather than assuming a key exists because a certificate does.
 It never writes private keys into its share-safe backups. Where CertMate is
-itself the issuer, running its own private CA for internal and client
-certificates, it operates the revocation list and an OCSP responder directly,
-so withdrawing a compromised internal certificate is an action inside the tool
-rather than a manual list somebody maintains.
+itself the issuer, running its own private CA for client certificates, it
+operates the revocation list and an OCSP responder directly, so withdrawing a
+compromised client certificate is an action inside the tool rather than a
+manual list somebody maintains. Since v2.35.0 a deploy hook can be set to run
+on `revoked` as well as on issuance and renewal, so that revocation can be
+followed by whatever has to happen next; it fires for client certificates,
+the only kind CertMate revokes.
 
 For publicly issued certificates, revocation stays with the CA: no certificate
-manager can withdraw a certificate it did not sign.
+manager can withdraw a certificate it did not sign. What CertMate can do is
+notice one still being served. Its discovery scan, when enabled, asks OCSP,
+then the CRL, whether the certificate each listed endpoint serves has been
+revoked, and keeps the answer with that endpoint's inventory record.
 
 ## Related errors
 

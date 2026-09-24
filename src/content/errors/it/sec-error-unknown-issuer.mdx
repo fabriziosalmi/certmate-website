@@ -5,7 +5,7 @@ description: "Risolvi SEC_ERROR_UNKNOWN_ISSUER di Firefox — l'emittente del ce
 summary: "Firefox non riesce a collegare il certificato a una root attendibile. Quasi sempre un certificato intermedio mancante o una CA interna/self-signed che Firefox non conosce."
 browsers: ["Firefox"]
 order: 4
-updated: "2026-05-22"
+updated: "2026-09-24"
 ---
 
 ## Cosa significa
@@ -56,8 +56,8 @@ distribuiscila tramite la policy enterprise / il trust store di Firefox via MDM.
 
 Poiché Firefox non maschera un intermedio mancante come a volte fa uno store di
 sistema in cache, una catena incompleta emerge *qui* per prima. CertMate
-distribuisce sempre `fullchain.pem` a emissione e rinnovo, così l'intermedio non
-viene mai perso.
+scrive sempre `fullchain.pem` a emissione e rinnovo e ne passa il percorso ai
+deploy hook come `CERTMATE_FULLCHAIN_PATH`, così l'intermedio non viene mai perso.
 
 ## Errori correlati
 

@@ -61,7 +61,7 @@ export const features: Feature[] = [
     icon: 'fa6-solid:certificate',
     title: 'Multiple CA Support',
     body:
-      "Let's Encrypt and ZeroSSL (free), Google Trust Services, DigiCert and SSL.com (ACME with EAB), Actalis (EU CA), plus a built-in Private CA for internal certificates.",
+      "Let's Encrypt and ZeroSSL (free), Google Trust Services, DigiCert, SSL.com and Sectigo (ACME with EAB), Actalis (EU CA), plus a built-in Private CA for internal certificates. A request for a CA that is not configured is refused, never issued by another CA.",
   },
   {
     icon: 'fa6-solid:gears',
@@ -72,7 +72,7 @@ export const features: Feature[] = [
     icon: 'fa6-solid:terminal',
     title: 'Auto-Deploy Hooks',
     body:
-      'Run shell commands automatically after certificate creation or renewal for seamless deployment.',
+      'Run shell commands automatically after certificate creation or renewal for seamless deployment, and, if you choose, when a client certificate is revoked.',
   },
   {
     icon: 'fa6-solid:globe',

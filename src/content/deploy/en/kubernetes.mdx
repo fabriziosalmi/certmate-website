@@ -5,7 +5,7 @@ description: "How TLS certificates work on Kubernetes Ingress — the tls secret
 summary: "How Ingress TLS secrets actually work, why cert-manager is the in-cluster default, and where an external certificate manager fits for certs that live outside the cluster."
 icon: "fa6-solid:dharmachakra"
 order: 3
-updated: "2026-05-22"
+updated: "2026-09-24"
 ---
 
 ## How Ingress TLS works
@@ -76,5 +76,10 @@ automatically (some reload within seconds; a few need a pod restart).
 CertMate isn't a Kubernetes controller — for in-cluster-only TLS, cert-manager
 is the better fit. CertMate is for teams that need **one** control plane for
 certificates that span Kubernetes *and* everything outside it (edge LBs, VMs,
-bare metal). Its deploy hooks can run the `kubectl create secret … | apply`
-above on renewal, so a single audited system keeps both worlds in sync.
+bare metal). Its Kubernetes Secret deploy target writes the renewed
+`fullchain.pem` and `privkey.pem` into a `kubernetes.io/tls` Secret with
+Server-Side Apply at issuance and every renewal, using a service-account token
+or, when CertMate runs in the cluster, its mounted service account, so a single
+audited system keeps both worlds in sync. A shell deploy hook runs inside the
+CertMate container, which has no `kubectl`, so the command above belongs in a
+job of your own rather than in a hook.

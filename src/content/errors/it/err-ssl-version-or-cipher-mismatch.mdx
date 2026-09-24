@@ -5,7 +5,7 @@ description: "Risolvi ERR_SSL_VERSION_OR_CIPHER_MISMATCH — browser e server no
 summary: "Browser e server non hanno alcuna versione TLS o cipher suite in comune, quindi l'handshake non può procedere — tipicamente una configurazione server obsoleta o un protocollo deprecato."
 browsers: ["Chrome", "Edge", "Brave", "Chromium"]
 order: 6
-updated: "2026-05-22"
+updated: "2026-09-24"
 ---
 
 ## Cosa significa
@@ -55,7 +55,7 @@ di sicurezza TLS attuale invece di una legacy.
 
 Questo errore è un problema di deriva della configurazione: un endpoint lasciato
 su una policy vecchia. Emettere certificati moderni (CertMate usa per default
-ECDSA P-256 o RSA-2048+) e distribuire una configurazione coerente ovunque
+RSA-2048, con ECDSA P-256 o P-384 disponibili per certificato) e distribuire una configurazione coerente ovunque
 evita che gli endpoint ricadano in silenzio su un profilo che i browser non
 accettano più.
 
