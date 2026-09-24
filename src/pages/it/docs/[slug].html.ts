@@ -4,7 +4,7 @@
  * Each declares the English page with the same slug as its hreflang pair.
  */
 import type { APIRoute } from 'astro';
-import { DOC_PAGES_IT, DOC_READING_ORDER, docAlternates, docUrl, type DocPage } from '../../../data/docs';
+import { DOC_PAGES_IT, DOC_READING_ORDER_SLUGS, docAlternates, docUrl, type DocPage } from '../../../data/docs';
 import { ogImageFor } from '~/lib/og';
 import { buildHead } from '../../../lib/seo';
 import { applyShell } from '~/lib/docs-shell';
@@ -47,7 +47,7 @@ function breadcrumb(page: DocPage) {
 // Previous and next among the Italian pages, in the English index's reading
 // order; each title is the Italian page's own.
 function neighbours(slug: string) {
-  const order = DOC_READING_ORDER.filter((s) => DOC_PAGES_IT.some((p) => p.slug === s));
+  const order = DOC_READING_ORDER_SLUGS.filter((s) => DOC_PAGES_IT.some((p) => p.slug === s));
   const i = order.indexOf(slug);
   if (i === -1) return {};
   const link = (s: string | undefined) => {

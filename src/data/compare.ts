@@ -112,7 +112,7 @@ const ROWS: Record<Key, { label: Text; cells: Partial<Record<Tool, Text>> }> = {
   dnsProviders: {
     label: { en: 'DNS-01 providers', it: 'Provider DNS-01' },
     cells: {
-      certmate: `${PROVIDER_COUNT}`,
+      certmate: String(PROVIDER_COUNT),
       certManager: { en: '8 built in, more via webhooks', it: '8 integrati, altri via webhook' },
       caddy: { en: '90+ (caddy-dns modules)', it: '90+ (moduli caddy-dns)' },
       traefik: '200+ (lego)',
@@ -145,7 +145,12 @@ const ROWS: Record<Key, { label: Text; cells: Partial<Record<Tool, Text>> }> = {
   },
   mcp: {
     label: { en: 'MCP server (LLM / agent operations)', it: 'Server MCP (LLM / agenti)' },
-    cells: { certmate: { en: 'Yes (first-party)', it: 'Sì (ufficiale)' }, certManager: no, caddy: no, acmeShLego: no },
+    cells: {
+      certmate: { en: 'Yes (first-party)', it: 'Sì (ufficiale)' },
+      certManager: no,
+      caddy: no,
+      acmeShLego: no,
+    },
   },
   multiAccount: {
     label: { en: 'Multi-account per DNS provider', it: 'Più account per provider DNS' },
@@ -204,17 +209,41 @@ const ROWS: Record<Key, { label: Text; cells: Partial<Record<Tool, Text>> }> = {
 
 export const HOME_VIEW = {
   tools: ['certmate', 'certManager', 'caddy', 'acmeShLego'] as Tool[],
-  rows: ['webUi', 'restApi', 'mcp', 'multiAccount', 'storage', 'oidc', 'audit', 'dnsProviders', 'outsideK8s', 'license'] as Key[],
+  rows: [
+    'webUi',
+    'restApi',
+    'mcp',
+    'multiAccount',
+    'storage',
+    'oidc',
+    'audit',
+    'dnsProviders',
+    'outsideK8s',
+    'license',
+  ] as Key[],
 };
 
 export const PAGE_VIEW = {
   tools: ['certmate', 'certManager', 'caddy', 'traefik', 'certbot'] as Tool[],
-  rows: ['formFactor', 'outsideK8s', 'webUi', 'restApi', 'otherHosts', 'dnsProviders', 'multiCa', 'rbac', 'license'] as Key[],
+  rows: [
+    'formFactor',
+    'outsideK8s',
+    'webUi',
+    'restApi',
+    'otherHosts',
+    'dnsProviders',
+    'multiCa',
+    'rbac',
+    'license',
+  ] as Key[],
 };
 
 const say = (t: Text, locale: Locale) => (typeof t === 'string' ? t : t[locale]);
 
-/** The table for one view, in one language. A view asking for a cell the data does not have fails the build. */
+/**
+ * The table for one view, in one language. A view asking for a cell the data
+ * does not have fails the build.
+ */
 export function compareTable(view: { tools: Tool[]; rows: Key[] }, locale: Locale) {
   return {
     columns: view.tools.map((tool) => TOOL_NAMES[tool]),

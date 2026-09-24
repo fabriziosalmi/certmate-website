@@ -19,7 +19,7 @@
  * are replaced by the site's (src/lib/docs-shell.ts).
  */
 import type { APIRoute } from 'astro';
-import { DOC_CARDS, DOC_GROUPS, DOC_PAGES, DOC_PAGES_IT, DOC_READING_ORDER, docAlternates, docUrl, type DocPage } from '../../data/docs';
+import { DOC_CARDS, DOC_GROUPS, DOC_PAGES, DOC_PAGES_IT, DOC_READING_ORDER_SLUGS, docAlternates, docUrl, type DocPage } from '../../data/docs';
 import { applyShell, renderDocsIndex } from '~/lib/docs-shell';
 import { ogImageFor } from '~/lib/og';
 import { buildHead } from '../../lib/seo';
@@ -61,10 +61,10 @@ function breadcrumb(page: DocPage) {
 
 // Previous and next in the index's reading order; the index itself has none.
 function neighbours(slug: string) {
-  const i = DOC_READING_ORDER.indexOf(slug);
+  const i = DOC_READING_ORDER_SLUGS.indexOf(slug);
   if (i === -1) return {};
   const link = (s: string | undefined) => (s ? { href: `${s}.html`, title: DOC_CARDS[s].name } : undefined);
-  return { prev: link(DOC_READING_ORDER[i - 1]), next: link(DOC_READING_ORDER[i + 1]) };
+  return { prev: link(DOC_READING_ORDER_SLUGS[i - 1]), next: link(DOC_READING_ORDER_SLUGS[i + 1]) };
 }
 
 export const GET: APIRoute = ({ props }) => {

@@ -67,7 +67,7 @@ export const NAV_LINKS: { key: Key; href: Record<NavLocale, string> }[] = [
 // Leaving the site. The agent and the tools are listed in the footer and in
 // the home's Ecosystem section; the header keeps the two a first-time visitor
 // looks for.
-export const NAV_EXTERNAL: { key: Key; href: string; icon?: string }[] = [
+export const NAV_EXTERNAL_LINKS: { key: Key; href: string; icon?: string }[] = [
   { key: 'demo', href: 'https://demo.certmate.org' },
   { key: 'github', href: 'https://github.com/fabriziosalmi/certmate', icon: 'fa6-brands:github' },
 ];
@@ -92,9 +92,17 @@ export interface FooterLink {
 export const FOOTER_BLURB =
   'Self-hosted TLS certificate management with a tamper-evident, verifiable audit trail. MIT-licensed.';
 
-export const FOOTER_SOCIAL = [
-  { label: 'CertMate on GitHub', href: 'https://github.com/fabriziosalmi/certmate', icon: 'fa6-brands:github' },
-  { label: 'CertMate on Docker Hub', href: 'https://hub.docker.com/r/fabriziosalmi/certmate', icon: 'fa6-brands:docker' },
+export const FOOTER_SOCIAL_LINKS = [
+  {
+    label: 'CertMate on GitHub',
+    href: 'https://github.com/fabriziosalmi/certmate',
+    icon: 'fa6-brands:github',
+  },
+  {
+    label: 'CertMate on Docker Hub',
+    href: 'https://hub.docker.com/r/fabriziosalmi/certmate',
+    icon: 'fa6-brands:docker',
+  },
 ];
 
 export const FOOTER_COLUMNS: { title: string; links: FooterLink[] }[] = [
@@ -128,8 +136,16 @@ export const FOOTER_COLUMNS: { title: string; links: FooterLink[] }[] = [
   {
     title: 'Legal',
     links: [
-      { label: 'MIT License', href: 'https://github.com/fabriziosalmi/certmate/blob/main/LICENSE', external: true },
-      { label: 'Code of Conduct', href: 'https://github.com/fabriziosalmi/certmate/blob/main/CODE_OF_CONDUCT.md', external: true },
+      {
+        label: 'MIT License',
+        href: 'https://github.com/fabriziosalmi/certmate/blob/main/LICENSE',
+        external: true,
+      },
+      {
+        label: 'Code of Conduct',
+        href: 'https://github.com/fabriziosalmi/certmate/blob/main/CODE_OF_CONDUCT.md',
+        external: true,
+      },
       { label: 'Privacy & legal', href: '/privacy/' },
     ],
   },
