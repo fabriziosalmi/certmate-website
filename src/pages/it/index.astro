@@ -75,9 +75,9 @@ const sections = [
           href={s.href}
           class="flex h-full items-start gap-3 rounded-lg border border-gray-200 p-4 transition-colors hover:border-primary dark:border-gray-700"
         >
-          <Icon name={s.icon} class="mt-0.5 text-xl text-primary" />
+          <Icon name={s.icon} class="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
           <span>
-            <span class="font-semibold text-gray-900 dark:text-white">{s.title}</span>
+            <span class="block font-semibold leading-snug text-gray-900 dark:text-white">{s.title}</span>
             <span class="mt-1 block text-sm text-gray-600 dark:text-gray-300">{s.body}</span>
             <span class="mt-2 block text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{s.count}</span>
           </span>
