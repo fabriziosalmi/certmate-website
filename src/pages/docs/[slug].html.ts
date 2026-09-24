@@ -19,7 +19,16 @@
  * are replaced by the site's (src/lib/docs-shell.ts).
  */
 import type { APIRoute } from 'astro';
-import { DOC_CARDS, DOC_GROUPS, DOC_PAGES, DOC_PAGES_IT, DOC_READING_ORDER_SLUGS, docAlternates, docUrl, type DocPage } from '../../data/docs';
+import {
+  DOC_CARDS,
+  DOC_GROUPS,
+  DOC_PAGES,
+  DOC_PAGES_IT,
+  DOC_READING_ORDER_SLUGS,
+  docAlternates,
+  docUrl,
+  type DocPage,
+} from '../../data/docs';
 import { applyShell, renderDocsIndex } from '~/lib/docs-shell';
 import { ogImageFor } from '~/lib/og';
 import { buildHead } from '../../lib/seo';
