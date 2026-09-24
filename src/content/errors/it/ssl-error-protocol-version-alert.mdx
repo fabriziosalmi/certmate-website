@@ -1,0 +1,120 @@
+---
+title: "SSL_ERROR_PROTOCOL_VERSION_ALERT"
+errorCode: "SSL_ERROR_PROTOCOL_VERSION_ALERT"
+description: "Risolvi SSL_ERROR_PROTOCOL_VERSION_ALERT di Firefox: il server rifiuta ogni versione TLS offerta. Massimo del browser abbassato, server vecchi, middlebox."
+summary: "Il server ha inviato un alert protocol_version: nessuna delle versioni TLS offerte da Firefox è una che accetta. O l'intervallo di Firefox è stato ristretto, o il server è troppo vecchio."
+browsers: ["Firefox"]
+order: 22
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+Firefox segnala `SSL_ERROR_PROTOCOL_VERSION_ALERT` con il messaggio *"Il peer
+segnala una versione del protocollo incompatibile o non supportata."* La pagina
+di errore aggiunge: *"Questo sito web non supporta il protocollo TLS 1.2, la
+versione minima utilizzata da Firefox."*
+
+La parola che conta è *segnala*. Firefox ha inviato il suo ClientHello e il
+server ha risposto con un alert TLS di tipo `protocol_version`: nell'offerta di
+Firefox non ha trovato nessuna versione che fosse disposto a usare, e ha chiuso
+la connessione. Firefox solleva questo errore quando riceve quell'alert. Il
+rifiuto è del server.
+
+È questa la differenza con `SSL_ERROR_UNSUPPORTED_VERSION`, dove il server
+sceglie una versione e Firefox la rifiuta. E si distingue anche da
+`SSL_ERROR_NO_CYPHER_OVERLAP`, dove il disaccordo riguarda le suite di
+cifratura.
+
+<Handshake
+  caption="Dove viene sollevato SSL_ERROR_PROTOCOL_VERSION_ALERT"
+  steps={[
+    { from: 'Firefox', to: 'Server', label: 'ClientHello con le versioni che Firefox ha abilitato' },
+    { from: 'Server', label: 'Tra le versioni offerte non ne trova nessuna delle proprie' },
+    { from: 'Server', to: 'Firefox', label: 'Alert: protocol_version' },
+    { from: 'Firefox', label: "Riceve l'alert: connessione chiusa (SSL_ERROR_PROTOCOL_VERSION_ALERT)", fails: true },
+  ]}
+/>
+
+## Cause comuni
+
+- **Il massimo di Firefox è stato abbassato.** Con `security.tls.version.max`
+  impostato a `3` (TLS 1.2) in `about:config`, oppure dalla policy aziendale
+  `SSLVersionMax`, Firefox non offre più TLS 1.3. Un server configurato solo
+  per TLS 1.3 non ha niente su cui accordarsi. Il massimo predefinito è `4`,
+  TLS 1.3. Se fallisce un browser e gli altri no, è la prima cosa da
+  controllare.
+- **Un server vecchio che rifiuta invece di negoziare al ribasso.** Un server
+  che arriva al massimo a TLS 1.0 o 1.1 dovrebbe rispondere con quella
+  versione, e in quel caso l'errore è `SSL_ERROR_UNSUPPORTED_VERSION`. Alcune
+  implementazioni invece rispondono all'offerta di una versione più recente con
+  l'alert. Il codice di connessione di Firefox stesso elenca questo alert tra i
+  segnali di un server che non regge le versioni TLS più recenti.
+- **Un dispositivo davanti al server.** Un bilanciatore, un proxy o un firewall
+  di ispezione che termina TLS risponde con la propria policy di versioni, non
+  con quella del server.
+
+Di serie Firefox non riprova con una versione più bassa:
+`security.tls.version.fallback-limit` vale `4` e non lascia niente di più basso
+a cui ripiegare.
+
+## Come risolverlo
+
+**1. Chiedi al server con quali versioni completa un handshake:**
+
+```bash
+for v in tls1 tls1_1 tls1_2 tls1_3; do
+  printf '%-9s ' "$v"
+  echo | openssl s_client -connect example.com:443 -servername example.com -"$v" 2>&1 \
+    | grep -q 'Cipher is [A-Z]' && echo accepted || echo refused
+done
+```
+
+- Solo `tls1_3` risulta `accepted`: il server è solo TLS 1.3, e il browser che
+  fallisce quasi certamente non offre TLS 1.3. Vai al passo 2.
+- Né `tls1_2` né `tls1_3` risultano `accepted`: la causa è il server, o il
+  dispositivo che gli sta davanti. Vai al passo 3.
+
+Molte build recenti di OpenSSL non offrono affatto TLS 1.0 o 1.1, quindi
+`refused` accanto a quei due può voler dire che è stata la tua macchina a non
+chiedere.
+
+**2. Controlla il browser.** Apri `about:config` e cerca
+`security.tls.version`. Un `security.tls.version.max` modificato e inferiore a
+`4` è la causa. Quando una qualsiasi preferenza `security.tls.version.*`,
+`security.ssl3.*` o `security.tls13.*` ha un valore cambiato, la pagina di
+errore propone **Ripristina impostazioni predefinite**. Un valore impostato da
+una policy aziendale è bloccato e va cambiato nella policy. Anche in questo
+caso la pagina mostra lo stesso avviso su TLS 1.2, benché il problema non sia
+il server.
+
+**3. Correggi il server.** Abilita TLS 1.2 e 1.3. Su nginx:
+
+```nginx
+ssl_protocols TLSv1.2 TLSv1.3;
+```
+
+Su un bilanciatore o una CDN gestiti, scegli una policy TLS attuale. Se davanti
+al server c'è un dispositivo che termina TLS, è la sua configurazione a
+rispondere al browser, ed è quella da cambiare.
+
+## Evitare che si ripresenti
+
+Quando la causa è una preferenza del browser, niente lato server può vederla,
+CertMate compreso.
+
+Quando la causa è il server, la condizione è la stessa di
+`SSL_ERROR_UNSUPPORTED_VERSION`: un host che non sa fare TLS 1.2. Le sonde di
+CertMate richiedono TLS 1.2, quindi un host del genere compare nell'inventario
+come `unreachable` con un `tls_error`. Il controllo opzionale `weak_tls`,
+disponibile dalla v2.34.0, va oltre e segna un host come `failing` finché
+accetta ancora TLS 1.0 o 1.1 accanto alle versioni più recenti. È spento di
+serie; per attivarlo vedi [Domain health](/docs/domain-health.html).
+
+## Errori correlati
+
+- `SSL_ERROR_UNSUPPORTED_VERSION`: il server ha scelto una versione e Firefox l'ha rifiutata.
+- `SSL_ERROR_NO_CYPHER_OVERLAP`: nessuna suite di cifratura in comune.
+- `ERR_SSL_VERSION_OR_CIPHER_MISMATCH`: il codice Chromium per i disaccordi di versione e di cifratura.
+- `ERR_SSL_PROTOCOL_ERROR`: un errore di handshake Chromium più generico.
