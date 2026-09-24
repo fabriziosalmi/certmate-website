@@ -163,7 +163,22 @@
 
             <h3>Signing</h3>
             <p>The instance holds an Ed25519 key. On first run it is generated and stored as <code>data/.audit_signing_key</code> with mode 0600; <code>AUDIT_SIGNING_KEY_FILE</code> points CertMate at a key kept elsewhere. If that variable is set but the file cannot be read, or the stored key is corrupt, signing is disabled rather than a new key being generated, and the unsigned chain keeps working.</p>
-            <p>Every 100 chain entries, the chain head is signed and appended to <code>data/audit/certificate_audit.checkpoints.jsonl</code>.</p>
+            <p>Every 100 chain entries, the chain head is signed and appended to <code>data/audit/certificate_audit.checkpoints.jsonl</code>. Since v2.35.0 the head is also signed on a clean shutdown, as the last step after pending events have been delivered, so the entries written since the last periodic checkpoint, including any written while shutting down, are covered. A crash, a <code>SIGKILL</code> or a power loss stops before that step; see <a href="#limits-of-the-evidence">Limits of the Evidence</a>.</p>
+
+            <h2 id="searching-the-log">Searching the Log</h2>
+            <p><code>GET /api/activity</code> (viewer and above) returns the most recent entries, newest first. <code>limit</code> defaults to 100 and is bounded to 1&ndash;500.</p>
+            <p>Since v2.35.0 it can be narrowed by any of <code>operation</code>, <code>resource_type</code>, <code>resource_id</code>, <code>user</code> and <code>status</code>. A filter is not applied to the tail an unfiltered call returns: the search walks backwards through the log until it has <code>limit</code> matches or reaches the start, so old entries are found.</p>
+            <pre><code># Which users were created while the instance was still in setup mode?
+curl -H "Authorization: Bearer $TOKEN" \
+  "https://certmate.example.com/api/activity?operation=create&amp;resource_type=user&amp;user=setup_user"</code></pre>
+            <p>The response carries <code>entries</code>, <code>count</code>, <code>limit</code>, <code>complete</code>, and <code>filters</code> when one was given. <code>complete</code> says how to read the result:</p>
+            <ul>
+                <li><code>complete: true</code> with no entries: the search reached the start of the log and there are none.</li>
+                <li><code>complete: true</code> with entries: these are all of them.</li>
+                <li><code>complete: false</code> with entries: the search stopped at <code>limit</code> matches, and there may be older ones.</li>
+                <li><code>complete: false</code> with no entries: the log could not be read. This does not mean there are none.</li>
+            </ul>
+            <p>An unfiltered call always reports <code>complete: true</code>.</p>
 
             <h2>Verifying the Chain</h2>
             <h3>On the instance</h3>
@@ -206,6 +221,7 @@ python -m modules.core.audit_verify --bundle bundle.json --pubkey instance.pem</
                 <li><code>protocol</code>: <code>udp</code> or <code>tcp</code>, for <code>syslog</code> and <code>cef</code>, sent to <code>host</code>:<code>port</code>.</li>
             </ul>
             <p>Entries pass through the credential sanitizer before they leave the process. A send error is logged as a warning and never breaks audit logging or the certificate operation.</p>
+            <p>Since v2.35.0 the weekly summary digest is itself an audit entry, so it is in the chain and reaches the sink like any other: <code>operation</code> <code>send</code>, <code>resource_type</code> <code>digest</code>, <code>resource_id</code> <code>weekly</code>, <code>status</code> <code>success</code> or <code>failed</code> (with the error), attributed to <code>actor.kind</code> <code>system</code>. It records how many recipients the digest was for and the counts it reported, not the recipients themselves: they are personal data, and an append-only chain cannot take them back out. A digest skipped because notifications, SMTP or the digest are turned off writes no entry.</p>
 
             <h2>Regime Mapping</h2>
             <h3>NIS2 (Directive (EU) 2022/2555)</h3>
@@ -220,12 +236,13 @@ python -m modules.core.audit_verify --bundle bundle.json --pubkey instance.pem</
             <p>What it helps with: the attributed, tamper-evident records are objective evidence that an AI agent took specific certificate actions, usable for the operational-records and traceability controls of the operator's own AIMS.</p>
             <p>Limit: ISO/IEC 42001 certifies an organisation's management system, not a tool. CertMate is not certified to ISO/IEC 42001 and cannot certify the operator.</p>
 
-            <h2>Limits of the Evidence</h2>
+            <h2 id="limits-of-the-evidence">Limits of the Evidence</h2>
             <ul>
                 <li>The key does not bind the operator. Whoever holds the signing key can re-sign a rewritten chain, checkpoint or anchor. Constraining the operator needs signed checkpoints shipped to an external append-only sink; that is planned and not shipped.</li>
                 <li>Authenticity, not completeness. Audit writes are best-effort and never block a certificate operation. A missing interior <code>seq</code> proves a deletion, but a write that failed before it was recorded leaves nothing to verify.</li>
-                <li>Tail truncation is caught only down to the last checkpoint. Entries written after the newest signed checkpoint can be dropped undetected until the next checkpoint seals them. Keep successive signed exports if you need to close that gap.</li>
+                <li>Tail truncation is caught only down to the last checkpoint. A clean shutdown signs the tail, so an instance that stops normally leaves nothing unattested. After a crash, a <code>SIGKILL</code> or a power loss, the entries written since the newest signed checkpoint can be dropped undetected until the next checkpoint seals them. Keep successive signed exports if you need to close that gap.</li>
                 <li>The agent-session header is a claim. It is recorded for correlation; the authenticated API key is the identity.</li>
+                <li>Bootstrap actions are attributed to <code>setup_user</code>. Until setup is complete the instance serves every request as admin, so there is no real identity to record. An entry with <code>operation</code> <code>create</code>, <code>resource_type</code> <code>user</code> and <code>user</code> <code>setup_user</code> means that user was created while anyone who could reach the instance was an admin. Since v2.34.0 setup mode creates only the first admin: a further user or an API key is refused with <code>409 SETUP_BOOTSTRAP_ONLY</code>, and the refusal is audited. Exactly one such entry is therefore expected. More than one means the instance was bootstrapped under an older version, and every user beyond the first is worth confirming or removing. API keys created in that window are flagged on the API Keys page until an operator reviews them; users are not flagged, and the chain is where the answer for them is. <a href="#searching-the-log">Searching the Log</a> shows the query.</li>
                 <li>History boundary. The chain starts when the feature is first enabled. Earlier <code>.log</code> history is not part of it.</li>
                 <li>A pruned chain proves less. After a prune, verification covers entries from the anchor forward, and both the API and the verifier report <code>anchored</code> and the anchor <code>seq</code> instead of a plain "intact".</li>
             </ul>
@@ -242,7 +259,8 @@ python -m modules.core.audit_verify --bundle archive-0-1199.json --pubkey instan
 # 3. Store the archive, then, with CertMate stopped:
 python -m modules.core.audit_prune --bundle archive-0-1199.json --data-dir data/audit
 python -m modules.core.audit_prune --bundle archive-0-1199.json --data-dir data/audit --yes</code></pre>
-            <p>Without <code>--yes</code> the command prints the plan and changes nothing. It refuses, and removes nothing, if the bundle does not verify, is unsigned, is empty, does not start where the chain starts, disagrees with the chain at any <code>seq</code>, or would leave the chain empty. <code>--data-dir</code> defaults to <code>data/audit</code> and <code>--key-dir</code>, the directory holding <code>.audit_signing_key</code>, defaults to <code>data</code>. Point <code>--key-dir</code> at the instance's real key; the anchor must be signed by it.</p>
+            <p>Without <code>--yes</code> the command prints the plan and changes nothing. It refuses, and removes nothing, if the bundle does not verify, is unsigned, is empty, does not start where the chain starts, disagrees with the chain at any <code>seq</code>, or would leave the chain empty. <code>--data-dir</code> defaults to <code>data/audit</code> and <code>--key-dir</code>, the directory holding <code>.audit_signing_key</code>, defaults to <code>data</code>, relative to the directory you run the command from. If <code>AUDIT_SIGNING_KEY_FILE</code> is set, that file is used instead, as on the instance.</p>
+            <p>With <code>--yes</code>, it also refuses if no signing key is found there, or if the key belongs to a different instance from the one that exported the bundle. Both are checked before anything is removed. The tool never creates a key: a new key would be a new instance identity, and an anchor signed with it would fail the instance's own verification.</p>
             <p>A prune:</p>
             <ul>
                 <li>appends an <code>archive</code> entry to the chain that survives, recording the archived seq range, the entry count, their head hash and the SHA-256 of the archive file;</li>

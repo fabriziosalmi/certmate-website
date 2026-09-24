@@ -138,6 +138,7 @@ docker exec certmate tail -n 50 /app/logs/audit/certificate_audit.log</code></pr
             <p><code>/health</code> always answers 200 while the process serves requests. Its <code>status</code> field is <code>healthy</code> or <code>degraded</code>, and <code>checks</code> covers the scheduler, certbot, the certificate directory and free disk space. <code>/health/ready</code> answers 503 when the renewal scheduler is not running or certbot failed its probe.</p>
             <pre><code>curl -s http://localhost:8000/health
 curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8000/health/ready</code></pre>
+            <p>When you report a problem, include the version you are running. It is in the footer of every page of the web UI, and in the <code>version</code> field of <code>/health</code>.</p>
 
             <h2>Debug Logging</h2>
             <p>In the container, set <code>CERTMATE_LOG_LEVEL=DEBUG</code> and restart. <code>LOG_LEVEL</code> is not read. When you run <code>python app.py</code> directly, use the flag instead: <code>--log-level</code> defaults to <code>INFO</code> and overrides the variable.</p>
@@ -161,7 +162,16 @@ chmod -R g+rwX ./{certificates,data,logs,backups}</code></pre>
             </ul>
 
             <h2>Certificate Creation Fails</h2>
-            <p>A failed certbot run returns HTTP 422 with code <code>CERTIFICATE_CREATION_FAILED</code>, certbot's output with credentials removed, and a <code>hint</code>. The full stderr is logged on a line starting <code>Certbot failed for &lt;domain&gt;:</code>. If a CAA record forbids the CA, the error says so.</p>
+            <p>A failed certbot run returns HTTP 422 with code <code>CERTIFICATE_CREATION_FAILED</code>, an <code>error</code> that reads <code>Certificate creation failed: </code> followed by certbot's output with credentials removed, and a <code>hint</code>. The same redacted output is logged on a line starting <code>Certbot failed for '&lt;domain&gt;':</code>. If a CAA record forbids the CA, the error says so.</p>
+            <p>A request refused before certbot runs returns HTTP 400, also with code <code>CERTIFICATE_CREATION_FAILED</code>; the <code>error</code> says what is missing.</p>
+            <h3>CA not configured</h3>
+            <p>Since v2.35.0, a certificate requested from a CA whose configuration or account cannot be loaded is refused, not issued by a different CA. The request returns HTTP 400 with an error that starts:</p>
+            <pre><code>CA provider '&lt;ca&gt;' is not configured on this instance, and issuing from a different CA is not a substitute for the one you asked for.</code></pre>
+            <p>and the hint <code>Configure that CA under Settings &gt; Certificate Authority providers, or request a CA that is already configured.</code> Let's Encrypt and "Let's Encrypt (Staging)" need no saved configuration and are not refused. A reissue whose CA, named in the request or kept from the certificate, is not configured returns 400 with code <code>CERTIFICATE_REISSUE_REJECTED</code> and the same error.</p>
+            <h3>ACME directory URL must use https</h3>
+            <p>Since v2.35.0, an ACME directory URL configured on a CA account must use <code>https</code>. Issuing from an account whose URL is <code>http://</code> returns HTTP 400 with an error of the form:</p>
+            <pre><code>&lt;CA name&gt; ACME Directory URL must use https. A directory fetched over plain HTTP cannot be trusted to be the one you meant.</code></pre>
+            <p>A URL without a scheme gets <code>Invalid &lt;CA name&gt; ACME Directory URL format</code> instead. Change the URL on the CA account in Settings to its <code>https://</code> form.</p>
             <h3>Provider account not configured</h3>
             <p><code>DNS provider '&lt;provider&gt;' account '&lt;id&gt;' not configured</code> returns HTTP 400 before certbot runs. Add the account, or fix its credentials, in Settings, then try again.</p>
             <h3>The TXT record is not visible in time</h3>
@@ -173,7 +183,7 @@ chmod -R g+rwX ./{certificates,data,logs,backups}</code></pre>
             <h2>Rate Limits and HTTP 429</h2>
             <p>Check which limit answered before you retry.</p>
             <ul>
-                <li><strong>The certificate authority's limit.</strong> A renewal the CA refused returns HTTP 422 with code <code>ACME_RATE_LIMITED</code>. Retrying makes it worse: wait, or use a different ACME account. The CA's own text in the log names the limit and when it resets. Hits are counted in <code>certmate_acme_rate_limit_hits_total</code>. Test against the "Let's Encrypt (Staging)" CA entry.</li>
+                <li><strong>The certificate authority's limit.</strong> A renewal the CA refused returns HTTP 422 with code <code>ACME_RATE_LIMITED</code>. A new certificate the CA refused returns HTTP 422 with code <code>CERTIFICATE_CREATION_FAILED</code> and the hint <code>You've hit the certificate authority's rate limit. Wait before trying again.</code> Retrying makes it worse: wait, or use a different ACME account. The CA's own text in the log names the limit and when it resets. Hits are counted in <code>certmate_acme_rate_limit_hits_total</code>. Test against the "Let's Encrypt (Staging)" CA entry.</li>
                 <li><strong><code>ISSUANCE_QUEUE_FULL</code></strong> (429): more jobs are queued or running than <code>CERTMATE_ISSUANCE_QUEUE_LIMIT</code> (default 20).</li>
                 <li><strong><code>Rate limit exceeded</code></strong> (429, <code>retry_after: 60</code>) is CertMate's own per-client API limit.</li>
                 <li><strong><code>Too many attempts. Please try again later.</code></strong> (429, with a <code>Retry-After</code> header) is the login limit.</li>

@@ -150,7 +150,7 @@
             <h3>Share-safe and disaster-recovery archives</h3>
             <p>Every backup is one of two kinds, recorded in the manifest as <code>secrets_masked</code> and <code>key_material_excluded</code>:</p>
             <ul>
-                <li><strong>Share-safe</strong> (the default): every credential in the settings is replaced with a mask, and no private key is included: no <code>privkey*</code> files, no ACME account <code>private_key.json</code>, no <code>.key</code>, <code>.pfx</code> or <code>.p12</code> files, and nothing under a <code>keys/</code> directory. It cannot restore an instance on its own.</li>
+                <li><strong>Share-safe</strong> (the default): every credential in the settings is replaced with a mask, and no private key is included: no <code>privkey*</code> files, no ACME account <code>private_key.json</code>, no <code>.key</code>, <code>.pfx</code> or <code>.p12</code> files, and nothing under a <code>keys/</code> directory. It cannot restore an instance on its own, because the credentials are not in it. Restored onto an instance with no certificates, it still brings back the domains, deploy hooks, the inventory and the audit chain; the certificates come back without their private keys, and the credentials must be re-entered.</li>
                 <li><strong>Disaster recovery</strong> (<code>include_secrets: true</code>): plaintext settings and every key. This is the archive that can rebuild an instance.</li>
             </ul>
 
@@ -177,7 +177,7 @@
             <ul>
                 <li><strong>Create Unified Backup</strong> takes a manual backup. It does not send <code>include_secrets</code>, so the result is share-safe.</li>
                 <li><strong>Restore From Elsewhere</strong> uploads an archive you kept off the host. Uploading only stores it.</li>
-                <li><strong>Existing Backups</strong> lists each archive with download, restore and delete buttons. An archive that cannot restore is marked <em>cannot restore</em> with the reason, and its restore button is disabled.</li>
+                <li><strong>Existing Backups</strong> lists each archive with download, restore and delete buttons. An archive that cannot restore is marked <em>cannot restore</em> with the reason, and its restore button is disabled. For a share-safe archive the reason says what it can still do onto an instance with no certificates; that restore is done through the API.</li>
             </ul>
 
             <h2>Using the API</h2>
@@ -186,7 +186,7 @@
             <h3>List backups</h3>
             <pre><code>curl -H "Authorization: Bearer $API_TOKEN" \
   http://localhost:8000/api/backups</code></pre>
-            <p>The response is <code>{"unified": [...]}</code>. Each entry has <code>filename</code>, <code>can_restore</code>, <code>restore_blocked_reason</code>, <code>contains_key_material</code>, <code>key_file_count</code> and <code>metadata</code>. An encrypted archive on an instance without the passphrase is reported as <code>can_restore: false</code>.</p>
+            <p>The response is <code>{"unified": [...]}</code>. Each entry has <code>filename</code>, <code>can_restore</code>, <code>restore_blocked_reason</code>, <code>contains_key_material</code>, <code>key_file_count</code> and <code>metadata</code>. An encrypted archive on an instance without the passphrase is reported as <code>can_restore: false</code>. <code>can_restore</code> answers whether the archive can bring this instance back, not whether the restore endpoint accepts the file: a share-safe archive is <code>can_restore: false</code>, and its <code>restore_blocked_reason</code> says what restoring it onto an instance with no certificates still returns.</p>
 
             <h3>Create a backup</h3>
             <pre><code>curl -X POST http://localhost:8000/api/backups/create \
@@ -217,7 +217,7 @@
                 <li><strong>Decryption.</strong> A <code>.zip.enc</code> archive is decrypted with <code>CERTMATE_BACKUP_PASSPHRASE</code>. A missing or wrong passphrase fails the restore.</li>
                 <li><strong>Share-safe archive over existing certificates.</strong> Refused with <code>409</code>, because it would leave certificates next to private keys that do not match them.</li>
                 <li><strong>Deploy hooks.</strong> The restored <code>deploy_hooks</code> are checked with the same validator used when saving settings. If they fail, the restore is aborted before anything is written.</li>
-                <li><strong>Settings.</strong> <code>settings.json</code> is replaced. For a masked archive restored where a settings file already exists, the credentials already on disk are kept. On a fresh install they stay masked and must be re-entered before the next renewal.</li>
+                <li><strong>Settings.</strong> <code>settings.json</code> is replaced. For a share-safe archive, fields holding the mask are dropped before the settings are written. Where a settings file already exists, the credentials already on disk are kept. On a fresh install the settings come back without those credentials, not with the mask in their place, and the DNS, storage and SMTP credentials must be re-entered before the next renewal.</li>
                 <li><strong>Files.</strong> Files under <code>certificates/</code> and <code>data/</code> are extracted one by one, each replacing its target only once fully written. Private keys and everything under <code>data/</code> are written <code>0600</code>, public certificate files <code>0644</code>. Only the <code>certs</code>, <code>audit</code> and <code>inventory</code> subtrees of <code>data/</code> are accepted. Certbot's <code>live/</code> symlinks are rebuilt for each restored domain.</li>
                 <li><strong>Partial failure.</strong> If any file cannot be extracted, the response is <code>500</code> and names the failed files in <code>failed</code>. Those files keep their previous content. Roll back with the pre-restore backup.</li>
             </ul>

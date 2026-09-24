@@ -58,7 +58,7 @@ export const DOC_PAGES: DocPage[] = [
     slug: 'api-reference',
     title: 'API Reference - CertMate Documentation',
     description:
-      'The CertMate REST API: bearer-token authentication, the certificate, backup, storage and settings endpoints, and a curl example for each.',
+      'The CertMate REST API: authentication, contract version, certificate, backup, storage, settings and activity endpoints, with curl examples.',
   },
   {
     slug: 'docker-deployment',
@@ -76,7 +76,7 @@ export const DOC_PAGES: DocPage[] = [
     slug: 'storage-backends',
     title: 'Storage Backends - CertMate Documentation',
     description:
-      'Where CertMate stores certificates and keys: local layout, the settings each remote backend needs, Azure Key Vault modes, fallback, and API migration.',
+      "Where CertMate stores certificates and keys: local layout and CERTMATE_CERT_DIR, each remote backend's settings, Azure Key Vault modes, and migration.",
   },
   {
     slug: 'security',
@@ -88,7 +88,7 @@ export const DOC_PAGES: DocPage[] = [
     slug: 'troubleshooting',
     title: 'Troubleshooting - CertMate Documentation',
     description:
-      'Diagnose CertMate by symptom: startup failures, DNS-01 errors, CA and API rate limits, 401s, lockouts, missed renewals, deploy hooks.',
+      'Diagnose CertMate by symptom: startup failures, CA and DNS-01 refusals, rate limits, 401s, lockouts, missed renewals, deploy hooks.',
   },
   {
     slug: 'contributing',
@@ -106,13 +106,13 @@ export const DOC_PAGES: DocPage[] = [
     slug: 'deploy-hooks',
     title: 'Deploy Hooks - CertMate Documentation',
     description:
-      'How CertMate deploy hooks work: hook fields, the Deploy settings tab and API, CERTMATE_* variables, maintenance windows, command validation, history.',
+      'Deploy hooks: shell commands CertMate runs inside its container after a certificate is created, renewed or revoked, with windows and validation.',
   },
   {
     slug: 'ca-providers',
     title: 'CA Providers - CertMate Documentation',
     description:
-      'The CAs CertMate issues from over ACME: keys, directories, EAB rules, what the connection test checks, per-certificate choice, reissue and private roots.',
+      'The certificate authorities CertMate issues from over ACME, Sectigo included: setup, EAB, https directories, and why an unconfigured CA is refused.',
   },
   {
     slug: 'certificate-discovery',
@@ -124,7 +124,7 @@ export const DOC_PAGES: DocPage[] = [
     slug: 'csr-certificates',
     title: 'CSR-Only Certificates - CertMate Documentation',
     description:
-      'Issue and renew certificates from a device CSR in CertMate: API and UI submission, refusals, stored files, status fields, renewal, and deploy hooks.',
+      'Issue, renew and rotate certificates from a device CSR in CertMate: API and UI submission, refusals, stored files, and key rotation through reissue.',
   },
   {
     slug: 'mcp-server',
@@ -136,13 +136,13 @@ export const DOC_PAGES: DocPage[] = [
     slug: 'compliance',
     title: 'Compliance Evidence - CertMate Documentation',
     description:
-      'Audit trail as evidence: actor attribution, SHA-256 hash chain, Ed25519 signed export, SIEM sink, prune, and the limits for NIS2, AI Act, ISO 42001.',
+      'Audit trail as evidence: actor attribution, SHA-256 hash chain, signed export, searchable log, SIEM sink, prune, and the limits for NIS2, AI Act, ISO 42001.',
   },
   {
     slug: 'domain-health',
     title: 'Domain Health - CertMate Documentation',
     description:
-      'CertMate v2.34.0 checks domain registration expiry, SPF, DMARC, MX, blocklists, HTTP headers and old TLS, and reports unknown when nobody answered.',
+      'Domain registration expiry, SPF, DMARC, MX, blocklists, headers and old TLS: what each check reports, why unknown is not clean, and the resolver.',
   },
 ];
 

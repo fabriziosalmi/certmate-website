@@ -172,7 +172,7 @@
       "min_request_interval": 2.0
     }
   }'</code></pre>
-            <p>Endpoints are parsed on save; a malformed one returns 400. The response is the effective configuration.</p>
+            <p>Endpoints are parsed on save; a malformed one returns 400. The response is the effective configuration. The same request and panel also hold <code>domain_registration</code>, <code>domain_health</code> and, since v2.35.0, <code>dns_resolver</code>, the nameservers CertMate asks for its own DNS lookups; see <a href="domain-health.html#choosing-the-resolver">Domain Health</a>.</p>
 
             <h2>Endpoint Discovery</h2>
             <p>The sweep runs daily at 04:00. It probes each configured endpoint and records every certificate it reads. The <code>monitored_endpoints</code> keys and their defaults:</p>

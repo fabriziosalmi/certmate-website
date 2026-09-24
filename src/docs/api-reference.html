@@ -184,7 +184,7 @@
         <section class="docs-hero" style="padding: 100px 0 60px;">
             <div class="container">
                 <h1 class="docs-title"><i class="fas fa-code"></i> API Reference</h1>
-                <p class="docs-subtitle">Complete REST API documentation with authentication and examples</p>
+                <p class="docs-subtitle">Authentication, the main REST endpoints, and examples</p>
             </div>
         </section>
 
@@ -195,20 +195,23 @@
             </div>
 
             <h2>Authentication</h2>
-            <p>All API endpoints require Bearer token authentication. Include the Authorization header in all requests:</p>
+            <p>API calls from scripts authenticate with a Bearer token (a browser session from the web UI also works, and <code>/health</code> needs no authentication). Include the Authorization header:</p>
             <pre><code>Authorization: Bearer your_api_token_here</code></pre>
 
             <div class="alert alert-warning">
                 <i class="fas fa-exclamation-triangle"></i>
-                Security: Always change the default API token in production environments!
+                Security: Set <code>API_BEARER_TOKEN</code> yourself, or keep the port bound to localhost, before the instance is reachable from a network.
             </div>
+
+            <h3>API contract version</h3>
+            <p>Every response carries the <code>X-CertMate-API-Version</code> header, and <code>/health</code> reports the same value as <code>api_contract_version</code>. It changes only when the API surface does, so it is the value to check compatibility against; the release number, in <code>version</code>, moves on every patch. CertMate v2.35.0 serves contract <code>2.14</code>.</p>
 
             <h2>Core Endpoints</h2>
 
             <h3>Health & Status</h3>
             <div class="api-endpoint">
                 <div><span class="api-method method-get">GET</span><span class="api-path">/health</span></div>
-                <p>Health check endpoint for monitoring</p>
+                <p>Health check endpoint for monitoring. It needs no authentication, and returns <code>status</code>, <code>version</code>, <code>api_contract_version</code> and per-component <code>checks</code>.</p>
                 <pre><code>curl http://localhost:8000/health</code></pre>
             </div>
 
@@ -219,7 +222,7 @@
 
             <div class="api-endpoint">
                 <div><span class="api-method method-get">GET</span><span class="api-path">/metrics</span></div>
-                <p>Prometheus-compatible metrics endpoint</p>
+                <p>Prometheus-compatible metrics endpoint (viewer role)</p>
             </div>
 
             <h3>Certificate Management</h3>
@@ -266,7 +269,20 @@
                         <td>❌</td>
                         <td>Domain alias for DNS validation</td>
                     </tr>
+                    <tr>
+                        <td>ca_provider</td>
+                        <td>string</td>
+                        <td>❌</td>
+                        <td>CA to issue from: <code>letsencrypt</code>, <code>letsencrypt_staging</code>, <code>zerossl</code>, <code>google</code>, <code>digicert</code>, <code>sslcom</code>, <code>actalis</code>, <code>sectigo</code> or <code>private_ca</code> (defaults to settings)</td>
+                    </tr>
+                    <tr>
+                        <td>ca_account_id</td>
+                        <td>string</td>
+                        <td>❌</td>
+                        <td>Specific CA account to use</td>
+                    </tr>
                 </table>
+                <p>Requires the operator role. Since v2.35.0, a request for a CA that is not configured on the instance is refused with HTTP 400, code <code>CERTIFICATE_CREATION_FAILED</code>, and an error naming the CA; it is not issued by a different CA. Let's Encrypt and its staging entry need no saved configuration.</p>
                 <pre><code># Basic certificate creation
 curl -X POST "http://localhost:8000/api/certificates/create" \
   -H "Authorization: Bearer your_token" \
@@ -312,12 +328,20 @@ curl -X POST "http://localhost:8000/api/certificates/create" \
             </div>
 
             <div class="api-endpoint">
-                <div><span class="api-method method-get">GET</span><span class="api-path">/api/certificates/{domain}/download</span></div>
-                <p>Automation-friendly endpoint - Simple URL for certificate download</p>
-                <p>Returns ZIP file with: cert.pem, chain.pem, fullchain.pem, privkey.pem</p>
+                <div><span class="api-method method-get">GET</span><span class="api-path">/api/certificates/{domain}/download/{file_type}</span></div>
+                <p>Download a single file. <code>file_type</code> is <code>cert</code>, <code>chain</code>, <code>fullchain</code>, <code>privkey</code> or <code>combined</code>. A viewer can download the public files; <code>privkey</code> and <code>combined</code> require the operator role.</p>
                 <pre><code>curl -H "Authorization: Bearer your_token" \
-  -o example.com-tls.zip \
-  https://certmate.company.com/example.com/tls</code></pre>
+  -o fullchain.pem \
+  http://localhost:8000/api/certificates/example.com/download/fullchain</code></pre>
+            </div>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-post">POST</span><span class="api-path">/api/certificates/{domain}/reissue</span></div>
+                <p>Change a certificate's configuration and reissue it in place (operator role). Omitted fields keep the values the certificate was issued with, and the old certificate is served until the new one is issued. Since contract 2.13 it accepts <code>csr</code>, which rotates the key of a CSR-only certificate without deleting it first; with <code>csr</code>, omit <code>san_domains</code> and the key options.</p>
+                <pre><code>curl -X POST "http://localhost:8000/api/certificates/example.com/reissue" \
+  -H "Authorization: Bearer your_token" \
+  -H "Content-Type: application/json" \
+  -d '{"san_domains": ["www.example.com"]}'</code></pre>
             </div>
 
             <div class="api-endpoint">
@@ -428,11 +452,11 @@ curl -X POST "http://localhost:8000/api/certificates/create" \
 
             <div class="api-endpoint">
                 <div><span class="api-method method-post">POST</span><span class="api-path">/api/backups/create</span></div>
-                <p>Create a new unified backup (settings + certificates)</p>
+                <p>Create a new unified backup (settings + certificates). Requires the admin role; <code>type</code> is required. Archives are named <code>backup_&lt;YYYYmmdd_HHMMSS_ffffff&gt;_&lt;reason&gt;.zip</code>, or <code>.zip.enc</code> when <code>CERTMATE_BACKUP_PASSPHRASE</code> is set.</p>
                 <pre><code>curl -X POST "http://localhost:8000/api/backups/create" \
   -H "Authorization: Bearer your_token" \
   -H "Content-Type: application/json" \
-  -d '{"reason": "manual_backup"}'</code></pre>
+  -d '{"type": "unified", "reason": "manual_backup"}'</code></pre>
             </div>
 
             <div class="api-endpoint">
@@ -440,7 +464,7 @@ curl -X POST "http://localhost:8000/api/certificates/create" \
                 <p>Download a specific backup</p>
                 <pre><code>curl -H "Authorization: Bearer your_token" \
   -o backup.zip \
-  "http://localhost:8000/api/backups/download/unified/unified_backup_20260111_120000.zip"</code></pre>
+  "http://localhost:8000/api/backups/download/unified/backup_20260111_120000_123456_manual_backup.zip"</code></pre>
             </div>
 
             <div class="api-endpoint">
@@ -450,15 +474,34 @@ curl -X POST "http://localhost:8000/api/certificates/create" \
   -H "Authorization: Bearer your_token" \
   -H "Content-Type: application/json" \
   -d '{
-    "filename": "unified_backup_20260111_120000.zip",
+    "filename": "backup_20260111_120000_123456_manual_backup.zip",
     "create_backup_before_restore": true
   }'</code></pre>
+            </div>
+
+            <h3>Activity Log</h3>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-get">GET</span><span class="api-path">/api/activity</span></div>
+                <p>The most recent audit log entries (viewer role). <code>limit</code> is bounded to 1&ndash;500, default 100. Since contract 2.14 it can be narrowed by any of <code>operation</code>, <code>resource_type</code>, <code>resource_id</code>, <code>user</code> and <code>status</code>. A filtered search walks back through the whole log until it has <code>limit</code> matches, rather than filtering only the most recent entries.</p>
+                <p>The response is <code>{entries, count, limit, complete}</code>, plus <code>filters</code> when one was given. An empty result with <code>complete: true</code> means there are no matches; <code>complete: false</code> means the search stopped at <code>limit</code> matches or could not read the log.</p>
+                <pre><code>curl -H "Authorization: Bearer your_token" \
+  "http://localhost:8000/api/activity?operation=create&amp;resource_type=user&amp;user=setup_user"</code></pre>
+            </div>
+
+            <h3>Update Check</h3>
+
+            <div class="api-endpoint">
+                <div><span class="api-method method-get">GET</span><span class="api-path">/api/web/update-check</span></div>
+                <p>Whether a newer CertMate release exists (web session, viewer role). Off by default: until <code>update_check.enabled</code> is set to true in the settings it answers <code>disabled</code> and makes no request. Otherwise <code>status</code> is <code>current</code>, <code>outdated</code>, or <code>unknown</code> when GitHub could not be reached; the answer is cached for a day.</p>
+                <pre><code>{ "status": "outdated", "running": "2.34.0", "latest": "v2.35.0" }</code></pre>
             </div>
 
             <h2>💼 Integration Examples</h2>
 
             <h3>Python SDK Example</h3>
-            <pre><code>import requests
+            <pre><code>import io
+import requests
 import zipfile
 from pathlib import Path
 
@@ -513,7 +556,7 @@ CERT_DIR="/etc/ssl/certs/${DOMAIN}"
 # Download certificate
 curl -f -H "Authorization: Bearer $API_TOKEN" \
      -o "${DOMAIN}-tls.zip" \
-     "$CERTMATE_URL/$DOMAIN/tls"
+     "$CERTMATE_URL/api/certificates/$DOMAIN/download"
 
 # Extract to directory
 mkdir -p "$CERT_DIR"
@@ -543,7 +586,7 @@ echo "Certificate updated for ${DOMAIN}"</code></pre>
                 <li><code>POST /api/storage/config</code> and <code>POST /api/notifications/config</code> accept the round-tripped masked GET payload safely: masked sentinels are stripped and the per-backend / per-channel subtree is deep-merged against the on-disk value, so toggling a non-secret field does not destroy adjacent credentials.</li>
                 <li>Client-cert endpoints under <code>/api/client-certs/...</code> are role-stratified: viewer reads list / detail / stats / cert / chain / csr; operator mints, renews, batches; <code>POST /api/client-certs/&lt;id&gt;/revoke</code> requires admin; <code>GET .../download/key</code> requires operator.</li>
                 <li><code>GET /api/web/settings</code> filters the <code>domains[]</code> array by the caller&rsquo;s <code>allowed_domains</code> scope. <code>POST /api/certificates/check-dns-alias</code> applies the same scope gate on the body-style <code>domain</code> and on every SAN entry.</li>
-                <li>Error responses on certificate creation / renewal failures now sanitise certbot stderr before returning to the client &mdash; credential-bearing lines (<code>dns_*_secret = ...</code>, etc.) are replaced with <code>[REDACTED]</code> and credential file paths with <code>&lt;credential file&gt;</code>. The raw stderr stays in the application log.</li>
+                <li>Error responses on certificate creation / renewal failures now sanitise certbot stderr before returning to the client &mdash; credential-bearing lines (<code>dns_*_secret = ...</code>, etc.) are replaced with <code>[REDACTED]</code> and credential file paths with <code>&lt;credential file&gt;</code>. The application log receives the same redacted copy.</li>
             </ul>
 
             <h2>Next Steps</h2>

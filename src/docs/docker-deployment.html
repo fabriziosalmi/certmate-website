@@ -193,6 +193,7 @@ docker compose logs -f certmate</code></pre>
                 <li><code>BEHIND_PROXY</code>: see Reverse Proxy below.</li>
                 <li><code>SESSION_TIMEOUT_HOURS</code>: login session lifetime, default <code>8</code>.</li>
                 <li><code>CERTMATE_LOG_LEVEL</code> (default <code>INFO</code>), <code>CERTMATE_LOG_JSON</code> (default <code>true</code>), <code>CERTMATE_LOG_FILE</code>: see Logs below.</li>
+                <li><code>CERTMATE_CERT_DIR</code>: where issued certificates live, default <code>/app/certificates</code>. See Volumes below.</li>
             </ul>
             <h3>Variables that do nothing</h3>
             <ul>
@@ -221,9 +222,10 @@ docker compose --profile nginx up -d</code></pre>
             </ul>
             <p>The image makes these directories owned by group 0, group-writable and setgid, so a process running as any UID in group 0 (rootless podman, OpenShift) can write to them. Secret files are created with mode <code>0600</code>.</p>
             <p>Named volumes inherit these permissions and need no preparation. Bind mounts keep the host directory's ownership; Docker creates missing directories owned by root, which the non-root process cannot write to. Prepare them with the <code>chgrp -R 0</code> and <code>chmod -R g+rwX</code> commands shown above, or with podman add <code>:U</code> to each mount. If a directory is not writable, CertMate refuses to start with the message "Required directories are not writable by the CertMate process".</p>
+            <p>To keep certificates somewhere other than <code>/app/certificates</code>, set <code>CERTMATE_CERT_DIR</code> and mount that path. Since v2.35.0 the local storage backend follows it too, unless <code>certificate_storage.cert_dir</code> in the settings names a directory of its own, in which case that directory wins.</p>
 
             <h2>Backups</h2>
-            <p>Set <code>CERTMATE_BACKUP_PASSPHRASE</code> if you want automatic backups you can restore from. With it, backups are complete and encrypted at rest (<code>.zip.enc</code>, PBKDF2-SHA256 and Fernet). Without it, automatic backups have their credentials masked and the restore path refuses them. The passphrase is read from the environment and never stored in <code>settings.json</code>, and the same passphrase is required to restore. Archives on the host are pruned after 30 days and a lost volume takes them with it, so keep a copy off the host.</p>
+            <p>Set <code>CERTMATE_BACKUP_PASSPHRASE</code> if you want automatic backups you can restore from. With it, backups are complete and encrypted at rest (<code>.zip.enc</code>, PBKDF2-SHA256 and Fernet). Without it, automatic backups have their credentials masked: the backup list marks them <code>can_restore: false</code>, and the restore API refuses them on an instance that already holds certificates. The passphrase is read from the environment and never stored in <code>settings.json</code>, and the same passphrase is required to restore. Archives on the host are pruned after 30 days and a lost volume takes them with it, so keep a copy off the host.</p>
 
             <h2>Upgrading</h2>
             <p>State lives in the volumes, not in the image, so upgrading means pulling a newer image and recreating the container with the same mounts. Take a backup first (Settings, Backup, or the API). Settings-format migrations run automatically on boot.</p>
@@ -235,11 +237,17 @@ docker compose up -d
 docker pull fabriziosalmi/certmate:latest
 docker rm -f certmate
 # re-run the original docker run command with the same -v mounts</code></pre>
+            <h3>Before upgrading to v2.35.0</h3>
+            <ul>
+                <li>A certificate requested from a CA that is not configured on the instance is refused with HTTP 400, naming the CA. Let's Encrypt, and its staging entry, still work with nothing saved. Configure the CA you request, or request one that is configured.</li>
+                <li>If you set <code>CERTMATE_CERT_DIR</code> and the settings do not name a <code>certificate_storage.cert_dir</code> of their own, the storage layer now writes to <code>CERTMATE_CERT_DIR</code> as well.</li>
+                <li>An ACME directory URL configured on a CA account must use <code>https</code>. A plain <code>http</code> URL is refused.</li>
+            </ul>
             <p>A build refuses to read a <code>settings.json</code> or <code>metadata.json</code> written by a newer version. <code>CERTMATE_ALLOW_SCHEMA_DOWNGRADE=1</code> overrides this, at the cost of dropping the fields the older build does not understand.</p>
 
             <h2>Health Checks</h2>
             <ul>
-                <li><code>/health</code> is the liveness endpoint. It returns 200 whenever the app is serving requests; its JSON <code>status</code> field is <code>healthy</code> or <code>degraded</code>, with per-component <code>checks</code>. The image's <code>HEALTHCHECK</code> calls it with curl every 30 seconds.</li>
+                <li><code>/health</code> is the liveness endpoint. It returns 200 whenever the app is serving requests; its JSON <code>status</code> field is <code>healthy</code> or <code>degraded</code>, with per-component <code>checks</code>. The image's <code>HEALTHCHECK</code> calls it with curl every 30 seconds, with a 40-second start period, the same as <code>docker-compose.yml</code>.</li>
                 <li><code>/health/ready</code> returns 503 when the renewal scheduler is not running or the certbot probe ran and failed. Use it for readiness probes and deploy gates: in either case the instance is up but would renew nothing.</li>
             </ul>
 
