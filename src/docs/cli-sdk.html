@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLI and Python SDK - CertMate Documentation</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="preload" href="vendor/font-awesome/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/font-awesome/all.min.css"></noscript>
+    <link rel="preload" as="style" href="vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/fonts/fonts.css"></noscript>
+    <style>
+        .doc-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h1 {
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-6);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content p, .doc-content li {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+        .doc-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin: var(--spacing-6) 0;
+        }
+        .doc-content pre code {
+            background: none;
+            padding: 0;
+            color: white;
+        }
+        .doc-content ul, .doc-content ol {
+            margin: var(--spacing-4) 0;
+            padding-left: var(--spacing-8);
+        }
+        .doc-content li {
+            margin: var(--spacing-2) 0;
+        }
+    
+    /* In-page TOC, injected by toc.js. Sticky right column on lg+
+       viewports; collapsed to a top disclosure on smaller screens. */
+    .doc-toc {
+      display: none;
+    }
+    /* Shown only when it fits in the right margin: this page's content
+       column is 900px wide, the TOC 220px plus 24px of gap, so the viewport
+       must be at least 900 + 2 * 244 = 1388px. Below that the old rule
+       placed the TOC over the text (#588). */
+    @media (min-width: 1388px) {
+      .doc-toc {
+        display: block;
+        position: fixed;
+        top: 100px;
+        right: max(24px, calc((100vw - 900px) / 2 - 244px));
+        width: 220px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+      }
+    }
+    .doc-toc-inner {
+      border-left: 2px solid var(--gray-200);
+      padding-left: 16px;
+    }
+    .doc-toc-list { list-style: none; padding: 0; margin: 0; }
+    .doc-toc-item { margin: 4px 0; line-height: 1.4; }
+    .doc-toc-item-h3 { padding-left: 12px; }
+    .doc-toc-link {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: block;
+      padding: 2px 0;
+      transition: color 120ms ease;
+    }
+    .doc-toc-link:hover { color: var(--gray-900); }
+    .doc-toc-link.is-active {
+      color: var(--blue-600, #2563eb);
+      font-weight: 600;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="../assets/certmate_logo.png" alt="CertMate Logo" class="brand-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html#features" class="nav-link">Features</a>
+                <a href="../index.html#providers" class="nav-link">DNS Providers</a>
+                <a href="index.html" class="nav-link active">Documentation</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-keyboard"></i> CLI and Python SDK</h1>
+                <p class="docs-subtitle">How to install and configure the certmate command and the certmate-sdk Python package, what each command and method calls, and how issuance jobs are awaited.</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <h2>Two Packages</h2>
+            <p>CertMate has two first-party Python clients for its REST API. Both live in the <code>clients/</code> directory of the CertMate repository and are published to PyPI.</p>
+            <ul>
+                <li><code>certmate-sdk</code> 0.1.5: the <code>certmate</code> Python package, with <code>Client</code>, two models and a set of exceptions. Its only runtime dependency is <code>httpx&gt;=0.24</code>.</li>
+                <li><code>certmate-cli</code> 0.1.5: the <code>certmate</code> command. It is built on the SDK and depends on <code>certmate-sdk&gt;=0.1.5</code>, <code>typer&gt;=0.9</code> and <code>rich&gt;=13</code>.</li>
+            </ul>
+            <p>Both require Python 3.9 or later. Neither package pulls in certbot, DNS plugins or cloud SDKs.</p>
+            <pre><code>pip install certmate-cli    # installs certmate-sdk as well
+pip install certmate-sdk    # the library alone</code></pre>
+            <p>From a checkout of the CertMate repository, install the in-repo copies in editable mode:</p>
+            <pre><code>pip install -e clients/certmate-sdk -e clients/certmate-cli</code></pre>
+            <p>The clients work against any CertMate v2.x server. Two features need server v2.21.1 or later: the renewed/not-due outcome of <code>cert renew</code>, and <code>dns test</code> or <code>cert create --dry-run</code> without explicit credentials, which relies on the server using the provider's stored account credentials when the config is empty.</p>
+
+            <h2>Configuration</h2>
+            <p>The CLI and the SDK read the same two environment variables:</p>
+            <table>
+                <thead>
+                    <tr><th>Variable</th><th>CLI flag</th><th>Meaning</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>CERTMATE_URL</code></td><td><code>--url</code></td><td>Base URL of the CertMate server. Default <code>http://localhost:8000</code>.</td></tr>
+                    <tr><td><code>CERTMATE_TOKEN</code></td><td><code>--token</code></td><td>API token, sent as <code>Authorization: Bearer &lt;token&gt;</code>. Omit it on a fresh instance still in setup mode.</td></tr>
+                </tbody>
+            </table>
+            <pre><code>export CERTMATE_URL=https://certmate.example.com
+export CERTMATE_TOKEN=...
+certmate health</code></pre>
+            <p>Use <code>CERTMATE_TOKEN</code> rather than <code>--token</code>: command-line arguments are visible to other local processes through <code>ps</code> and are saved in shell history. <code>--token</code> still works, and when it is given on the command line with stderr attached to a terminal the CLI prints a warning. Scripts and pipelines get no warning.</p>
+            <p>The global options go before the command group, for example <code>certmate --url https://certmate.example.com cert ls</code>. <code>certmate --version</code> (or <code>-V</code>) prints the <code>certmate-cli</code> version and exits without contacting a server.</p>
+
+            <h2>CLI Commands</h2>
+            <p>Each command below calls one SDK method, which calls one API endpoint. The token's role must allow the endpoint; see <a href="security.html">Security</a> for roles and scoped API keys.</p>
+
+            <h3>cert</h3>
+            <table>
+                <thead>
+                    <tr><th>Command</th><th>Endpoint</th><th>What it does</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>cert ls</code></td><td><code>GET /api/certificates</code></td><td>Table of domain, expiry date, days left, CA and auto-renew, sorted by remaining lifetime.</td></tr>
+                    <tr><td><code>cert info DOMAIN</code></td><td><code>GET /api/certificates/DOMAIN</code></td><td>Expiry, CA, DNS provider, auto-renew, SAN list, and a "needs renewal" line when the server reports it.</td></tr>
+                    <tr><td><code>cert create DOMAIN</code></td><td><code>POST /api/certificates/create</code></td><td>Issue a certificate as an asynchronous job. Waits for it by default.</td></tr>
+                    <tr><td><code>cert job JOB_ID</code></td><td><code>GET /api/certificates/jobs/JOB_ID</code></td><td>Status of an issuance or renewal job, with its error if it has one.</td></tr>
+                    <tr><td><code>cert renew DOMAIN</code></td><td><code>POST /api/certificates/DOMAIN/renew</code></td><td>Renew. Prints "renewed", "not due", or that the server did not report the outcome.</td></tr>
+                    <tr><td><code>cert reissue DOMAIN</code></td><td><code>POST /api/certificates/DOMAIN/reissue</code></td><td>Reissue, for example to change the SAN list.</td></tr>
+                    <tr><td><code>cert rm DOMAIN</code></td><td><code>DELETE /api/certificates/DOMAIN</code></td><td>Delete a certificate. Asks for confirmation.</td></tr>
+                    <tr><td><code>cert download DOMAIN</code></td><td><code>GET /api/certificates/DOMAIN/download</code></td><td>Write one certificate file, or a bundle, to disk or stdout.</td></tr>
+                </tbody>
+            </table>
+            <p>Options:</p>
+            <ul>
+                <li><code>cert create</code>: <code>--dns PROVIDER</code>, <code>--ca PROVIDER</code>, <code>--san a.example.com,b.example.com</code> (empty entries are dropped), <code>--wait/--no-wait</code> (default <code>--wait</code>), <code>--dry-run</code>.</li>
+                <li><code>cert renew</code>: <code>--force</code> renews even when the certificate is not due.</li>
+                <li><code>cert reissue</code>: <code>--san</code>, a comma-separated list sent as <code>san_domains</code>.</li>
+                <li><code>cert rm</code>: <code>--yes</code> or <code>-y</code> skips the confirmation.</li>
+                <li><code>cert download</code>: <code>--file</code>/<code>-f</code> (<code>cert</code>, <code>chain</code>, <code>fullchain</code>, <code>privkey</code>, <code>combined</code> or <code>pfx</code>; default <code>fullchain</code>), <code>--output</code>/<code>-o</code> (default the file's usual name in the current directory; <code>-</code> writes to stdout), <code>--key-format pkcs1|pkcs8</code> (only with <code>--file privkey</code>), <code>--bundle zip|json</code> (the whole certificate instead of one file).</li>
+            </ul>
+            <p>In <code>cert ls</code> and <code>cert info</code> a certificate with less than a day left is shown as <code>&lt;1</code> or "less than a day", not <code>0</code>, and an expired one as <code>expired</code>. The CLI takes this from the server's <code>expired</code> and <code>seconds_left</code> fields; against a server that does not send them it shows <code>?</code> for the ambiguous last day.</p>
+
+            <h3>--dry-run</h3>
+            <p><code>cert create DOMAIN --dry-run</code> issues nothing. It checks locally that the domain and every SAN look like hostnames (a leading <code>*.</code> is allowed), and, when <code>--dns</code> is given, preflights that provider with <code>POST /api/web/certificates/test-provider</code> and an empty config, so the server uses the provider's stored credentials. Without <code>--dns</code> the provider check is skipped. Any problem is listed and the command exits 1.</p>
+            <pre><code>certmate cert create app.example.com --dns cloudflare --dry-run</code></pre>
+
+            <h3>Pulling files onto a host</h3>
+            <p><code>cert download</code> lets a target server fetch what it deploys, instead of CertMate pushing to it. Give each host an API key scoped to its own domain and run the pull on a timer: the host needs no inbound access and CertMate holds no credentials for it.</p>
+            <pre><code>certmate cert download app.example.com --file fullchain -o /etc/ssl/certs/app.pem
+certmate cert download app.example.com --file privkey   -o /etc/ssl/private/app.key</code></pre>
+            <p>A new file is created with mode 0600, set when the file is opened rather than afterwards. A file that already exists keeps its mode, and the CLI prints the mode it actually has. <code>cert</code>, <code>chain</code> and <code>fullchain</code> are readable with a viewer key; <code>privkey</code>, <code>combined</code> and <code>pfx</code> need operator. <code>--key-format pkcs1</code> returns the <code>BEGIN RSA PRIVATE KEY</code> form for software that rejects certbot's PKCS#8. Options are checked before any request is sent.</p>
+
+            <h3>dns, audit, backup, deploy, health</h3>
+            <table>
+                <thead>
+                    <tr><th>Command</th><th>Endpoint</th><th>What it does</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>dns providers</code></td><td><code>GET /api/settings/dns-providers</code></td><td>Print the server's DNS provider data.</td></tr>
+                    <tr><td><code>dns accounts [PROVIDER]</code></td><td><code>GET /api/dns/accounts</code>, or <code>GET /api/dns/PROVIDER/accounts</code></td><td>Table of provider, account ID, name and email.</td></tr>
+                    <tr><td><code>dns test PROVIDER</code></td><td><code>POST /api/web/certificates/test-provider</code></td><td>Preflight a provider with its stored credentials. Issues nothing.</td></tr>
+                    <tr><td><code>audit verify</code></td><td><code>GET /api/audit/verify</code></td><td>Verify the audit chain and, when present, the signed checkpoint.</td></tr>
+                    <tr><td><code>backup ls</code></td><td><code>GET /api/web/backups</code></td><td>Table of filename, reason, creation time and size.</td></tr>
+                    <tr><td><code>backup create</code></td><td><code>POST /api/web/backups/create</code></td><td>Create a backup now, with reason <code>manual</code>.</td></tr>
+                    <tr><td><code>deploy run DOMAIN</code></td><td><code>POST /api/certificates/DOMAIN/deploy</code></td><td>Run the enabled deploy hooks for the domain now. The endpoint requires the admin role.</td></tr>
+                    <tr><td><code>health</code></td><td><code>GET /health</code></td><td>Print the server's health response.</td></tr>
+                </tbody>
+            </table>
+            <p><code>audit verify</code> reports "none yet" and exits 0 only when the server says the chain is absent on a fresh instance. Any other result that is not intact prints <code>BROKEN</code> with the reason and exits 1.</p>
+
+            <h3>Exit codes</h3>
+            <ul>
+                <li><code>0</code>: the command succeeded. <code>--version</code> also exits 0.</li>
+                <li><code>1</code>: any SDK error (the server was unreachable, the API returned an error, a job failed or timed out), with the message printed to stderr as <code>error: ...</code>. Also a failed <code>--dry-run</code>, a failed <code>dns test</code>, an audit chain that is not intact, a <code>deploy run</code> the server reports as not ok, and an invalid <code>cert download</code> option.</li>
+            </ul>
+
+            <h2>Jobs and --wait</h2>
+            <p>Issuance is asynchronous. The SDK sends <code>"async": true</code> to <code>POST /api/certificates/create</code>; the server accepts the request and returns a job ID.</p>
+            <ul>
+                <li>With <code>--wait</code> (the CLI default) the CLI polls <code>GET /api/certificates/jobs/JOB_ID</code> every 2 seconds, shows the job status in a spinner, and prints <code>issued</code> when the job reaches a success state. A failed job exits 1 with the job's error. After 600 seconds without a terminal state it exits 1 with a timeout.</li>
+                <li>With <code>--no-wait</code> it prints <code>accepted</code> and the job ID. Check it later with <code>certmate cert job JOB_ID</code>.</li>
+            </ul>
+            <p>A job is terminal when its status is <code>succeeded</code>, <code>success</code>, <code>completed</code> or <code>done</code>, or <code>failed</code> or <code>error</code>. While polling, a single network failure does not stop the wait; three consecutive ones do. If the server has already dropped a finished job from its job table, the SDK checks whether the certificate now exists and, if it does, treats the job as succeeded. If the server returns no job ID, the call is treated as having completed synchronously.</p>
+            <p>Renewal is a single request, not a job. The SDK gives it a 600-second timeout because a DNS-01 renewal waits for propagation.</p>
+
+            <h2>Python SDK</h2>
+            <pre><code>from certmate import Client, CertMateError, JobFailed
+
+with Client("https://certmate.example.com", token="...") as c:
+    try:
+        job = c.create_certificate("app.example.com",
+                                   dns_provider="cloudflare", wait=True)
+        print(job.job_id, job.status)
+    except JobFailed as e:
+        print("issuance failed:", e, e.job.error)
+
+    for cert in c.list_certificates():
+        print(cert.domain, cert.days_until_expiry, cert.has_expired())
+
+    print(c.audit_verify()["ok"])</code></pre>
+
+            <h3>Client</h3>
+            <p><code>Client(base_url=None, token=None, *, timeout=30.0, verify=True)</code>. <code>base_url</code> and <code>token</code> fall back to <code>CERTMATE_URL</code> and <code>CERTMATE_TOKEN</code>, and the URL defaults to <code>http://localhost:8000</code>. <code>verify</code> is passed to httpx for TLS verification. Connection-level failures are retried up to 3 times. Use the client as a context manager, or call <code>close()</code>.</p>
+            <table>
+                <thead>
+                    <tr><th>Method</th><th>Endpoint</th><th>Returns</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>list_certificates()</code></td><td><code>GET /api/certificates</code></td><td>list of <code>Certificate</code></td></tr>
+                    <tr><td><code>get_certificate(domain)</code></td><td><code>GET /api/certificates/&lt;domain&gt;</code></td><td><code>Certificate</code></td></tr>
+                    <tr><td><code>create_certificate(domain, *, dns_provider=None, ca_provider=None, san_domains=None, account_id=None, wait=False, on_progress=None, **extra)</code></td><td><code>POST /api/certificates/create</code></td><td><code>Job</code>; extra keyword arguments are added to the request body</td></tr>
+                    <tr><td><code>get_job(job_id)</code></td><td><code>GET /api/certificates/jobs/&lt;job_id&gt;</code></td><td><code>Job</code></td></tr>
+                    <tr><td><code>wait_for_job(job_id, *, interval=2.0, timeout=600.0, on_progress=None)</code></td><td>polls <code>get_job</code></td><td>terminal <code>Job</code>; raises <code>JobFailed</code> or <code>JobTimeout</code></td></tr>
+                    <tr><td><code>renew_certificate(domain, *, force=False)</code></td><td><code>POST /api/certificates/&lt;domain&gt;/renew</code></td><td>dict</td></tr>
+                    <tr><td><code>reissue_certificate(domain, **body)</code></td><td><code>POST /api/certificates/&lt;domain&gt;/reissue</code></td><td>dict</td></tr>
+                    <tr><td><code>delete_certificate(domain)</code></td><td><code>DELETE /api/certificates/&lt;domain&gt;</code></td><td>None</td></tr>
+                    <tr><td><code>download_certificate(domain, fmt="json")</code></td><td><code>GET /api/certificates/&lt;domain&gt;/download</code></td><td>dict for <code>json</code>; bytes for <code>zip</code>, <code>pem</code> (fullchain) and <code>pfx</code></td></tr>
+                    <tr><td><code>download_certificate_file(domain, name, key_format=None)</code></td><td><code>GET /api/certificates/&lt;domain&gt;/download?file=...</code></td><td>bytes of one file; <code>name</code> is a key of <code>Client.CERT_FILES</code></td></tr>
+                    <tr><td><code>set_auto_renew(domain, enabled)</code></td><td><code>PUT /api/certificates/&lt;domain&gt;/auto-renew</code></td><td>dict</td></tr>
+                    <tr><td><code>deploy_certificate(domain)</code></td><td><code>POST /api/certificates/&lt;domain&gt;/deploy</code></td><td>dict</td></tr>
+                    <tr><td><code>list_dns_providers()</code></td><td><code>GET /api/settings/dns-providers</code></td><td>server response</td></tr>
+                    <tr><td><code>list_dns_accounts(provider=None)</code></td><td><code>GET /api/dns/accounts</code> or <code>/api/dns/&lt;provider&gt;/accounts</code></td><td>server response</td></tr>
+                    <tr><td><code>test_dns_provider(provider, **config)</code></td><td><code>POST /api/web/certificates/test-provider</code></td><td>dict; credentials go under <code>config</code></td></tr>
+                    <tr><td><code>audit_verify()</code></td><td><code>GET /api/audit/verify</code></td><td>dict with <code>ok</code> and <code>_http_status</code> (200 or 409)</td></tr>
+                    <tr><td><code>activity(limit=100)</code></td><td><code>GET /api/activity</code></td><td>server response</td></tr>
+                    <tr><td><code>health()</code></td><td><code>GET /health</code></td><td>dict</td></tr>
+                    <tr><td><code>probe(host, *, port=443, server_name=None, check_revocation=True)</code></td><td><code>POST /api/probe</code></td><td>dict with <code>status</code> (ok, blocked or unreachable), <code>certificate</code>, <code>validation</code>, <code>chain</code>, <code>revocation</code></td></tr>
+                    <tr><td><code>list_backups()</code></td><td><code>GET /api/web/backups</code></td><td>server response</td></tr>
+                    <tr><td><code>create_backup(*, reason="manual")</code></td><td><code>POST /api/web/backups/create</code></td><td>dict</td></tr>
+                </tbody>
+            </table>
+            <p><code>force</code>, <code>enabled</code> and <code>check_revocation</code> must be real booleans; anything else raises <code>TypeError</code> before a request is made. <code>download_certificate_file</code> raises <code>ValueError</code> for an unknown file name, an unknown <code>key_format</code>, or a <code>key_format</code> on a file other than <code>privkey</code>. <code>audit_verify</code> returns the result for a broken chain (HTTP 409) instead of raising, so inspect <code>result["ok"]</code>. <code>probe</code> does not raise for a host that refuses the connection or does not resolve; that is reported in <code>status</code>.</p>
+
+            <h3>Models</h3>
+            <p><code>Certificate</code> has <code>domain</code>, <code>expiry_date</code>, <code>days_until_expiry</code>, <code>expired</code>, <code>seconds_left</code>, <code>needs_renewal</code>, <code>ca_provider</code>, <code>dns_provider</code>, <code>auto_renew</code>, <code>san_domains</code>, and <code>raw</code>, the full response dict. Fields the server does not send are <code>None</code>; unknown fields are ignored.</p>
+            <p>To ask whether a certificate has expired, call <code>cert.has_expired()</code> rather than testing <code>days_until_expiry &lt;= 0</code>. <code>days_until_expiry</code> is whole days rounded down, so a certificate with 23 hours left reports <code>0</code>. <code>has_expired()</code> returns the server's <code>expired</code> field when the server sends it (API contract 2.2 and later). Otherwise it returns <code>True</code> for a negative day count, <code>False</code> for a positive one, and <code>None</code> for zero or a missing value.</p>
+            <p><code>Job</code> has <code>job_id</code>, <code>operation</code>, <code>domain</code>, <code>status</code>, <code>error</code> and <code>raw</code>, and the properties <code>is_terminal</code>, <code>succeeded</code> and <code>failed</code>.</p>
+
+            <h3>Errors</h3>
+            <p>Every SDK exception derives from <code>CertMateError</code>, so one <code>except</code> clause covers them all.</p>
+            <table>
+                <thead>
+                    <tr><th>Exception</th><th>Raised when</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>TransportError</code></td><td>The server could not be reached or the connection failed (DNS failure, refused connection, timeout, protocol error).</td></tr>
+                    <tr><td><code>APIError</code></td><td>The API returned a non-2xx status. Carries <code>status</code>, <code>code</code> (CertMate's machine-readable code, such as <code>DOMAIN_OUT_OF_SCOPE</code>, when present) and <code>payload</code>.</td></tr>
+                    <tr><td><code>AuthError</code></td><td>Subclass of <code>APIError</code> for 401 and 403.</td></tr>
+                    <tr><td><code>NotFoundError</code></td><td>Subclass of <code>APIError</code> for 404.</td></tr>
+                    <tr><td><code>ConflictError</code></td><td>Subclass of <code>APIError</code> for 409, for example an operation already in progress.</td></tr>
+                    <tr><td><code>JobFailed</code></td><td>A job waited on finished in a failed state. The job is on <code>.job</code>.</td></tr>
+                    <tr><td><code>JobTimeout</code></td><td><code>wait_for_job</code> reached its timeout before the job finished.</td></tr>
+                </tbody>
+            </table>
+
+            <h2>Next Steps</h2>
+            <ul>
+                <li><a href="api-reference.html">API Reference</a>: the endpoints both clients call</li>
+                <li><a href="security.html">Security</a>: roles and API keys scoped to a domain</li>
+                <li><a href="mcp-server.html">MCP Server</a>: the same API driven by an AI assistant</li>
+                <li><a href="deploy-hooks.html">Deploy Hooks</a>: what <code>certmate deploy run</code> executes</li>
+                <li><a href="dns-providers.html">DNS Providers</a>: the accounts that <code>dns test</code> checks</li>
+                <li><a href="backup-recovery.html">Backup and Recovery</a>: what a backup contains and how to restore it</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributors</a></p>
+        </div>
+    </footer>
+    <script src="toc.js" defer></script>
+</body>
+</html>

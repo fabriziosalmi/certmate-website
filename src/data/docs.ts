@@ -168,6 +168,12 @@ export const DOC_PAGES: DocPage[] = [
     description:
       'Issue certificates for a domain whose DNS CertMate cannot write: CNAME _acme-challenge to an alias zone, set domain_alias, verify with dig and the API.',
   },
+  {
+    slug: 'cli-sdk',
+    title: 'CLI and Python SDK - CertMate Documentation',
+    description:
+      'Install and configure the certmate CLI and certmate-sdk Python client: every command and method, the endpoint each calls, exit codes, errors and jobs.',
+  },
 ];
 
 /** The published URL of a documentation page, absolute. */
