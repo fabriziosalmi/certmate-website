@@ -162,6 +162,12 @@ export const DOC_PAGES: DocPage[] = [
     description:
       "CertMate's /health and /health/ready endpoints, the Prometheus metrics at /metrics, the eight shipped alert rules and the Grafana dashboard to import.",
   },
+  {
+    slug: 'dns-01-delegation',
+    title: 'DNS-01 Delegation - CertMate Documentation',
+    description:
+      'Issue certificates for a domain whose DNS CertMate cannot write: CNAME _acme-challenge to an alias zone, set domain_alias, verify with dig and the API.',
+  },
 ];
 
 /** The published URL of a documentation page, absolute. */
