@@ -1,0 +1,128 @@
+---
+title: "SSL_ERROR_UNKNOWN_CA_ALERT"
+errorCode: "SSL_ERROR_UNKNOWN_CA_ALERT"
+description: "Fix Firefox's SSL_ERROR_UNKNOWN_CA_ALERT: the server could not chain your client certificate to a CA it trusts. Wrong CA file, a rebuilt CA, or no CRL."
+summary: "Firefox sent a client certificate and the server answered unknown_ca: it could not build a chain from that certificate to a CA in its client-CA file. The trust files on the two sides no longer agree."
+browsers: ["Firefox"]
+order: 18
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+Firefox reports `SSL_ERROR_UNKNOWN_CA_ALERT` with the message *"Peer does not
+recognize and trust the CA that issued your certificate."* The server sent a
+TLS `unknown_ca` alert about the **client** certificate Firefox presented. It
+is the mirror image of `SEC_ERROR_UNKNOWN_ISSUER`, where Firefox is the one
+that cannot trust the server.
+
+The certificate was received and parsed. What failed is the chain: the server
+looked for the issuer of that certificate among the CAs it was configured to
+trust for client authentication, and did not find a path to one of them.
+
+<Handshake
+  caption="Where SSL_ERROR_UNKNOWN_CA_ALERT is raised"
+  steps={[
+    { from: 'Firefox', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Firefox', label: 'ServerHello, Certificate, CertificateRequest (accepted CA names)' },
+    { from: 'Firefox', to: 'Server', label: 'Certificate (client), CertificateVerify' },
+    { from: 'Server', label: 'Builds a chain to its client CA file: no trusted issuer found' },
+    { from: 'Server', to: 'Firefox', label: 'Alert unknown_ca: connection refused (SSL_ERROR_UNKNOWN_CA_ALERT)', fails: true },
+  ]}
+/>
+
+## Common causes
+
+- **The server trusts a different CA.** Its client-CA file is the wrong file:
+  a public root bundle, the CA of another environment, or a copy made before
+  the CA changed. Go's `crypto/tls` sends `unknown_ca` whenever the
+  certificate does not chain to its configured client CAs. OpenSSL sends it
+  when it cannot find the issuer, including when the issuer is missing only
+  locally.
+- **The CA was rebuilt, and only one side was updated.** Certificates signed
+  by the old CA do not verify against the new one, and new certificates do
+  not verify on a server that still holds the old one. If the new CA kept the
+  old name, this is hard to spot. The server still lists the same CA name,
+  Firefox still offers the certificate, and the chain fails only on the
+  signature. Go's `crypto/tls` reports that as an unknown authority too.
+- **An intermediate is missing.** If client certificates are signed by an
+  intermediate, the server needs it, or the client has to send it. Without
+  it, the server cannot reach the root.
+- **The certificate is self-signed.** OpenSSL answers a self-signed client
+  certificate, or a chain that ends in an untrusted self-signed root, with
+  `unknown_ca`.
+- **Revocation checking with no CRL.** An OpenSSL-based server told to check
+  CRLs that has no CRL for the issuing CA fails with *"unable to get
+  certificate CRL"* and sends `unknown_ca`, although the CA itself is
+  trusted. This one is easy to misread.
+
+## How to fix it
+
+**1. Compare the certificate's issuer with what the server asks for:**
+
+```bash
+openssl x509 -in client.crt -noout -issuer
+openssl s_client -connect app.example.com:443 -servername app.example.com \
+  -cert client.crt -key client.key </dev/null
+```
+
+The second command lists *"Acceptable client certificate CA names"*. The
+issuer of the first has to appear there. Firefox itself offers only
+certificates that chain to one of those names, or any certificate if the
+server lists none. A matching name is not proof, though: the names the server
+sends and the CAs it verifies against can be configured separately, and a
+rebuilt CA can carry the old name.
+
+**2. Verify against the exact file the server loads:**
+
+```bash
+openssl verify -CAfile /path/the/server/uses/client-ca.crt client.crt
+```
+
+`unable to get local issuer certificate` means that file does not contain the
+issuer. `client.crt: OK` means the chain is fine, so look at revocation next.
+
+**3. If the server checks revocation, check with the CRL it has:**
+
+```bash
+openssl verify -crl_check -CAfile client-ca.crt -CRLfile crl.pem client.crt
+```
+
+An `unable to get certificate CRL` here is the misleading case above. Give
+the server a current CRL for that CA.
+
+**4. Put the matching pair back.** Load the issuing CA into the server's
+client-CA file and reload the server, or reissue the client certificate from
+the CA the server already trusts.
+
+## Prevent it from recurring
+
+With CertMate's built-in CA, both halves come from one place. The CA is
+generated once, on first start, and its certificate is `data/certs/ca/ca.crt`.
+Every client certificate is signed directly by it, with no intermediate. The
+`.pfx` download carries that CA certificate along with the client
+certificate and key.
+
+The CA changes only when an admin rebuilds it on purpose, through `POST
+/api/client-certs/ca/reset` with a typed confirmation. Editing the CA subject
+in settings does not replace an existing CA. A rebuild backs up the old CA,
+removes every client certificate it signed and republishes the CRL. Every
+server then needs the new `ca.crt`, and every holder needs a new certificate.
+Treat the reset as one change to both sides.
+
+For servers that check revocation, the CRL is served without credentials at
+`/api/crl/download/pem` (or `der`). Its `next_update` is seven days out, and
+CertMate regenerates it when it is read after that date. A server that
+fetches it on a schedule shorter than a week always has one.
+
+Details in [Client Certificates](/docs/client-certificates.html).
+
+## Related errors
+
+- `SSL_ERROR_BAD_CERT_ALERT`: the server found the certificate unacceptable
+  for another reason.
+- `ERR_BAD_SSL_CLIENT_AUTH_CERT`: Chromium reports `unknown_ca`, with the
+  other client certificate refusals, under this code.
+- `SEC_ERROR_UNKNOWN_ISSUER`: the same failure in the other direction, with
+  Firefox unable to trust the server's certificate.

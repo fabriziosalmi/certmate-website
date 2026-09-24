@@ -1,0 +1,132 @@
+---
+title: "SSL_ERROR_UNKNOWN_CA_ALERT"
+errorCode: "SSL_ERROR_UNKNOWN_CA_ALERT"
+description: "Risolvi SSL_ERROR_UNKNOWN_CA_ALERT di Firefox: il server non lega il tuo certificato client a una CA fidata. File CA errato, CA ricostruita, CRL assente."
+summary: "Firefox ha inviato un certificato client e il server ha risposto unknown_ca: non è riuscito a costruire una catena da quel certificato a una CA del suo file di CA client. I file di fiducia dei due lati non coincidono più."
+browsers: ["Firefox"]
+order: 18
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+Firefox segnala `SSL_ERROR_UNKNOWN_CA_ALERT` con il messaggio *"il peer non
+riconosce né considera attendibile la CA che ha emesso il tuo certificato."*
+Il server ha inviato un alert TLS `unknown_ca` riguardo al certificato
+**client** che Firefox ha presentato. È l'immagine speculare di
+`SEC_ERROR_UNKNOWN_ISSUER`, dove è Firefox a non potersi fidare del server.
+
+Il certificato è stato ricevuto e interpretato. Quello che è fallito è la
+catena: il server ha cercato l'emittente del certificato tra le CA che è
+configurato a considerare attendibili per l'autenticazione client, e non ha
+trovato un percorso verso nessuna di esse.
+
+<Handshake
+  caption="Dove viene sollevato SSL_ERROR_UNKNOWN_CA_ALERT"
+  steps={[
+    { from: 'Firefox', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Firefox', label: 'ServerHello, Certificate, CertificateRequest (nomi delle CA accettate)' },
+    { from: 'Firefox', to: 'Server', label: 'Certificate (client), CertificateVerify' },
+    { from: 'Server', label: 'Costruisce la catena verso il suo file di CA client: nessun emittente fidato trovato' },
+    { from: 'Server', to: 'Firefox', label: 'Alert unknown_ca: connessione rifiutata (SSL_ERROR_UNKNOWN_CA_ALERT)', fails: true },
+  ]}
+/>
+
+## Cause comuni
+
+- **Il server si fida di un'altra CA.** Il suo file di CA client è quello
+  sbagliato: un bundle di radici pubbliche, la CA di un altro ambiente, o una
+  copia fatta prima che la CA cambiasse. `crypto/tls` di Go invia
+  `unknown_ca` ogni volta che il certificato non risale alle CA client
+  configurate. OpenSSL lo invia quando non trova l'emittente, anche quando
+  manca solo in locale.
+- **La CA è stata ricostruita e solo un lato è stato aggiornato.** I
+  certificati firmati dalla vecchia CA non si verificano con la nuova, e i
+  certificati nuovi non si verificano su un server che ha ancora la vecchia.
+  Se la nuova CA ha mantenuto il vecchio nome, è difficile accorgersene. Il
+  server elenca ancora lo stesso nome di CA, Firefox propone ancora il
+  certificato, e la catena fallisce solo sulla firma. Anche `crypto/tls` di
+  Go lo segnala come autorità sconosciuta.
+- **Manca un intermedio.** Se i certificati client sono firmati da un
+  intermedio, il server deve averlo, oppure deve inviarlo il client. Senza, il
+  server non arriva alla radice.
+- **Il certificato è autofirmato.** OpenSSL risponde con `unknown_ca` a un
+  certificato client autofirmato, o a una catena che termina in una radice
+  autofirmata non fidata.
+- **Controllo di revoca senza CRL.** Un server basato su OpenSSL configurato
+  per controllare le CRL, che non ha una CRL per la CA emittente, fallisce con
+  *"unable to get certificate CRL"* e invia `unknown_ca`, anche se la CA è
+  fidata. Questo caso è facile da fraintendere.
+
+## Come risolverlo
+
+**1. Confronta l'emittente del certificato con ciò che il server chiede:**
+
+```bash
+openssl x509 -in client.crt -noout -issuer
+openssl s_client -connect app.example.com:443 -servername app.example.com \
+  -cert client.crt -key client.key </dev/null
+```
+
+Il secondo comando elenca *"Acceptable client certificate CA names"*.
+L'emittente del primo deve comparire lì. Firefox stesso propone solo
+certificati che risalgono a uno di quei nomi, o qualunque certificato se il
+server non ne elenca nessuno. Un nome corrispondente però non basta: i nomi
+che il server invia e le CA con cui verifica si possono configurare
+separatamente, e una CA ricostruita può portare il vecchio nome.
+
+**2. Verifica con il file esatto che il server carica:**
+
+```bash
+openssl verify -CAfile /path/the/server/uses/client-ca.crt client.crt
+```
+
+`unable to get local issuer certificate` significa che quel file non contiene
+l'emittente. `client.crt: OK` significa che la catena è a posto, quindi il
+passo successivo è la revoca.
+
+**3. Se il server controlla la revoca, verifica con la CRL che ha:**
+
+```bash
+openssl verify -crl_check -CAfile client-ca.crt -CRLfile crl.pem client.crt
+```
+
+Un `unable to get certificate CRL` qui è il caso ingannevole descritto sopra.
+Dai al server una CRL aggiornata per quella CA.
+
+**4. Rimetti insieme la coppia giusta.** Carica la CA emittente nel file di
+CA client del server e ricarica il server, oppure riemetti il certificato
+client dalla CA di cui il server si fida già.
+
+## Evitare che si ripresenti
+
+Con la CA integrata di CertMate, le due metà vengono dalla stessa fonte. La
+CA viene generata una volta sola, al primo avvio, e il suo certificato è
+`data/certs/ca/ca.crt`. Ogni certificato client è firmato direttamente da
+lei, senza intermedi. Il `.pfx` scaricato contiene quel certificato della CA
+insieme al certificato client e alla chiave.
+
+La CA cambia solo quando un admin la ricostruisce di proposito, con `POST
+/api/client-certs/ca/reset` e una conferma scritta per esteso. Modificare il
+soggetto della CA nelle impostazioni non sostituisce una CA esistente. Una
+ricostruzione salva una copia della vecchia CA, rimuove ogni certificato
+client che ha firmato e ripubblica la CRL. A quel punto ogni server ha
+bisogno del nuovo `ca.crt` e ogni titolare di un certificato nuovo. Tratta il
+reset come un'unica modifica ai due lati.
+
+Per i server che controllano la revoca, la CRL è servita senza credenziali su
+`/api/crl/download/pem` (o `der`). Il suo `next_update` è a sette giorni, e
+CertMate la rigenera quando viene letta dopo quella data. Un server che la
+scarica con una cadenza inferiore alla settimana ne ha sempre una valida.
+
+Dettagli in [Client Certificates](/docs/client-certificates.html).
+
+## Errori correlati
+
+- `SSL_ERROR_BAD_CERT_ALERT`: il server ha trovato il certificato
+  inaccettabile per un altro motivo.
+- `ERR_BAD_SSL_CLIENT_AUTH_CERT`: Chromium segnala `unknown_ca`, insieme agli
+  altri rifiuti del certificato client, con questo codice.
+- `SEC_ERROR_UNKNOWN_ISSUER`: lo stesso fallimento nella direzione opposta,
+  con Firefox che non si fida del certificato del server.

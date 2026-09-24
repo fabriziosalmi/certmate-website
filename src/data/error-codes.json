@@ -1,5 +1,19 @@
 [
   {
+    "code": "ERR_BAD_SSL_CLIENT_AUTH_CERT",
+    "symbol": "ERR_BAD_SSL_CLIENT_AUTH_CERT",
+    "emittedBy": "Chromium (Chrome, Edge, Brave, Opera, Vivaldi)",
+    "source": "chromium/net/base/net_error_list.h",
+    "evidence": "NET_ERROR(BAD_SSL_CLIENT_AUTH_CERT, -117)"
+  },
+  {
+    "code": "ERR_SSL_CLIENT_AUTH_CERT_NEEDED",
+    "symbol": "ERR_SSL_CLIENT_AUTH_CERT_NEEDED",
+    "emittedBy": "Chromium (Chrome, Edge, Brave, Opera, Vivaldi)",
+    "source": "chromium/net/base/net_error_list.h",
+    "evidence": "NET_ERROR(SSL_CLIENT_AUTH_CERT_NEEDED, -110)"
+  },
+  {
     "code": "ERR_SSL_PROTOCOL_ERROR",
     "symbol": "ERR_SSL_PROTOCOL_ERROR",
     "emittedBy": "Chromium (Chrome, Edge, Brave, Opera, Vivaldi)",
@@ -91,6 +105,13 @@
     "evidence": "Peer’s Certificate issuer is not recognized."
   },
   {
+    "code": "SSL_ERROR_BAD_CERT_ALERT",
+    "symbol": "SSL_ERROR_BAD_CERT_ALERT",
+    "emittedBy": "NSS (Firefox, Thunderbird)",
+    "source": "nss/lib/ssl/sslerr.h + gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
+    "evidence": "SSL peer cannot verify your certificate."
+  },
+  {
     "code": "SSL_ERROR_BAD_CERT_DOMAIN",
     "symbol": "SSL_ERROR_BAD_CERT_DOMAIN",
     "emittedBy": "NSS (Firefox, Thunderbird)",
@@ -110,5 +131,12 @@
     "emittedBy": "NSS (Firefox, Thunderbird)",
     "source": "nss/lib/ssl/sslerr.h + gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
     "evidence": "SSL received a record that exceeded the maximum permissible length."
+  },
+  {
+    "code": "SSL_ERROR_UNKNOWN_CA_ALERT",
+    "symbol": "SSL_ERROR_UNKNOWN_CA_ALERT",
+    "emittedBy": "NSS (Firefox, Thunderbird)",
+    "source": "nss/lib/ssl/sslerr.h + gecko security/manager/locales/en-US/chrome/pipnss/nsserrors.properties",
+    "evidence": "Peer does not recognize and trust the CA that issued your certificate."
   }
 ]

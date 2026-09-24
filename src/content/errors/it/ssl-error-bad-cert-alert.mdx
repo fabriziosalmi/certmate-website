@@ -1,0 +1,132 @@
+---
+title: "SSL_ERROR_BAD_CERT_ALERT"
+errorCode: "SSL_ERROR_BAD_CERT_ALERT"
+description: "Risolvi SSL_ERROR_BAD_CERT_ALERT di Firefox: il server ha ricevuto il tuo certificato client e l'ha rifiutato con un alert bad_certificate."
+summary: "Firefox ha inviato un certificato client e il server ha risposto con un alert bad_certificate. Il server l'ha letto e non l'ha accettato: date sbagliate, uso sbagliato, o un controllo tutto suo."
+browsers: ["Firefox"]
+order: 17
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+Firefox segnala `SSL_ERROR_BAD_CERT_ALERT` con il messaggio *"il peer SSL non
+è in grado di verificare il tuo certificato."* Il server ha inviato un alert
+TLS `bad_certificate`, e Firefox dà all'errore il nome dell'alert. Il
+certificato del server non ha niente che non va. Il problema è il certificato
+client che Firefox ha presentato.
+
+Di solito significa che un certificato *è stato* inviato. I server il cui
+codice sorgente è stato controllato per questa pagina inviano un alert
+diverso quando non ne arriva nessuno. OpenSSL invia `certificate_required`,
+che Firefox segnala con un codice suo, diverso da questo.
+`crypto/tls` di Go invia `certificate_required` con TLS 1.3 e
+`handshake_failure` con TLS 1.2. Quando vedi `bad_certificate`, il server ha
+ricevuto un certificato, l'ha esaminato e l'ha rifiutato.
+
+<Handshake
+  caption="Dove viene sollevato SSL_ERROR_BAD_CERT_ALERT"
+  steps={[
+    { from: 'Firefox', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Firefox', label: 'ServerHello, Certificate, CertificateRequest (nomi delle CA accettate)' },
+    { from: 'Firefox', to: 'Server', label: 'Certificate (client), CertificateVerify' },
+    { from: 'Server', label: 'Verifica il certificato client: rifiutato' },
+    { from: 'Server', to: 'Firefox', label: 'Alert bad_certificate: connessione rifiutata (SSL_ERROR_BAD_CERT_ALERT)', fails: true },
+  ]}
+/>
+
+## Cause comuni
+
+Che cosa meriti un `bad_certificate` dipende dalla libreria TLS del server.
+Le due più diffuse rispondono in modo diverso.
+
+- **Non ancora valido.** OpenSSL risponde con `bad_certificate` a un
+  certificato con `notBefore` nel futuro. Un certificato appena emesso,
+  controllato da un server con l'orologio indietro, finisce qui finché
+  l'orologio non recupera.
+- **L'uso sbagliato.** `crypto/tls` di Go controlla che i certificati client
+  abbiano l'extended key usage `clientAuth`, e un certificato che non ce l'ha
+  fallisce con `bad_certificate`. OpenSSL segnala la stessa condizione come
+  `unsupported_certificate`, che in Firefox è un altro codice.
+- **Chiavi o firme deboli.** OpenSSL invia `bad_certificate` per una chiave
+  troppo corta o per un digest di firma troppo debole rispetto al suo livello
+  di sicurezza.
+- **Le regole del server.** In Go, anche un certificato che si verifica ma
+  viene poi rifiutato dal controllo dell'applicazione (`VerifyPeerCertificate`
+  o `VerifyConnection`) produce `bad_certificate`. È il caso "valido, ma non
+  sei tu".
+- **Firefox ha inviato un certificato vecchio.** Firefox può ricordare quale
+  certificato inviare a un host. Dopo che un certificato è stato sostituito,
+  una decisione ricordata continua a presentare quello vecchio.
+
+Un certificato scaduto non produce questo errore sui server OpenSSL o Go.
+Entrambi inviano `certificate_expired`, che Firefox segnala con un codice a
+parte: il peer ha rifiutato il certificato perché scaduto.
+
+## Come risolverlo
+
+**1. Leggi il certificato che Firefox sta inviando.** Parti dal file che è
+stato importato. Firefox elenca quelli che ha nel suo gestore dei
+certificati, nella sezione Privacy e sicurezza delle impostazioni, alla
+scheda dei tuoi certificati:
+
+```bash
+openssl x509 -in client.crt -noout -subject -issuer -dates -ext extendedKeyUsage
+```
+
+Controlla che `notBefore` non sia nel futuro per il server, e che l'uso
+includa `TLS Web Client Authentication`.
+
+**2. Presenta lo stesso certificato fuori dal browser:**
+
+```bash
+openssl s_client -connect app.example.com:443 -servername app.example.com \
+  -cert client.crt -key client.key </dev/null
+```
+
+Un fallimento che termina con `alert bad certificate` riproduce l'errore
+senza Firefox. Se invece si connette, il server accetta quel file, e Firefox
+sta inviando qualcos'altro.
+
+**3. Cancella una decisione ricordata.** Nello stesso gestore dei
+certificati, la scheda delle decisioni di autenticazione elenca gli host per
+cui Firefox ricorda una scelta di certificato. Rimuovi la voce dell'host e
+ricarica. Di default Firefox chiede ogni volta, e propone solo certificati
+che risalgono a un nome di CA richiesto dal server.
+
+**4. Fatti dire il motivo a parole.** Per un server basato su OpenSSL,
+`openssl verify` sul file delle CA client del server esegue lo stesso tipo di
+controlli e dà un nome al fallimento, per esempio `certificate is not yet
+valid or the system clock is incorrect`:
+
+```bash
+openssl verify -CAfile /path/the/server/uses/client-ca.crt -purpose sslclient client.crt
+```
+
+## Evitare che si ripresenti
+
+CertMate emette certificati client dalla sua CA integrata con i campi che i
+server controllano. Ognuno è un certificato foglia, firmato direttamente da
+quella CA, con key usage `digitalSignature` ed extended key usage
+`clientAuth`. La validità si sceglie all'emissione, da 1 a 3650 giorni.
+
+Due cose da sapere. La validità parte dall'istante dell'emissione, quindi un
+server con l'orologio indietro rispetto a CertMate rifiuta un certificato
+appena emesso per tutto il tempo della differenza. E un certificato importato
+non si aggiorna mai da solo: il rinnovo, che un job giornaliero esegue 30
+giorni prima della scadenza, produce un certificato nuovo con una chiave
+nuova, che va importato come nuovo `.pfx`, e una decisione che Firefox ha
+ricordato per quell'host punta ancora al vecchio finché non viene cancellata.
+
+Emissione, download e rinnovo sono spiegati in
+[Client Certificates](/docs/client-certificates.html).
+
+## Errori correlati
+
+- `SSL_ERROR_UNKNOWN_CA_ALERT`: il server non si fida della CA che ha emesso
+  il certificato.
+- `ERR_BAD_SSL_CLIENT_AUTH_CERT`: Chromium segnala questo alert, e quasi tutti
+  gli altri rifiuti del certificato client, con questo unico codice.
+- `ERR_SSL_CLIENT_AUTH_CERT_NEEDED`: Chromium, il server ha chiesto un
+  certificato e non è stato possibile sceglierne uno.

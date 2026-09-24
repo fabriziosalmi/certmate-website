@@ -1,0 +1,129 @@
+---
+title: "SSL_ERROR_BAD_CERT_ALERT"
+errorCode: "SSL_ERROR_BAD_CERT_ALERT"
+description: "Fix Firefox's SSL_ERROR_BAD_CERT_ALERT: the server received your client certificate and refused it with a bad_certificate alert. What servers mean by it."
+summary: "Firefox sent a client certificate and the server answered with a bad_certificate alert. The server read it and would not accept it: wrong dates, wrong usage, or a check of its own."
+browsers: ["Firefox"]
+order: 17
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+Firefox reports `SSL_ERROR_BAD_CERT_ALERT` with the message *"SSL peer cannot
+verify your certificate."* The server sent a TLS `bad_certificate` alert, and
+Firefox names the error after the alert. Nothing is wrong with the server's
+own certificate. The complaint is about the client certificate Firefox
+presented.
+
+It usually means a certificate *was* sent. The servers whose source was
+checked for this page send a different alert when none arrives. OpenSSL sends
+`certificate_required`, which Firefox reports under its own, different code. Go's `crypto/tls` sends
+`certificate_required` under TLS 1.3 and `handshake_failure` under TLS 1.2.
+When you see `bad_certificate`, the server received a certificate, examined
+it, and refused it.
+
+<Handshake
+  caption="Where SSL_ERROR_BAD_CERT_ALERT is raised"
+  steps={[
+    { from: 'Firefox', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Firefox', label: 'ServerHello, Certificate, CertificateRequest (accepted CA names)' },
+    { from: 'Firefox', to: 'Server', label: 'Certificate (client), CertificateVerify' },
+    { from: 'Server', label: 'Verifies the client certificate: rejected' },
+    { from: 'Server', to: 'Firefox', label: 'Alert bad_certificate: connection refused (SSL_ERROR_BAD_CERT_ALERT)', fails: true },
+  ]}
+/>
+
+## Common causes
+
+What earns a `bad_certificate` depends on the server's TLS library. The two
+most common libraries give different answers.
+
+- **Not yet valid.** OpenSSL answers a certificate whose `notBefore` is in the
+  future with `bad_certificate`. A certificate issued a moment ago, checked by
+  a server whose clock is behind, falls here until the clock catches up.
+- **The wrong usage.** Go's `crypto/tls` checks client certificates for the
+  `clientAuth` extended key usage, and a certificate without it fails with
+  `bad_certificate`. OpenSSL reports the same condition as
+  `unsupported_certificate`, a different Firefox code.
+- **Weak keys or signatures.** OpenSSL sends `bad_certificate` for a key that
+  is too small or a signature digest that is too weak for its security level.
+- **The server's own rules.** In Go, a certificate that verifies but is then
+  refused by the application's own check (`VerifyPeerCertificate` or
+  `VerifyConnection`) also produces `bad_certificate`. This is the "valid, but
+  not you" case.
+- **Firefox sent an old certificate.** Firefox can remember which certificate
+  to send to a host. After a certificate has been replaced, a remembered
+  decision keeps presenting the old one.
+
+An expired certificate is not this error on OpenSSL or Go servers. Both send
+`certificate_expired` for it, which Firefox reports under a separate code that
+says the peer rejected the certificate as expired.
+
+## How to fix it
+
+**1. Read the certificate Firefox is sending.** Start from the file that was
+imported. Firefox lists what it holds in its certificate manager (Settings,
+Privacy and security, Certificates, *Manage certificates*, *Your
+Certificates*):
+
+```bash
+openssl x509 -in client.crt -noout -subject -issuer -dates -ext extendedKeyUsage
+```
+
+Check that `notBefore` is not in the future for the server, and that the usage
+includes `TLS Web Client Authentication`.
+
+**2. Present the same certificate outside the browser:**
+
+```bash
+openssl s_client -connect app.example.com:443 -servername app.example.com \
+  -cert client.crt -key client.key </dev/null
+```
+
+A failure ending in `alert bad certificate` reproduces it without Firefox. If
+this connects, the server accepts the file, and Firefox is sending something
+else.
+
+**3. Clear a remembered decision.** In the same certificate manager, the
+*Authentication Decisions* tab lists the hosts for which Firefox remembers
+a certificate choice. Remove the entry for the host and reload. By default
+Firefox asks every time, and it lists only certificates that chain to a CA
+name the server asked for.
+
+**4. Get the reason in words.** For a server built on OpenSSL, `openssl
+verify` against the server's client-CA file runs the same kind of checks
+and names the failure, for example `certificate is not yet valid or the system
+clock is incorrect`:
+
+```bash
+openssl verify -CAfile /path/the/server/uses/client-ca.crt -purpose sslclient client.crt
+```
+
+## Prevent it from recurring
+
+CertMate issues client certificates from its built-in CA with the fields
+servers check. Each one is a leaf, signed directly by that CA, with
+`digitalSignature` key usage and the `clientAuth` extended key usage. Its
+validity is chosen at issue time, from 1 to 3650 days.
+
+Two things are worth knowing. Validity starts at the moment of issue, so a
+server whose clock is behind CertMate's refuses a brand-new certificate for
+as long as the clocks differ. And an imported certificate never updates
+itself: renewal, which a daily job runs 30 days before expiry, produces a new
+certificate with a new key, which has to be imported as a new `.pfx`, and a
+decision Firefox remembered for that host still points at the old one until
+it is cleared.
+
+Issuing, downloading and renewing are covered in
+[Client Certificates](/docs/client-certificates.html).
+
+## Related errors
+
+- `SSL_ERROR_UNKNOWN_CA_ALERT`: the server does not trust the CA that issued
+  the certificate.
+- `ERR_BAD_SSL_CLIENT_AUTH_CERT`: Chromium reports this alert, and most other
+  client certificate refusals, under this one code.
+- `ERR_SSL_CLIENT_AUTH_CERT_NEEDED`: Chromium, the server asked and no
+  certificate could be chosen.

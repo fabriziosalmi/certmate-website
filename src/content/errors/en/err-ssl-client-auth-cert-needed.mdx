@@ -1,0 +1,109 @@
+---
+title: "ERR_SSL_CLIENT_AUTH_CERT_NEEDED"
+errorCode: "ERR_SSL_CLIENT_AUTH_CERT_NEEDED"
+description: "Fix Chromium's ERR_SSL_CLIENT_AUTH_CERT_NEEDED: the server asked for a client certificate and the browser could not ask you which one to send."
+summary: "The server asked for a client certificate, and Chromium had nowhere to ask you which one to send: no tab to show the selector in, or a program on Chromium's network stack that does not handle the request."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 15
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+Chromium defines `ERR_SSL_CLIENT_AUTH_CERT_NEEDED` (error -110) as *"The
+server requested a client certificate for SSL client authentication."* That is
+a request, not a refusal. Nothing has been rejected yet.
+
+Inside Chromium the code is a question passed upward. When the server's
+`CertificateRequest` arrives and the browser has not already chosen a
+certificate for that host and port, the TLS layer pauses the handshake and
+returns this code so that the browser can decide what to send. Usually it is
+answered at once: a certificate is selected automatically by enterprise
+policy, you pick one in the certificate selector, or, if there are no
+certificates at all, the handshake continues without one.
+
+You see the code only when that question could not be answered. The request
+is then cancelled with this code. It is not in the list of errors Chromium's
+error page has specific text for, so a page shows the generic *"This site
+can't be reached"* heading with the code underneath.
+
+<Handshake
+  caption="Where ERR_SSL_CLIENT_AUTH_CERT_NEEDED is raised"
+  steps={[
+    { from: 'Chromium', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Chromium', label: 'ServerHello, Certificate, CertificateRequest (accepted CA names)' },
+    { from: 'Chromium', label: 'No certificate chosen yet for this host: handshake paused, the browser is asked to pick one' },
+    { from: 'Chromium', label: 'Nothing can show the selector or answer for it: request cancelled (ERR_SSL_CLIENT_AUTH_CERT_NEEDED)', fails: true },
+  ]}
+/>
+
+## Common causes
+
+- **The request has no tab.** A service worker or another background context
+  hits a server that asks for a certificate. When the certificate cannot be
+  selected automatically and there is no tab to show the selector in, Chrome
+  cancels the request instead. For an extension's background requests there
+  is one exception: if there are no client certificates at all, the request
+  continues without one.
+- **The tab cannot show the selector.** Not every tab can host the dialog.
+  Chrome gives up on the request rather than show a selector with no page
+  attached.
+- **The client is built on Chromium's network stack and never answers the
+  question.** In Chromium's network library, a program that does not handle
+  certificate requests cancels them with exactly this code. An embedded
+  browser or a tool built on that library, with no certificate selection
+  wired in, fails on every server that asks.
+
+## How to fix it
+
+**1. Confirm the server asks, and for which CA.** Connect with the client
+certificate you expect to use:
+
+```bash
+openssl s_client -connect app.example.com:443 -servername app.example.com \
+  -cert client.crt -key client.key </dev/null
+```
+
+Under *"Acceptable client certificate CA names"* the output lists the CAs the
+server accepts. Chromium offers only certificates that chain to one of those
+names, and only certificates that have not expired.
+
+**2. Answer the question once, in a tab.** Open the same host and port as a
+normal page in a tab and choose the certificate in the selector. Chromium
+remembers that choice per host and port, and later requests to the same
+server, including background ones, use it without asking again.
+
+**3. If the selector never appears, check the certificate store.** With no
+certificate that matches the CA names and the date check, Chromium sends
+none and the server then refuses the handshake. That shows up as
+`ERR_BAD_SSL_CLIENT_AUTH_CERT`, which has its own page.
+
+**4. For an embedded client, handle the request.** An application built on
+Chromium's network stack has to answer certificate requests itself. That is
+done in the application's code. No server setting changes it.
+
+## Prevent it from recurring
+
+This error is about the browser not being able to ask which certificate to
+send. Where the certificate comes from is a separate matter. CertMate's part
+is the certificate itself. It issues client certificates from its built-in
+certificate authority, with the `clientAuth` extended key usage that Chromium
+looks for on macOS and Windows, and it serves each one as an encrypted `.pfx` bundle
+(certificate, private key and the CA certificate). When the server's client-CA file is
+CertMate's CA certificate, the certificate in the browser comes from the same
+place, and it is one the server lists as acceptable.
+
+Background requests stop failing once the certificate is in the browser's
+store and has been chosen in a tab for that host. How to issue, download,
+renew and revoke these certificates is covered in
+[Client Certificates](/docs/client-certificates.html).
+
+## Related errors
+
+- `ERR_BAD_SSL_CLIENT_AUTH_CERT`: the handshake went on, and the server
+  refused the certificate or its absence.
+- `SSL_ERROR_BAD_CERT_ALERT`: Firefox's report of a client certificate the
+  server could not verify.
+- `ERR_SSL_PROTOCOL_ERROR`: the handshake failed for a reason other than a
+  client certificate.
