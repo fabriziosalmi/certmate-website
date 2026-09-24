@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Script DNS Provider - CertMate Documentation</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="preload" href="vendor/font-awesome/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/font-awesome/all.min.css"></noscript>
+    <link rel="preload" as="style" href="vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/fonts/fonts.css"></noscript>
+    <style>
+        .doc-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h1 {
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-6);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content p, .doc-content li {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+        .doc-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin: var(--spacing-6) 0;
+        }
+        .doc-content pre code {
+            background: none;
+            padding: 0;
+            color: white;
+        }
+        .doc-content ul, .doc-content ol {
+            margin: var(--spacing-4) 0;
+            padding-left: var(--spacing-8);
+        }
+        .doc-content li {
+            margin: var(--spacing-2) 0;
+        }
+    
+    /* In-page TOC, injected by toc.js. Sticky right column on lg+
+       viewports; collapsed to a top disclosure on smaller screens. */
+    .doc-toc {
+      display: none;
+    }
+    /* Shown only when it fits in the right margin: this page's content
+       column is 900px wide, the TOC 220px plus 24px of gap, so the viewport
+       must be at least 900 + 2 * 244 = 1388px. Below that the old rule
+       placed the TOC over the text (#588). */
+    @media (min-width: 1388px) {
+      .doc-toc {
+        display: block;
+        position: fixed;
+        top: 100px;
+        right: max(24px, calc((100vw - 900px) / 2 - 244px));
+        width: 220px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+      }
+    }
+    .doc-toc-inner {
+      border-left: 2px solid var(--gray-200);
+      padding-left: 16px;
+    }
+    .doc-toc-list { list-style: none; padding: 0; margin: 0; }
+    .doc-toc-item { margin: 4px 0; line-height: 1.4; }
+    .doc-toc-item-h3 { padding-left: 12px; }
+    .doc-toc-link {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: block;
+      padding: 2px 0;
+      transition: color 120ms ease;
+    }
+    .doc-toc-link:hover { color: var(--gray-900); }
+    .doc-toc-link.is-active {
+      color: var(--blue-600, #2563eb);
+      font-weight: 600;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="../assets/certmate_logo.png" alt="CertMate Logo" class="brand-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html#features" class="nav-link">Features</a>
+                <a href="../index.html#providers" class="nav-link">DNS Providers</a>
+                <a href="index.html" class="nav-link active">Documentation</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-code"></i> Custom Script DNS Provider</h1>
+                <p class="docs-subtitle">Issue DNS-01 certificates through a DNS service CertMate has no provider for, by giving it a script that creates and removes the TXT record.</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <h2>How It Works</h2>
+            <p>The <code>custom-script</code> provider runs certbot in its core <code>--manual</code> mode with <code>--preferred-challenges dns</code>, and passes your scripts as <code>--manual-auth-hook</code> and, when set, <code>--manual-cleanup-hook</code>. No certbot plugin is installed or needed. Your auth script creates the <code>_acme-challenge</code> TXT record and waits for it to propagate; the optional cleanup script removes it after validation.</p>
+            <p>Use it for a DNS service without a certbot plugin: an in-house DNS server with an HTTP API, an appliance, or a cloud DNS that CertMate does not list.</p>
+
+            <h2>Configuration</h2>
+            <p>In <strong>Settings</strong>, choose <strong>Custom Script</strong> and fill in <strong>Auth Hook Script Path</strong> (required) and <strong>Cleanup Hook Script Path</strong> (optional). Through the API:</p>
+            <pre><code>curl -X POST https://certmate.example.com/api/settings \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "dns_provider": "custom-script",
+    "dns_providers": {
+      "custom-script": {
+        "auth_hook": "/opt/certmate-hooks/dns-auth.sh",
+        "cleanup_hook": "/opt/certmate-hooks/dns-cleanup.sh"
+      }
+    }
+  }'</code></pre>
+            <p>The values are paths, not commands: you cannot add arguments. The provider supports multiple accounts like the others, so two accounts can point at two different pairs of scripts.</p>
+
+            <h2>Path Rules</h2>
+            <p>CertMate checks each path when a certificate is issued or renewed with the provider, and in the provider test (<code>POST /api/web/certificates/test-provider</code>). A path is refused unless it:</p>
+            <ul>
+                <li>is absolute;</li>
+                <li>names an existing file that the CertMate process can execute;</li>
+                <li>contains only letters, digits, <code>/</code>, <code>.</code>, <code>_</code> and <code>-</code> (certbot runs hooks through the shell, so whitespace and shell metacharacters cannot work even quoted);</li>
+                <li>is neither world-writable nor group-writable (<code>chmod 755</code> or stricter).</li>
+            </ul>
+            <p>The test checks the files only. It does not run the scripts and makes no DNS change, so the first real test of the script is an issuance; use the Let's Encrypt staging CA (<code>letsencrypt_staging</code>) for it.</p>
+
+            <h2>Where the Script Lives</h2>
+            <p>The script runs inside the CertMate container, as the container user <code>certmate</code> (UID 1000 in the image), with CertMate's privileges. The path you configure is a path inside the container, and the script can use only what the image contains: <code>sh</code>, <code>bash</code>, <code>curl</code>, <code>openssl</code> and <code>grep</code>. There is no <code>jq</code>, no <code>dig</code> and no vendor DNS CLI.</p>
+            <p>Mount the scripts from the host read-only, and set the mode on the host:</p>
+            <pre><code># on the host
+mkdir -p dns-hooks
+chmod 755 dns-hooks/dns-auth.sh dns-hooks/dns-cleanup.sh
+
+# docker-compose.yml, under the certmate service
+    volumes:
+      - ./dns-hooks:/opt/certmate-hooks:ro</code></pre>
+            <p>Keep the path stable. certbot stores the hook paths in the certificate's renewal configuration and replays them at every renewal; if you move the scripts, reissue the certificate.</p>
+            <p>Only an admin can set the provider's configuration. Treat the scripts as part of your deployment, the same trust model as <a href="deploy-hooks.html">deploy hooks</a>.</p>
+
+            <h2>The Contract</h2>
+            <p>certbot calls the auth script once per challenge, then asks the CA to validate. It calls the cleanup script once per challenge after validation. The scripts take no arguments; everything arrives in environment variables:</p>
+            <table>
+                <thead>
+                    <tr><th>Variable</th><th>Hook</th><th>Value</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>CERTBOT_DOMAIN</code></td><td>both</td><td>The name being validated. The record goes on <code>_acme-challenge.$CERTBOT_DOMAIN</code>.</td></tr>
+                    <tr><td><code>CERTBOT_VALIDATION</code></td><td>both</td><td>The TXT value for this challenge.</td></tr>
+                    <tr><td><code>CERTBOT_ALL_DOMAINS</code></td><td>both</td><td>Comma-separated names of every challenge in this run.</td></tr>
+                    <tr><td><code>CERTBOT_REMAINING_CHALLENGES</code></td><td>both</td><td>How many challenges come after this one; <code>0</code> on the last.</td></tr>
+                    <tr><td><code>CERTBOT_AUTH_OUTPUT</code></td><td>cleanup</td><td>What the auth script printed on stdout for the same challenge, trimmed.</td></tr>
+                    <tr><td><code>CERTMATE_DNS_PROPAGATION_SECONDS</code></td><td>both</td><td>The propagation wait CertMate has configured (see below).</td></tr>
+                </tbody>
+            </table>
+            <p>The script also inherits the CertMate process environment, so a variable you set on the container (an API token, for example) is visible to it.</p>
+            <p>The exit code does not stop the issuance. certbot 2.10.0, the version the image installs, logs a non-zero exit and anything on stderr as a warning and carries on to validation. The outcome depends only on whether the CA finds the TXT value. Exit non-zero anyway when something fails (<code>set -eu</code>, <code>curl -f</code>), so the warning and the error text appear in the log next to the failed validation.</p>
+            <p>There is no timeout per script. CertMate stops the whole certbot run after 30 minutes, for issuance and for renewal. A script that hangs holds the issuance until then, and a killed run does not reach the cleanup script.</p>
+
+            <h2>Waiting for Propagation</h2>
+            <p>certbot validates as soon as the last auth script returns and does not wait between them, so the wait is the script's job. CertMate exports the wait it would use for a plugin as <code>CERTMATE_DNS_PROPAGATION_SECONDS</code>:</p>
+            <ul>
+                <li>the <code>custom-script</code> entry of the <code>dns_propagation_seconds</code> setting, default 120, kept between 1 and 3600;</li>
+                <li>unless the account's configuration has its own <code>propagation_seconds</code>, which takes precedence.</li>
+            </ul>
+            <p>The variable is set at issuance and at renewal. Nothing enforces it: a script can ignore it and poll its DNS API instead.</p>
+            <p>Because all auth scripts run before validation, a script that sleeps only when <code>CERTBOT_REMAINING_CHALLENGES</code> is <code>0</code> waits once per run instead of once per name.</p>
+
+            <h2>Apex and Wildcard in One Certificate</h2>
+            <p>A certificate for <code>example.com</code> and <code>*.example.com</code> has two challenges, and both put their TXT value on <code>_acme-challenge.example.com</code>. Both auth scripts run before the CA checks either value, so both values must be on the name at the same time.</p>
+            <p>The auth script must add a record, never replace the record set. If your DNS API offers only "set the TXT records on this name", read the existing values and write them back with the new one. The cleanup script must delete only the record whose value is <code>$CERTBOT_VALIDATION</code>, since the other challenge's cleanup runs separately.</p>
+
+            <h2>Worked Example</h2>
+            <p>The DNS service here is a made-up HTTP API at <code>dns-api.example.net</code> that creates one TXT record per <code>POST</code> and deletes records matching a name, type and value. Replace the URLs and the request body with your service's. The scripts use only <code>sh</code> and <code>curl</code>. The token comes from a container variable, <code>DNS_API_TOKEN</code>, which you set in the container's environment.</p>
+            <p><code>/opt/certmate-hooks/dns-auth.sh</code>:</p>
+            <pre><code>#!/bin/sh
+set -eu
+
+NAME="_acme-challenge.${CERTBOT_DOMAIN}"
+
+# Add one TXT record. The API adds; it does not replace the
+# records already on the name, so apex + wildcard both survive.
+curl -fsS -X POST "https://dns-api.example.net/v1/records" \
+  -H "Authorization: Bearer ${DNS_API_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "{\"type\":\"TXT\",\"name\":\"${NAME}\",\"content\":\"${CERTBOT_VALIDATION}\",\"ttl\":60}" \
+  &gt;/dev/null
+
+# Wait once, after the last record of this run.
+if [ "${CERTBOT_REMAINING_CHALLENGES:-0}" = "0" ]; then
+  sleep "${CERTMATE_DNS_PROPAGATION_SECONDS:-120}"
+fi</code></pre>
+            <p><code>/opt/certmate-hooks/dns-cleanup.sh</code>:</p>
+            <pre><code>#!/bin/sh
+set -eu
+
+NAME="_acme-challenge.${CERTBOT_DOMAIN}"
+
+# Delete only this challenge's value.
+curl -fsS -G -X DELETE "https://dns-api.example.net/v1/records" \
+  -H "Authorization: Bearer ${DNS_API_TOKEN}" \
+  --data-urlencode "type=TXT" \
+  --data-urlencode "name=${NAME}" \
+  --data-urlencode "content=${CERTBOT_VALIDATION}" \
+  &gt;/dev/null</code></pre>
+            <p>If your API deletes by record ID instead, have the auth script print the ID on stdout and read it in the cleanup script from <code>CERTBOT_AUTH_OUTPUT</code>. Keep other output off stdout, or send it to stderr.</p>
+            <p>Before a production certificate:</p>
+            <ol>
+                <li>Mount the scripts, <code>chmod 755</code> them, and set <code>DNS_API_TOKEN</code> on the container.</li>
+                <li>Save the provider and use the provider test to confirm the paths pass the checks.</li>
+                <li>Issue a certificate for <code>example.com</code> and <code>*.example.com</code> against <code>letsencrypt_staging</code>, which exercises the two-values case.</li>
+                <li>Check that both records are gone from <code>_acme-challenge.example.com</code> afterwards.</li>
+            </ol>
+
+            <h2>Next Steps</h2>
+            <ul>
+                <li><a href="dns-providers.html">DNS Providers</a>: the providers CertMate supports natively</li>
+                <li><a href="dns-01-delegation.html">DNS-01 Delegation</a>: answering the challenge in a zone CertMate can write</li>
+                <li><a href="docker-deployment.html">Docker Deployment</a>: volumes, users and environment for the container</li>
+                <li><a href="deploy-hooks.html">Deploy Hooks</a>: the other scripts CertMate runs inside the container</li>
+                <li><a href="ca-providers.html">CA Providers</a>: the staging CA and the other certificate authorities</li>
+                <li><a href="troubleshooting.html">Troubleshooting</a>: failed validations and slow propagation</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributors</a></p>
+        </div>
+    </footer>
+    <script src="toc.js" defer></script>
+</body>
+</html>

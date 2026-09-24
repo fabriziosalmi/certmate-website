@@ -180,6 +180,12 @@ export const DOC_PAGES: DocPage[] = [
     description:
       'Set up OpenID Connect SSO in CertMate: IdP redirect URI and discovery, role mapping from group claims, JIT users, email linking, and logout.',
   },
+  {
+    slug: 'custom-dns-script',
+    title: 'Custom Script DNS Provider - CertMate Documentation',
+    description:
+      'Use a DNS service CertMate has no provider for: the hook script contract, path rules, propagation wait, apex plus wildcard, and a curl example.',
+  },
 ];
 
 /** The published URL of a documentation page, absolute. */
