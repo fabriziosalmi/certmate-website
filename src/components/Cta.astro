@@ -1,13 +1,15 @@
 ---
 import { Icon } from 'astro-icon/components';
 import { GITHUB } from '~/data/site';
-// Hero-style call-to-action band between the API and Documentation sections.
+// Hero-style call-to-action band at the foot of the home. It carries id="docs"
+// because the Documentation section that used to have it is gone, and links
+// to /#docs elsewhere should still land on a way into the documentation.
 // Copy is fact-only: no soft-number social proof (the previous "join
 // hundreds of developers" line was unverifiable). The pitch is the honest
 // self-hosting one — one command, and your keys never leave your box.
 ---
 
-<section class="border-b border-gray-200 bg-gradient-to-br from-blue-50 via-white to-cyan-50 py-20 dark:border-gray-800 dark:from-blue-950/30 dark:via-gray-950 dark:to-cyan-950/30">
+<section id="docs" class="border-b border-gray-200 bg-gradient-to-br from-blue-50 via-white to-cyan-50 py-20 dark:border-gray-800 dark:from-blue-950/30 dark:via-gray-950 dark:to-cyan-950/30">
   <div class="container-x">
     <div class="mx-auto max-w-2xl text-center">
       <h2 class="section-title">Run it on your own infrastructure</h2>
@@ -25,7 +27,7 @@ import { GITHUB } from '~/data/site';
           Get Started on GitHub
           <span class="sr-only">(opens in new tab)</span>
         </a>
-        <a href="#docs" class="btn btn-secondary">
+        <a href="/docs/" class="btn btn-secondary">
           <Icon name="fa6-solid:book" aria-hidden="true" />
           Read Documentation
         </a>
