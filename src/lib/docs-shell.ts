@@ -135,3 +135,43 @@ export function applyShell(html: string, opts: { locale: NavLocale; pathname: st
   out = swap(out, /<\/body>/, `    <script src="/docs/shell.js" defer></script>\n</body>`, '</body>');
   return out;
 }
+
+/**
+ * The documentation index's sections and cards, from DOC_GROUPS and DOC_CARDS
+ * in src/data/docs.ts. It replaces the DOCS_INDEX marker in src/docs/index.html.
+ * The index used to be one hand-written grid of 25 cards with no headings,
+ * 9,000px tall on a phone; the same pages are now in seven titled sections,
+ * and a page cannot be added to the site without a place in one of them.
+ */
+export function renderDocsIndex(
+  groups: { title: string; slugs: string[] }[],
+  cards: Record<string, { name: string; blurb: string; icon: string; tone: string }>,
+): string {
+  const id = (title: string) => title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const sections = groups
+    .map((g) => {
+      const items = g.slugs
+        .map((slug) => {
+          const c = cards[slug];
+          return `<a href="${slug}.html" class="docs-card">
+                        <div class="docs-card-icon ${c.tone}">${svgIcon(c.icon)}</div>
+                        <h3>${esc(c.name)}</h3>
+                        <p>${esc(c.blurb)}</p>
+                        <span class="docs-card-arrow">${svgIcon('fa6-solid:arrow-right')}</span>
+                    </a>`;
+        })
+        .join('\n                    ');
+      return `<section class="docs-group" aria-labelledby="${id(g.title)}">
+                <h2 class="docs-group-title" id="${id(g.title)}">${esc(g.title)}</h2>
+                <div class="docs-grid">
+                    ${items}
+                </div>
+            </section>`;
+    })
+    .join('\n            ');
+  return `<section class="docs-section">
+        <div class="container">
+            ${sections}
+        </div>
+    </section>`;
+}
