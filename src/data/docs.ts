@@ -150,6 +150,12 @@ export const DOC_PAGES: DocPage[] = [
     description:
       "CertMate's private CA for mTLS client certificates: CA subject and reset, issuing, PFX download, renewal, revocation, CRL and deploy hooks on revoke.",
   },
+  {
+    slug: 'revocation',
+    title: 'Revocation Checking - CertMate Documentation',
+    description:
+      'How CertMate checks whether a served certificate is revoked: OCSP first, CRL fallback, verified answers only, and why unavailable is never good.',
+  },
 ];
 
 /** The published URL of a documentation page, absolute. */
