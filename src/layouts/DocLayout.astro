@@ -89,12 +89,12 @@ const crumbLd = {
   <main id="main-content" class="mx-auto w-full max-w-3xl flex-1 px-4 py-8 [&_:is(code,.font-mono)]:[overflow-wrap:anywhere]">
     <nav aria-label="Breadcrumb" class="mb-6 text-sm text-gray-500 [overflow-wrap:anywhere] dark:text-gray-400">
       <ol class="flex flex-wrap items-center gap-1">
-        <li><a href={localizedPath(lang, '/')} class="hover:text-primary">{t.home}</a></li>
+        <li><a href={localizedPath(lang, '/')} class="inline-flex min-h-6 items-center hover:text-primary">{t.home}</a></li>
         {breadcrumbs.map((c) => (
           <li class="flex items-center gap-1">
             <span aria-hidden="true">/</span>
             {c.path
-              ? <a href={localizedPath(lang, c.path)} class="hover:text-primary">{c.label}</a>
+              ? <a href={localizedPath(lang, c.path)} class="inline-flex min-h-6 items-center hover:text-primary">{c.label}</a>
               : <span>{c.label}</span>}
           </li>
         ))}

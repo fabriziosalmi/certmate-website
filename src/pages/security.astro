@@ -216,11 +216,11 @@ const disclosureRows = [
           */}
           <div class="mt-6 flex flex-wrap items-center gap-4 text-sm">
             {/* slopless-disable-next-line VBC-944 -- GITHUB is a build-time constant in src/data/site.ts */}
-            <a href={`${GITHUB}/actions/workflows/codeql.yml`} class="inline-flex items-center gap-2 font-medium text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+            <a href={`${GITHUB}/actions/workflows/codeql.yml`} class="inline-flex min-h-11 items-center gap-2 font-medium text-primary hover:underline" target="_blank" rel="noopener noreferrer">
               <Icon name="fa6-solid:shield-halved" aria-hidden="true" />
               CodeQL runs
             </a>
-            <a href="https://securityscorecards.dev/viewer/?uri=github.com/fabriziosalmi/certmate" class="inline-flex items-center gap-2 font-medium text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+            <a href="https://securityscorecards.dev/viewer/?uri=github.com/fabriziosalmi/certmate" class="inline-flex min-h-11 items-center gap-2 font-medium text-primary hover:underline" target="_blank" rel="noopener noreferrer">
               <Icon name="fa6-solid:list-check" aria-hidden="true" />
               OSSF Scorecard report
             </a>
@@ -244,7 +244,7 @@ const disclosureRows = [
             </p>
             <p class="mt-4">
               {/* slopless-disable-next-line VBC-944 -- GITHUB is a build-time constant in src/data/site.ts */}
-              <a href={`${GITHUB}/blob/main/SECURITY.md`} class="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+              <a href={`${GITHUB}/blob/main/SECURITY.md`} class="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-primary hover:underline" target="_blank" rel="noopener noreferrer">
                 Read the full security policy
                 <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.65rem]" aria-hidden="true" />
                 <span class="sr-only">(opens in new tab)</span>

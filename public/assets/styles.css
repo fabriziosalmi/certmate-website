@@ -2078,8 +2078,8 @@ html:not(.dark) .only-dark, html.dark .only-light { display: none; }
     color: var(--shell-strong);
 }
 .site-footer ul { list-style: none; margin: 0.75rem 0 0; padding: 0; }
-.site-footer li { margin: 0 0 0.5rem; font-size: 0.875rem; line-height: 1.25rem; }
-.site-footer li a { color: var(--shell-muted); text-decoration: none; }
+.site-footer li { margin: 0 0 0.25rem; font-size: 0.875rem; line-height: 1.25rem; }
+.site-footer li a { display: inline-flex; align-items: center; min-height: 1.5rem; min-width: 1.5rem; color: var(--shell-muted); text-decoration: none; }
 .site-footer li a:hover { color: var(--shell-accent); }
 .site-footer-bottom {
     display: flex;
