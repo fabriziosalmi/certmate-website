@@ -4,7 +4,7 @@
  * Each declares the English page with the same slug as its hreflang pair.
  */
 import type { APIRoute } from 'astro';
-import { DOC_PAGES_IT, docAlternates, docUrl, type DocPage } from '../../../data/docs';
+import { DOC_PAGES_IT, DOC_READING_ORDER, docAlternates, docUrl, type DocPage } from '../../../data/docs';
 import { ogImageFor } from '~/lib/og';
 import { buildHead } from '../../../lib/seo';
 import { applyShell } from '~/lib/docs-shell';
@@ -44,6 +44,19 @@ function breadcrumb(page: DocPage) {
   };
 }
 
+// Previous and next among the Italian pages, in the English index's reading
+// order; each title is the Italian page's own.
+function neighbours(slug: string) {
+  const order = DOC_READING_ORDER.filter((s) => DOC_PAGES_IT.some((p) => p.slug === s));
+  const i = order.indexOf(slug);
+  if (i === -1) return {};
+  const link = (s: string | undefined) => {
+    const page = s && DOC_PAGES_IT.find((p) => p.slug === s);
+    return page ? { href: `${page.slug}.html`, title: page.title.split(' - ')[0] } : undefined;
+  };
+  return { prev: link(order[i - 1]), next: link(order[i + 1]) };
+}
+
 export const GET: APIRoute = ({ props }) => {
   const page = props.page as DocPage;
   const source = SOURCES[`../../../docs/it/${page.slug}.html`];
@@ -79,6 +92,7 @@ export const GET: APIRoute = ({ props }) => {
     pathname: new URL(docUrl(page.slug, undefined, 'it')).pathname,
     altHref: new URL(docUrl(page.slug)).pathname,
     source: `src/docs/it/${page.slug}.html`,
+    ...neighbours(page.slug),
   });
   return new Response(html, {
     headers: { 'content-type': 'text/html; charset=utf-8' },

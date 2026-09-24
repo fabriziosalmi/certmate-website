@@ -2213,3 +2213,158 @@ html.dark .pagefind-ui input.pagefind-ui__search-input::placeholder { color: #9c
     .docs-group-title { font-size: var(--font-size-xl); margin-bottom: var(--spacing-3); }
     .docs-group + .docs-group { margin-top: var(--spacing-8); }
 }
+
+/* ------------------------------------------------------------------------
+   Documentation reading tools: column width, table of contents, previous
+   and next, copy buttons, code face. "html" in front of a selector outranks
+   the rules each page carries in its own <style>.
+   ------------------------------------------------------------------------ */
+
+/* A 900px column ran about 120 characters a line of prose, measured. 42rem
+   runs about 86. The API reference and the DNS provider pages keep their
+   wide column for the endpoint and provider grids. */
+html .doc-content { max-width: 42rem; }
+html .doc-content.doc-content-wide { max-width: 1100px; }
+
+/* One monospace stack for inline code and blocks, the site's own: the pages
+   named Monaco for inline code and nothing for blocks, so the two differed. */
+html .doc-content code,
+html .doc-content pre {
+    font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas, monospace;
+}
+/* The bare `monospace` family the blocks had made browsers draw them at 13px;
+   a named stack does not, so the block and the code in it are sized here, to
+   one size, or the block's 16px line box spaces out the 14px code. */
+html .doc-content pre { font-size: 0.875rem; line-height: 1.6; }
+html .doc-content pre code { font-size: 1em; }
+/* Every code block drawn the same way. Two pages (storage-backends, security)
+   carry no pre rule of their own, so their blocks were a borderless grey box
+   with no margin, unlike the dark block on every other page. */
+html .doc-content pre {
+    background: #111827;
+    color: #f9fafb;
+    padding: var(--spacing-6);
+    border-radius: var(--radius-lg);
+    margin: var(--spacing-6) 0;
+}
+html .doc-content pre code { background: none; padding: 0; color: inherit; }
+
+/* Table of contents. Both copies are in the HTML (addToc in docs-shell.ts):
+   a fixed column beside the text where it fits, a disclosure at the top of
+   the text where it does not. The column is 220px plus 24px of gap on each
+   side of the text, so it fits from 42rem + 2 * 244px = 1160px, and from
+   1100px + 488px = 1588px beside the wide pages. */
+.doc-toc { display: none; }
+.doc-toc-inner { border-left: 2px solid var(--gray-200); padding-left: 16px; }
+.doc-toc-list { list-style: none; padding: 0; margin: 0; }
+.doc-toc-item { margin: 4px 0; line-height: 1.4; }
+.doc-toc-item-h3 { padding-left: 12px; }
+.doc-toc-link {
+    color: var(--gray-600);
+    text-decoration: none;
+    font-size: 0.85rem;
+    display: block;
+    padding: 2px 0;
+    transition: color 120ms ease;
+}
+.doc-toc-link:hover { color: var(--gray-900); }
+.doc-toc-link.is-active { color: var(--primary-color); font-weight: 600; }
+
+html .doc-content .doc-toc-mobile {
+    margin: 0 0 var(--spacing-8);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 0 var(--spacing-4);
+}
+html .doc-content .doc-toc-mobile summary {
+    display: flex;
+    align-items: center;
+    min-height: 2.75rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    cursor: pointer;
+}
+html .doc-content .doc-toc-mobile .doc-toc-list { padding: 0 0 var(--spacing-3); }
+html .doc-content .doc-toc-mobile li { margin: 0; line-height: 1.4; }
+html .doc-content .doc-toc-mobile .doc-toc-link { padding: 0.4rem 0; font-size: 0.9rem; }
+
+@media (min-width: 1160px) {
+    .doc-toc:not(.doc-toc-wide) {
+        display: block;
+        position: fixed;
+        top: 6rem;
+        right: max(24px, calc((100vw - 42rem) / 2 - 244px));
+        width: 220px;
+        max-height: calc(100vh - 7.5rem);
+        overflow-y: auto;
+    }
+    html .doc-content .doc-toc-mobile:not(.doc-toc-wide) { display: none; }
+}
+@media (min-width: 1588px) {
+    .doc-toc.doc-toc-wide {
+        display: block;
+        position: fixed;
+        top: 6rem;
+        right: max(24px, calc((100vw - 1100px) / 2 - 244px));
+        width: 220px;
+        max-height: calc(100vh - 7.5rem);
+        overflow-y: auto;
+    }
+    html .doc-content .doc-toc-mobile.doc-toc-wide { display: none; }
+}
+
+/* Previous and next, in the index's reading order. */
+.doc-pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-4);
+    max-width: 42rem;
+    margin: 0 auto var(--spacing-16);
+    padding: 0 var(--spacing-4);
+}
+.doc-pager-link {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-1);
+    padding: var(--spacing-4);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    min-height: 2.75rem;
+}
+.doc-pager-link:hover { border-color: var(--primary-color); }
+.doc-pager-next { text-align: right; align-items: flex-end; }
+.doc-pager-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    font-size: var(--font-size-sm);
+    color: var(--gray-600);
+}
+.doc-pager-title { font-weight: 600; color: var(--primary-color); }
+@media (max-width: 480px) {
+    .doc-pager { grid-template-columns: 1fr; }
+    .doc-pager-next { text-align: left; align-items: flex-start; }
+}
+
+/* Copy button on code blocks (shell.js). Not .code-block: that name belongs
+   to the legacy home styles above, which recolour the code inside it. */
+.doc-code { position: relative; }
+.code-copy {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    min-height: 2rem;
+    padding: 0 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-md);
+    background: rgba(17, 24, 39, 0.8);
+    color: #e5e7eb;
+    font: 500 0.75rem var(--font-family);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 120ms ease;
+}
+.doc-code:hover .code-copy,
+.code-copy:focus-visible { opacity: 1; }
+@media (hover: none) { .code-copy { opacity: 1; } }

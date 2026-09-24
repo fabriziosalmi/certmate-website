@@ -121,44 +121,6 @@
     
     /* In-page TOC, injected by toc.js. Sticky right column on lg+
        viewports; collapsed to a top disclosure on smaller screens. */
-    .doc-toc {
-      display: none;
-    }
-    /* Shown only when it fits in the right margin: this page's content
-       column is 1100px wide, the TOC 220px plus 24px of gap, so the viewport
-       must be at least 1100 + 2 * 244 = 1588px. Below that the old rule
-       placed the TOC over the text (#588). */
-    @media (min-width: 1588px) {
-      .doc-toc {
-        display: block;
-        position: fixed;
-        top: 100px;
-        right: max(24px, calc((100vw - 1100px) / 2 - 244px));
-        width: 220px;
-        max-height: calc(100vh - 120px);
-        overflow-y: auto;
-      }
-    }
-    .doc-toc-inner {
-      border-left: 2px solid var(--gray-200);
-      padding-left: 16px;
-    }
-    .doc-toc-list { list-style: none; padding: 0; margin: 0; }
-    .doc-toc-item { margin: 4px 0; line-height: 1.4; }
-    .doc-toc-item-h3 { padding-left: 12px; }
-    .doc-toc-link {
-      color: var(--gray-500);
-      text-decoration: none;
-      font-size: 0.85rem;
-      display: block;
-      padding: 2px 0;
-      transition: color 120ms ease;
-    }
-    .doc-toc-link:hover { color: var(--gray-900); }
-    .doc-toc-link.is-active {
-      color: var(--blue-600, #2563eb);
-      font-weight: 600;
-    }
     </style>
 </head>
 <body>
@@ -172,7 +134,7 @@
             </div>
         </section>
 
-        <section class="doc-content">
+        <section class="doc-content doc-content-wide">
             <h2>Provider DNS supportati</h2>
             <p>CertMate supporta {{PROVIDER_COUNT}} provider DNS per la challenge DNS-01 di ACME. La maggior parte può avere più di un account.</p>
 

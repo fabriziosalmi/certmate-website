@@ -1,7 +1,8 @@
 /**
- * The site header's behaviour on the documentation pages: the theme toggle
- * and the phone menu. The same logic as the script in
- * src/components/Navbar.astro, which these static pages do not bundle.
+ * The site header's behaviour on the documentation pages, the theme toggle
+ * and the phone menu, with the same logic as the script in
+ * src/components/Navbar.astro, which these static pages do not bundle; and a
+ * copy button on each code block.
  */
 (function () {
   'use strict';
@@ -16,6 +17,36 @@
       }
     });
   });
+
+  // A copy button on every code block. The wrapper takes the block's place
+  // at the same size, so adding it does not move the page.
+  var it = document.documentElement.lang === 'it';
+  var label = it ? 'Copia' : 'Copy';
+  var done = it ? 'Copiato' : 'Copied';
+  var aria = it ? 'Copia il codice' : 'Copy code to clipboard';
+  if (navigator.clipboard) {
+    document.querySelectorAll('.doc-content pre').forEach(function (pre) {
+      var wrap = document.createElement('div');
+      wrap.className = 'doc-code';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'code-copy';
+      button.textContent = label;
+      button.setAttribute('aria-label', aria);
+      button.addEventListener('click', function () {
+        navigator.clipboard.writeText(pre.innerText.replace(/\n$/, '')).then(function () {
+          button.textContent = done;
+          setTimeout(function () { button.textContent = label; }, 1500);
+        }, function () {
+          // Clipboard refused (permissions, insecure context): the text is
+          // still there to select by hand, and the label stays as it was.
+        });
+      });
+      wrap.appendChild(button);
+    });
+  }
 
   var burger = document.getElementById('nav-hamburger');
   var mobile = document.getElementById('nav-menu-mobile');

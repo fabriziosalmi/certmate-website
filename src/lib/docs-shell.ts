@@ -120,7 +120,96 @@ export function renderFooter(): string {
  * lost one, or has two, fails the build instead of shipping with two headers
  * or none.
  */
-export function applyShell(html: string, opts: { locale: NavLocale; pathname: string; altHref?: string; source: string }): string {
+const TOC_LABEL: Record<NavLocale, string> = { en: 'On this page', it: 'In questa pagina' };
+// The closing link list every page ends with; the TOC leaves it out, since it
+// repeats the cross-references at the foot.
+const TOC_TAIL = new Set(['Next Steps', 'Prossimi passi']);
+
+// The same slug public/docs/toc.js computed in the browser until now, so every
+// anchor already linked from elsewhere keeps resolving.
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 80);
+}
+
+// A heading's text as the browser's textContent would give it, near enough for
+// slugify: tags dropped, entities dropped (slugify drops what they decode to).
+function headingText(inner: string): string {
+  return inner.replace(/<[^>]+>/g, '').replace(/&[#a-z0-9]+;/gi, '').replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * The page's table of contents, built from the h2 and h3 of .doc-content at
+ * build time. It used to be built by toc.js after load, which meant nothing on
+ * a phone: the list was display:none below 1388px. Now there are two copies of
+ * the same list, a fixed column beside the text where the viewport has room
+ * for it and an "On this page" disclosure at the top of the text where it has
+ * not, both in the HTML so neither moves the page when a script runs. Headings
+ * without an id get the one toc.js used to give them.
+ */
+export function addToc(html: string, locale: NavLocale): string {
+  const start = html.search(/<section class="doc-content[^"]*">/);
+  if (start === -1) return html;
+  const end = html.indexOf('</section>', start);
+  const section = html.slice(start, end);
+  const taken = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]));
+  const entries: { level: number; id: string; text: string }[] = [];
+
+  const withIds = section.replace(/<h([23])(\s[^>]*)?>([\s\S]*?)<\/h\1>/g, (whole, level: string, attrs = '', inner: string) => {
+    const text = headingText(inner);
+    if (TOC_TAIL.has(text)) return whole;
+    const existing = attrs.match(/\sid="([^"]+)"/);
+    let id = existing?.[1];
+    if (!id) {
+      const base = slugify(text) || 'section';
+      id = base;
+      for (let n = 2; taken.has(id); n += 1) id = `${base}-${n}`;
+      taken.add(id);
+    }
+    entries.push({ level: Number(level), id, text });
+    return existing ? whole : `<h${level} id="${id}"${attrs}>${inner}</h${level}>`;
+  });
+
+  if (entries.filter((e) => e.level === 2).length < 2) return html.slice(0, start) + withIds + html.slice(end);
+
+  const list = entries
+    .map((e) => `<li class="doc-toc-item${e.level === 3 ? ' doc-toc-item-h3' : ''}"><a class="doc-toc-link" href="#${e.id}">${esc(e.text)}</a></li>`)
+    .join('');
+  const wide = /doc-content-wide/.test(html.slice(start, start + 80)) ? ' doc-toc-wide' : '';
+  const aside = `<nav class="doc-toc${wide}" aria-label="${TOC_LABEL[locale]}"><div class="doc-toc-inner"><ol class="doc-toc-list">${list}</ol></div></nav>\n        `;
+  const details = `<details class="doc-toc-mobile${wide}"><summary>${TOC_LABEL[locale]}</summary><ol class="doc-toc-list">${list}</ol></details>`;
+  const opened = withIds.replace(/^(<section class="doc-content[^"]*">)/, `$1\n            ${details}`);
+  return html.slice(0, start) + aside + opened + html.slice(end);
+}
+
+const PAGER_LABEL: Record<NavLocale, { nav: string; prev: string; next: string }> = {
+  en: { nav: 'Documentation pages', prev: 'Previous', next: 'Next' },
+  it: { nav: 'Pagine della documentazione', prev: 'Precedente', next: 'Successiva' },
+};
+
+export type PagerLink = { href: string; title: string };
+
+/** Previous and next links, in the index's reading order, at the foot of main. */
+export function renderPager(locale: NavLocale, prev?: PagerLink, next?: PagerLink): string {
+  if (!prev && !next) return '';
+  const l = PAGER_LABEL[locale];
+  const cell = (link: PagerLink | undefined, dir: 'prev' | 'next') =>
+    link
+      ? `<a class="doc-pager-link doc-pager-${dir}" href="${link.href}" rel="${dir}"><span class="doc-pager-label">${dir === 'prev' ? svgIcon('fa6-solid:arrow-left') : ''}${l[dir]}${dir === 'next' ? svgIcon('fa6-solid:arrow-right') : ''}</span><span class="doc-pager-title">${esc(link.title)}</span></a>`
+      : '<span></span>';
+  return `<nav class="doc-pager" aria-label="${l.nav}">${cell(prev, 'prev')}${cell(next, 'next')}</nav>`;
+}
+
+export function applyShell(
+  html: string,
+  opts: { locale: NavLocale; pathname: string; altHref?: string; source: string; prev?: PagerLink; next?: PagerLink },
+): string {
   const swap = (input: string, re: RegExp, replacement: string, what: string) => {
     const matches = input.match(new RegExp(re.source, 'g'));
     if (!matches || matches.length !== 1) {
@@ -133,6 +222,9 @@ export function applyShell(html: string, opts: { locale: NavLocale; pathname: st
   out = swap(out, /<!-- SITE_FOOTER:[^>]*-->/, renderFooter(), 'SITE_FOOTER');
   out = swap(out, /<\/head>/, `    ${THEME_INIT}\n</head>`, '</head>');
   out = swap(out, /<\/body>/, `    <script src="/docs/shell.js" defer></script>\n</body>`, '</body>');
+  out = addToc(out, opts.locale);
+  const pager = renderPager(opts.locale, opts.prev, opts.next);
+  if (pager) out = swap(out, /<\/main>/, `    ${pager}\n    </main>`, '</main>');
   return out;
 }
 
