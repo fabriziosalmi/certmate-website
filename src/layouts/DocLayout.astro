@@ -2,6 +2,7 @@
 import { Icon } from 'astro-icon/components';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import Footer from '~/components/Footer.astro';
+import Navbar from '~/components/Navbar.astro';
 import { SITE, DEFAULT_LOCALE, localizedPath, alternatesFor, ui, type Locale } from '~/i18n';
 import Media from '~/components/Media.astro';
 import { mediaJsonLd, type MediaItem } from '~/lib/media';
@@ -74,23 +75,7 @@ const crumbLd = {
     />
   ))}
 
-  <header class="sticky top-0 z-40 border-b border-gray-200 bg-white/80 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
-    <div class="mx-auto flex max-w-container items-center justify-between gap-4 px-4 py-3">
-      <a href={localizedPath(lang, '/')} class="flex items-center gap-2 font-semibold text-gray-900 dark:text-white">
-        <img src="/assets/certmate_logo.png" alt="CertMate" width="28" height="28" />
-        <span>CertMate</span>
-      </a>
-      <div class="flex items-center gap-3 text-sm">
-        <a href={localizedPath(lang, '/errors')} class="text-gray-600 hover:text-primary dark:text-gray-300">{t.errors}</a>
-        <a href={localizedPath(lang, '/deploy')} class="text-gray-600 hover:text-primary dark:text-gray-300">{t.deploy}</a>
-        <a
-          href={localizedPath(otherLocale, path)}
-          class="rounded border border-gray-300 px-2 py-1 font-medium uppercase text-gray-600 hover:border-primary hover:text-primary dark:border-gray-700 dark:text-gray-300"
-          aria-label={otherLocale === 'it' ? 'Italiano' : 'English'}
-        >{otherLocale}</a>
-      </div>
-    </div>
-  </header>
+  <Navbar lang={lang} altHref={localizedPath(otherLocale, path)} />
 
   {/* overflow-wrap:anywhere, not break-words: error codes such as
      MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY are one 45-character token,
