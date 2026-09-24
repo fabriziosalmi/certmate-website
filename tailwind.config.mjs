@@ -39,6 +39,18 @@ export default {
           '50%': { backgroundPosition: '100% 50%' },
         },
       },
+      // The typography plugin draws a backtick before and after inline code
+      // by default. A reader sees `notAfter` with the backticks, which looks
+      // like markdown that failed to render. The code face and background
+      // already mark it as code.
+      typography: {
+        DEFAULT: {
+          css: {
+            'code::before': { content: 'none' },
+            'code::after': { content: 'none' },
+          },
+        },
+      },
     },
   },
   plugins: [typography],
