@@ -1,0 +1,147 @@
+---
+title: "x509: certificate signed by unknown authority"
+errorCode: "x509: certificate signed by unknown authority"
+description: "Fix Go's x509: certificate signed by unknown authority: a missing intermediate on the server, a private CA, or a container with no CA bundle."
+summary: "Go could not build a chain from the server's certificate to a root it trusts. A server that omits its intermediate, a private CA, or a container image with no root certificates at all."
+browsers: ["Go"]
+order: 32
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+Go's `crypto/x509` returns an `UnknownAuthorityError` when it cannot build any
+chain from the server's certificate to a trusted root. Its text is
+*"x509: certificate signed by unknown authority"*. Through `net/http` or
+`crypto/tls` it usually arrives wrapped:
+
+```text
+tls: failed to verify certificate: x509: certificate signed by unknown authority
+```
+
+Sometimes a hint follows, in the form *(possibly because of "..." while trying
+to verify candidate authority certificate "...")*. It means Go did find a
+certificate that looked like the issuer, and rejected it: the signature did
+not verify, or that certificate was itself invalid. The hint names the
+candidate, which is often the fastest route to the cause.
+
+Go's own verifier, the one used on Linux, looks for the issuer in two places
+only: the root pool, and the certificates the server sent after the leaf. It
+does not fetch a missing intermediate from anywhere else.
+
+<Handshake
+  caption="Where x509: certificate signed by unknown authority is raised"
+  steps={[
+    { from: 'Go client', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Go client', label: 'ServerHello, Certificate (leaf + whatever intermediates it sends)' },
+    { from: 'Go client', label: 'Searches the root pool, then the sent intermediates, for a valid issuer: no chain' },
+    { from: 'Go client', to: 'Server', label: 'bad_certificate alert: x509: certificate signed by unknown authority', fails: true },
+  ]}
+/>
+
+## Common causes
+
+- **The server does not send its intermediate.** The leaf's issuer is an
+  intermediate that no root pool contains, and it is not in the handshake.
+  The server is configured with the bare certificate instead of the full
+  chain.
+- **The certificate comes from a private CA.** An internal ACME CA, a
+  corporate root, a development CA. The chain may be complete; its root is
+  simply not in the pool Go is using.
+- **The container has no root certificates.** On Linux, Go reads the system
+  bundle from a fixed list of paths, the first being
+  `/etc/ssl/certs/ca-certificates.crt`, plus the files in `/etc/ssl/certs` and
+  `/etc/pki/tls/certs`. An image built `FROM scratch`, or a minimal image
+  without a CA package, has none of them. Go then verifies against an empty
+  pool, and every HTTPS request fails with this error, including ones to
+  public sites with valid certificates.
+- **`RootCAs` was set to a pool that holds only the private root.** A
+  `tls.Config` with a non-nil `RootCAs` uses that pool instead of the system
+  roots, so public sites stop verifying.
+
+## How to fix it
+
+**1. Find out which side is wrong.** Count the certificates the server sends:
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com -showcerts 2>/dev/null \
+  | grep -c 'BEGIN CERTIFICATE'
+```
+
+`1` for a publicly issued certificate means the intermediate is missing. If
+every host fails, including well-known public ones, the problem is the client's
+root pool, not any server.
+
+**2. Missing intermediate: serve the full chain.**
+
+```nginx
+ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
+ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+```
+
+**3. Empty container: give it roots.** Install the distribution's CA package
+in the image, or copy the bundle from the build stage into the final image:
+
+```dockerfile
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+```
+
+For a binary that must work without any system bundle, import
+`golang.org/x/crypto/x509roots/fallback`. It embeds a root set and registers
+it with `x509.SetFallbackRoots`, which Go uses only when no system roots are
+available. The Go team notes that the package must be kept up to date.
+
+**4. Private CA: add the root, keep the public ones.** On Linux,
+`SSL_CERT_FILE` replaces the bundle file Go reads and `SSL_CERT_DIR` replaces
+the directories (colon-separated). Point them at a bundle that contains the
+public roots and yours, not at your root alone. In code, start from the system
+pool and add to it:
+
+```go
+pool, err := x509.SystemCertPool()
+if err != nil {
+	return err
+}
+pem, err := os.ReadFile("/etc/ssl/internal-root.pem")
+if err != nil {
+	return err
+}
+if !pool.AppendCertsFromPEM(pem) {
+	return errors.New("no certificates found in internal-root.pem")
+}
+client := &http.Client{Transport: &http.Transport{
+	TLSClientConfig: &tls.Config{RootCAs: pool},
+}}
+```
+
+On macOS and Windows, Go normally asks the operating system to verify the
+chain, so a root trusted in the Keychain or the Windows store is honoured
+without any change to the program.
+
+**Do not set `InsecureSkipVerify: true`.** Go's own documentation says that
+with it, `crypto/tls` accepts any certificate and any host name, and the
+connection is open to a machine-in-the-middle. The error goes away because
+nothing is being checked any more.
+
+## Prevent it from recurring
+
+The server-side half of this error is a chain that lost its intermediate on
+the way to the server. CertMate writes `fullchain.pem` alongside `cert.pem`
+and `chain.pem` for every certificate it issues, hands deploy hooks the full
+chain as `CERTMATE_FULLCHAIN_PATH` (and the intermediates alone as
+`CERTMATE_CHAIN_PATH`), and its typed deploy targets read `fullchain.pem`. A
+deployment built on those paths does not drop the intermediate.
+
+The client-side half, an empty or incomplete root pool, is a property of how
+the Go program is built and run; no certificate issuer can fix it. When
+CertMate itself talks to a private ACME CA, it trusts the CA certificate you
+supply by passing it to certbot as `REQUESTS_CA_BUNDLE`, rather than turning
+verification off.
+
+## Related errors
+
+- `UNABLE_TO_VERIFY_LEAF_SIGNATURE`: the Node.js error for a leaf whose issuer cannot be found.
+- `PKIX path building failed`: the same failure in Java.
+- `NET::ERR_CERT_AUTHORITY_INVALID`: what Chromium shows when it cannot reach a trusted root.
+- `SEC_ERROR_UNKNOWN_ISSUER`: the Firefox equivalent.

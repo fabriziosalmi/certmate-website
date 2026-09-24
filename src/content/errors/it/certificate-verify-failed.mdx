@@ -1,0 +1,177 @@
+---
+title: "CERTIFICATE_VERIFY_FAILED"
+errorCode: "CERTIFICATE_VERIFY_FAILED"
+description: "Risolvi [SSL: CERTIFICATE_VERIFY_FAILED] di Python: il testo dopo i due punti indica la vera causa. Intermedi mancanti, bundle CA, certifi, CA interne."
+summary: "Il modulo ssl di Python non è riuscito a verificare il certificato del server. Le parole dopo 'certificate verify failed:' sono il motivo di OpenSSL, e sono loro a decidere la soluzione."
+browsers: ["Python"]
+order: 30
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+Il modulo `ssl` di Python solleva `ssl.SSLCertVerificationError`, una
+sottoclasse di `ssl.SSLError`, con un messaggio di questa forma:
+
+```text
+[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1082)
+```
+
+Tra parentesi quadre ci sono la libreria e il codice di motivo di OpenSSL.
+`CERTIFICATE_VERIFY_FAILED` dice solo che la verifica è fallita, ed è uguale
+per ogni causa. Conta il testo dopo i due punti: la descrizione di OpenSSL
+dell'errore di verifica oppure, per un nome che non corrisponde, una frase di
+Python. Il numero di `_ssl.c` è la riga del sorgente di Python che ha sollevato
+l'eccezione e cambia tra una versione di Python e l'altra. Del tuo server non
+dice nulla.
+
+L'eccezione riporta le stesse informazioni come attributi, `verify_code` (il
+numero di errore di OpenSSL) e `verify_message`. Le librerie costruite su
+`ssl` la incapsulano: `requests` solleva `requests.exceptions.SSLError` con
+dentro il messaggio di Python.
+
+I motivi che incontrerai più spesso, con il loro `verify_code`:
+
+- `unable to get local issuer certificate` (20): un intermedio mancante sul
+  server, oppure una radice che manca nel bundle usato da Python.
+- `self-signed certificate in certificate chain` (19): il server ha inviato una
+  radice di cui questo client non si fida.
+- `self-signed certificate` (18): è autofirmato il certificato del server
+  stesso.
+- `certificate has expired` (10): la data `notAfter` di un certificato è
+  passata.
+- `Hostname mismatch, certificate is not valid for 'example.com'.` (62): il
+  certificato non copre il nome a cui ti sei collegato.
+
+<Handshake
+  caption="Dove viene sollevato CERTIFICATE_VERIFY_FAILED"
+  steps={[
+    { from: 'Python', label: 'create_default_context(): CERT_REQUIRED, controllo del nome host attivo, certificati CA predefiniti caricati' },
+    { from: 'Python', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Python', label: 'ServerHello, Certificate (foglia + intermedi)' },
+    { from: 'Python', label: 'OpenSSL costruisce e controlla la catena rispetto ai certificati CA caricati nel contesto' },
+    { from: 'Python', to: 'Server', label: 'Verifica fallita: handshake interrotto, sollevata ssl.SSLCertVerificationError (CERTIFICATE_VERIFY_FAILED)', fails: true },
+  ]}
+/>
+
+## Da dove prende Python le radici attendibili
+
+È all'origine della maggior parte di questi errori, e non vale allo stesso modo
+per ogni programma Python:
+
+- **Il modulo `ssl`.** `ssl.create_default_context()` richiede un certificato
+  valido e controlla il nome host. Carica i certificati CA con
+  `load_default_certs()`: su Windows dagli store di sistema `CA` e `ROOT`, e su
+  ogni piattaforma dal file e dalla directory predefiniti di OpenSSL. Questi
+  predefiniti sono fissati quando quell'OpenSSL viene compilato, e
+  `SSL_CERT_FILE` e `SSL_CERT_DIR` li sostituiscono. Se lì non trova nulla,
+  Python non si lamenta alla creazione del contesto; fallisce invece la prima
+  connessione.
+- **`requests`.** Non usa quei predefiniti. Verifica rispetto al bundle del
+  pacchetto `certifi`, a meno che sia impostata `REQUESTS_CA_BUNDLE` (o
+  `CURL_CA_BUNDLE`) o che tu passi `verify="/percorso/bundle.pem"`. Se chi l'ha
+  pacchettizzato non l'ha puntato altrove, una radice aggiunta allo store del
+  sistema operativo non cambia nulla per `requests`.
+- **Python dall'installer macOS di python.org.** Include una propria copia di
+  OpenSSL e non usa i certificati dei portachiavi di macOS. L'installer mette
+  nella cartella di Python sotto `/Applications` un comando *Install
+  Certificates*, che installa `certifi` e collega a quel bundle il file CA
+  predefinito di OpenSSL. Finché non viene eseguito, la verifica fallisce con
+  `unable to get local issuer certificate`.
+
+## Cause comuni
+
+- **Il server non invia l'intermedio.** Motivo
+  `unable to get local issuer certificate`. I browser possono comunque caricare
+  il sito.
+- **Il bundle usato da Python non contiene nessuna radice**, o non quella
+  giusta: la build macOS di python.org prima di *Install Certificates*,
+  un'immagine container ridotta senza pacchetto CA, `SSL_CERT_FILE` che punta
+  al file sbagliato.
+- **Una CA interna**, attendibile per la macchina ma non per `certifi`, per cui
+  `requests` fallisce dove un browser o curl sulla stessa macchina funzionano.
+- **Un proxy che intercetta il TLS** e rifirma il traffico con una propria
+  radice.
+- **Un `certifi` vecchio**, precedente alla radice a cui porta la catena del
+  server.
+
+## Come risolverlo
+
+**1. Leggi il motivo e verifica quale bundle è in uso.**
+
+```python
+import socket
+import ssl
+
+host = "example.com"
+ctx = ssl.create_default_context()
+try:
+    with socket.create_connection((host, 443), timeout=10) as sock:
+        with ctx.wrap_socket(sock, server_hostname=host):
+            print("verified")
+except ssl.SSLCertVerificationError as e:
+    print(e.verify_code, e.verify_message)
+print(ssl.get_default_verify_paths())
+```
+
+`get_default_verify_paths()` mostra il file e la directory in cui guarda
+OpenSSL e i nomi delle variabili d'ambiente che li sostituiscono. Per
+`requests`, `python3 -m certifi` stampa il percorso del bundle che usa.
+
+**2. Se il problema è del server, correggi il server.** Con
+`unable to get local issuer certificate` verso un sito pubblico, controlla che
+il server invii l'intermedio e, se non lo fa, servi `fullchain.pem`. La pagina
+dedicata a quel messaggio spiega come distinguere i due casi.
+
+**3. Sulle build macOS di python.org, esegui *Install Certificates*** dalla
+cartella di Python in `/Applications`, una volta per ogni versione di Python
+installata.
+
+**4. Per una CA interna, aggiungi la radice a ciò che Python legge davvero.**
+Procurati la radice da chi gestisce la CA, non dalla connessione fallita. Con
+il modulo `ssl`, aggiungila al contesto predefinito invece di sostituire i
+predefiniti:
+
+```python
+ctx = ssl.create_default_context()
+ctx.load_verify_locations(cafile="/etc/ssl/internal-root.pem")
+```
+
+Passare `cafile=` direttamente a `create_default_context()` carica solo quel
+file, e a quel punto falliscono i siti pubblici. Per `requests`,
+`REQUESTS_CA_BUNDLE` e `verify=` sostituiscono il bundle di `certifi`, quindi
+costruiscine uno che contenga entrambi:
+
+```bash
+cat "$(python3 -m certifi)" /etc/ssl/internal-root.pem > /etc/ssl/bundle-with-internal-root.pem
+export REQUESTS_CA_BUNDLE=/etc/ssl/bundle-with-internal-root.pem
+```
+
+**5. Per un bundle vecchio,** `pip install --upgrade certifi`.
+
+**`verify=False` non è una soluzione.** In `requests` imposta `ssl.CERT_NONE`:
+nessun certificato viene controllato, da nessun server, compreso quello di un
+impostore. `ssl._create_unverified_context()` fa lo stesso per il modulo `ssl`.
+Entrambi trasformano un errore visibile in un'esposizione invisibile.
+
+## Evitare che si ripresenti
+
+CertMate è a sua volta un programma Python che parla con le CA via HTTPS, e
+segue il passo 4 invece di disattivare i controlli. Per una CA ACME privata, il
+certificato CA che incolli nell'account viene usato come `verify=` nel test di
+connessione e passato a certbot come `REQUESTS_CA_BUNDLE` sia all'emissione sia
+al rinnovo. Vedi [CA Providers](/docs/ca-providers.html).
+
+Per i tuoi server, l'errore lato Python che più spesso porta a loro è
+l'intermedio mancante. CertMate scrive `fullchain.pem` per ogni certificato e
+passa ai deploy hook il suo percorso in `CERTMATE_FULLCHAIN_PATH`, quindi un
+hook che installa quel file serve la catena completa.
+
+## Errori correlati
+
+- `unable to get local issuer certificate`: il motivo più comune dopo i due punti.
+- `self-signed certificate in certificate chain`: una radice non attendibile inviata dal server.
+- `MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT`: Firefox, quando è autofirmato il certificato del server stesso.
+- `NET::ERR_CERT_DATE_INVALID`: la versione Chromium di `certificate has expired`.
+- `NET::ERR_CERT_COMMON_NAME_INVALID`: la versione Chromium di un nome host che non corrisponde.

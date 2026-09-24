@@ -1,0 +1,140 @@
+---
+title: "self-signed certificate in certificate chain"
+errorCode: "self-signed certificate in certificate chain"
+description: "Fix 'self-signed certificate in certificate chain': the server sent a root this client does not trust. Internal CAs, TLS interception, old CA bundles."
+summary: "The chain the server sent ends in a root certificate, and that root is not in this client's trust store. Usually an internal CA, a proxy that intercepts TLS, or an outdated CA bundle."
+browsers: ["curl", "OpenSSL", "Python"]
+order: 29
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+This is OpenSSL's text for verification error 19,
+`X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN`. OpenSSL releases before 3.0 spell it
+*self signed*, without the hyphen. It reaches you wrapped in the client's own
+message:
+
+```text
+curl: (60) SSL certificate problem: self-signed certificate in certificate chain
+curl: (60) SSL certificate OpenSSL verify result: self-signed certificate in certificate chain (19)
+[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: self-signed certificate in certificate chain (_ssl.c:1082)
+verify error:num=19:self-signed certificate in certificate chain
+```
+
+curl up to 8.16, curl 8.17 and later with the OpenSSL backend, Python, and
+`openssl s_client`, in that order. Node.js reports the same condition with the
+code `SELF_SIGNED_CERT_IN_CHAIN`.
+
+OpenSSL built the chain upwards from the server's certificate and reached a
+certificate that signed itself: a root. A root that is in the client's trust
+store ends verification successfully. This one is not, and it came from the
+server, so nothing the client trusts vouches for any certificate in the chain.
+
+Sending the root is not the problem in itself. A server that includes a
+publicly trusted root in its chain works with every client that has that root.
+The error says the root is unknown **to this client**.
+
+The wording separates it from two neighbours. `self-signed certificate`
+(error 18) means the server's own certificate is the self-signed one, with no
+chain at all. `unable to get local issuer certificate` (error 20) means the
+chain stopped below any root.
+
+<Handshake
+  caption="Where self-signed certificate in certificate chain is raised"
+  steps={[
+    { from: 'curl', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'curl', label: 'ServerHello, Certificate (leaf, intermediate, root)' },
+    { from: 'curl', label: 'OpenSSL builds the chain up to the root the server sent' },
+    { from: 'curl', label: 'The root signed itself and is not in the local trust store' },
+    { from: 'curl', to: 'Server', label: 'Verify result 19: connection abandoned, exit code 60 (self-signed certificate in certificate chain)', fails: true },
+  ]}
+/>
+
+## Common causes
+
+- **An internal CA.** The server's certificate comes from your organisation's
+  CA (a private ACME server, an internal PKI) and the server sends the root
+  with the chain. A workstation where the root was installed trusts it; a
+  fresh container, a CI runner or a Python client using `certifi` does not.
+- **Something is intercepting TLS.** A corporate proxy or endpoint security
+  product terminates the connection and re-signs it with its own root. The
+  sign is that every HTTPS site shows the same root on the `i:` lines,
+  carrying the proxy's or vendor's name, not the site's CA.
+- **The client's CA bundle is older than the root.** The server sends a
+  publicly trusted root that was added to trust stores after this client's
+  bundle was built: an old base image, an old `ca-certificates` package, an
+  old `certifi`.
+
+## How to fix it
+
+**1. Identify the root.** Split what the server sends and print each
+certificate's names and fingerprint:
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com -showcerts 2>/dev/null \
+  | awk '/BEGIN CERT/{n++; p=1} p{print > ("served-" n ".pem")} /END CERT/{p=0}'
+for f in served-*.pem; do
+  openssl x509 -in "$f" -noout -subject -issuer -fingerprint -sha256
+done
+```
+
+The certificate whose subject equals its issuer is the root the client
+refused.
+
+**2. Decide whether it deserves trust.** A root taken from the failing
+connection proves nothing: if something is intercepting traffic, that is
+exactly the certificate it would hand you. Get the root from whoever runs the
+CA, over a separate channel, and compare the SHA-256 fingerprint. If the root
+turns out to belong to a proxy you did not know about, take it up with whoever
+runs the network before trusting anything.
+
+**3. Trust the root in the client.** Per command, per process, or for the
+machine:
+
+```bash
+curl --cacert /etc/ssl/internal-root.pem https://internal.example.com/
+
+export SSL_CERT_FILE=/etc/ssl/bundle-with-internal-root.pem
+
+cp internal-root.pem /usr/local/share/ca-certificates/internal-root.crt
+update-ca-certificates
+```
+
+`--cacert`, `CURL_CA_BUNDLE` and `SSL_CERT_FILE` replace the default bundle,
+so a file holding only the internal root breaks public sites. The system store
+(the last two lines, Debian and Ubuntu; PEM with a `.crt` extension) adds to
+it. Node.js adds to its bundled roots with `NODE_EXTRA_CA_CERTS`, read once at
+startup. Git reads `http.sslCAInfo` or `GIT_SSL_CAINFO`. Python and
+`requests` are covered under `CERTIFICATE_VERIFY_FAILED`.
+
+**4. If the bundle is out of date, update it** rather than adding a public
+root by hand: upgrade the distribution's `ca-certificates` package, rebuild on
+a current base image, or `pip install --upgrade certifi`.
+
+**Turning verification off is not a fix.** `curl -k`, `verify=False` in
+Python or the equivalent elsewhere accepts any certificate, including one from
+the interceptor that step 2 is meant to catch.
+
+## Prevent it from recurring
+
+This error is about distribution of trust, and the only lasting fix is to put
+the internal root into every client's store deliberately, once, through the
+same channel you use for the rest of the machine's configuration.
+
+CertMate applies that rule to its own connections. A private ACME CA account
+in CertMate takes the CA certificate as a field. The connection test verifies
+the ACME endpoint against it, and when verification fails with no CA
+certificate given it reports `SSL verification failed. Provide CA cert for
+verification.` Issuance and renewal pass the certificate to certbot as
+`REQUESTS_CA_BUNDLE`. The account has no option to skip verification. See
+[CA Providers](/docs/ca-providers.html).
+
+## Related errors
+
+- `unable to get local issuer certificate`: the chain stopped below any root.
+- `CERTIFICATE_VERIFY_FAILED`: how Python reports this and the other verification errors.
+- `MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT`: Firefox, when the server's own certificate is self-signed.
+- `NET::ERR_CERT_AUTHORITY_INVALID`: the Chromium equivalent.
+- `SEC_ERROR_UNKNOWN_ISSUER`: the Firefox equivalent.

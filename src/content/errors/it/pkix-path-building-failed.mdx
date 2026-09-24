@@ -1,0 +1,133 @@
+---
+title: "PKIX path building failed"
+errorCode: "PKIX path building failed"
+description: "Risolvi PKIX path building failed di Java (unable to find valid certification path): intermedio mancante sul server o CA assente dal truststore."
+summary: "Java non è riuscito a costruire un percorso di certificazione dal certificato del server a un trust anchor del suo truststore. Il server ha omesso l'intermedio, oppure la radice non è in cacerts."
+browsers: ["Java"]
+order: 33
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+Il trust manager predefinito del JDK passa i certificati del server al
+`CertPathBuilder` PKIX. Quando non si riesce a costruire un percorso verso un
+trust anchor, il builder solleva un'eccezione e
+`sun.security.validator.PKIXValidator` la incapsula. In uno stack trace si
+legge:
+
+```text
+Caused by: sun.security.validator.ValidatorException: PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+```
+
+In cima allo stack trace c'è una `javax.net.ssl.SSLHandshakeException` con lo
+stesso testo; dal JDK 25 è preceduto dal nome dell'alert TLS inviato,
+`(certificate_unknown)`.
+
+Il builder lavora solo con ciò che ha: i certificati inviati dal server e i
+trust anchor del truststore. Può scaricare un emittente mancante dall'URL
+indicato nel certificato, ma solo se la proprietà di sistema
+`com.sun.security.enableAIAcaIssuers` vale `true`, e di default non è così.
+
+<Handshake
+  caption="Dove viene sollevato PKIX path building failed"
+  steps={[
+    { from: 'Client Java', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Client Java', label: 'ServerHello, Certificate (foglia + gli intermedi che invia)' },
+    { from: 'Client Java', label: 'PKIXValidator costruisce un percorso verso un anchor del truststore: nessuno trovato' },
+    { from: 'Client Java', to: 'Server', label: 'alert certificate_unknown: PKIX path building failed', fails: true },
+  ]}
+/>
+
+## Cause comuni
+
+- **Il server non invia il suo intermedio.** Java non lo trova in `cacerts`,
+  che contiene radici, e non lo scarica. Il server è configurato con il
+  certificato da solo invece che con la catena completa.
+- **La radice non è nel truststore usato da Java.** Una CA privata o
+  aziendale, oppure un proxy che ispeziona il TLS e rifirma il traffico con la
+  propria radice.
+- **Java usa un truststore diverso da quello che hai modificato.** Il JDK ne
+  sceglie uno solo, in quest'ordine: il file indicato da
+  `javax.net.ssl.trustStore`, poi `jssecacerts`, poi `cacerts`, entrambi in
+  `lib/security` sotto la Java home. Una radice importata in `cacerts` viene
+  ignorata se esiste un `jssecacerts`, e ogni JDK sulla macchina ha il suo
+  `cacerts`.
+- **`javax.net.ssl.trustStore` punta a uno store con la sola radice privata.**
+  Quello store sostituisce il default, non vi si aggiunge, quindi i siti
+  pubblici iniziano a fallire con questo errore.
+- **Il JDK è stato aggiornato.** `cacerts` sta dentro l'installazione di Java,
+  quindi un nuovo JDK arriva con un file nuovo che non contiene niente di
+  quanto era stato importato nel vecchio.
+
+## Come risolverlo
+
+**1. Conta cosa invia il server:**
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com -showcerts 2>/dev/null \
+  | grep -c 'BEGIN CERTIFICATE'
+```
+
+`1` per un certificato emesso da una CA pubblica significa che manca
+l'intermedio e la correzione va fatta sul server. Due o più, con l'errore
+ancora presente, significa che questa JVM non si fida della radice.
+
+**2. Intermedio mancante: servi la catena completa.**
+
+```nginx
+ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
+ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+```
+
+Importare invece l'intermedio nel truststore funziona solo finché la CA non
+cambia i suoi intermedi, e sistema solo quella JVM. Correggi il server.
+
+**3. CA privata: importa la radice nel truststore che la JVM usa davvero.**
+L'opzione `-cacerts` fa lavorare `keytool` sul file `cacerts` del JDK a cui
+appartiene:
+
+```bash
+keytool -importcert -cacerts -alias internal-root -file internal-root.pem
+```
+
+Usa il `keytool` della JVM che esegue l'applicazione, e verifica che accanto a
+`cacerts`, nella stessa directory, non ci sia un `jssecacerts`.
+
+**4. Oppure crea un truststore separato, con dentro le radici pubbliche.** Se
+punti la JVM a un tuo store, copia prima `cacerts` e importa nella copia,
+così lo store contiene le radici pubbliche oltre alla tua:
+
+```bash
+cp "$JAVA_HOME/lib/security/cacerts" /etc/myapp/truststore
+keytool -importcert -keystore /etc/myapp/truststore -alias internal-root -file internal-root.pem
+java -Djavax.net.ssl.trustStore=/etc/myapp/truststore -jar app.jar
+```
+
+**Non installare un trust manager che accetta tutto.** Un `X509TrustManager`
+il cui `checkServerTrusted` ritorna senza controllare niente è la risposta
+tipica dei forum. Elimina l'errore eliminando la verifica, per ogni
+connessione che usa quell'`SSLContext`.
+
+## Evitare che si ripresenti
+
+La causa lato server è un certificato distribuito senza la sua catena.
+CertMate scrive `fullchain.pem` accanto a `cert.pem` e `chain.pem` per ogni
+certificato che emette, passa ai deploy hook la catena completa come
+`CERTMATE_FULLCHAIN_PATH` e i soli intermedi come `CERTMATE_CHAIN_PATH`, e i
+suoi deploy target tipizzati leggono `fullchain.pem`: una distribuzione che
+usa quei percorsi conserva l'intermedio.
+
+Il truststore fa parte della JVM, e CertMate non lo gestisce. Per le proprie
+connessioni verso una CA ACME privata, CertMate segue la regola che questa
+pagina raccomanda: si fida del certificato della CA che gli fornisci,
+passandolo a certbot come `REQUESTS_CA_BUNDLE`, invece di disattivare la
+verifica.
+
+## Errori correlati
+
+- `UNABLE_TO_VERIFY_LEAF_SIGNATURE`: l'errore di Node.js per una foglia di cui non si trova l'emittente.
+- `x509: certificate signed by unknown authority`: lo stesso errore in Go.
+- `NET::ERR_CERT_AUTHORITY_INVALID`: ciò che mostra Chromium quando non arriva a una radice attendibile.
+- `SEC_ERROR_UNKNOWN_ISSUER`: l'equivalente in Firefox.

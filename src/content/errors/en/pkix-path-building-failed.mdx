@@ -1,0 +1,130 @@
+---
+title: "PKIX path building failed"
+errorCode: "PKIX path building failed"
+description: "Fix Java's PKIX path building failed: unable to find valid certification path. A missing intermediate on the server, or a CA absent from the truststore."
+summary: "Java could not build a certification path from the server's certificate to a trust anchor in its truststore. Either the server left out its intermediate, or the root is not in cacerts."
+browsers: ["Java"]
+order: 33
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+The JDK's default trust manager hands the server's certificates to the PKIX
+`CertPathBuilder`. When no path to a trust anchor can be built, the builder
+throws, and `sun.security.validator.PKIXValidator` wraps the exception. In a
+stack trace it reads:
+
+```text
+Caused by: sun.security.validator.ValidatorException: PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+```
+
+The top of the trace is a `javax.net.ssl.SSLHandshakeException` carrying the
+same text; from JDK 25 it is prefixed with the name of the TLS alert sent,
+`(certificate_unknown)`.
+
+The builder works only with what it has: the certificates the server sent and
+the trust anchors in the truststore. It can fetch a missing issuer from the
+URL in the certificate, but only when the system property
+`com.sun.security.enableAIAcaIssuers` is set to `true`, and it is not by
+default.
+
+<Handshake
+  caption="Where PKIX path building failed is raised"
+  steps={[
+    { from: 'Java client', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Java client', label: 'ServerHello, Certificate (leaf + whatever intermediates it sends)' },
+    { from: 'Java client', label: 'PKIXValidator builds a path to an anchor in the truststore: none found' },
+    { from: 'Java client', to: 'Server', label: 'certificate_unknown alert: PKIX path building failed', fails: true },
+  ]}
+/>
+
+## Common causes
+
+- **The server does not send its intermediate.** Java will not find it in
+  `cacerts`, which holds roots, and will not download it. The server is
+  configured with the bare certificate rather than the full chain.
+- **The root is not in the truststore Java is using.** A private or corporate
+  CA, or a TLS-inspecting proxy that re-signs traffic with its own root.
+- **Java is using a different truststore from the one you edited.** The JDK
+  picks one store, in this order: the file named by `javax.net.ssl.trustStore`,
+  then `jssecacerts`, then `cacerts`, both in `lib/security` under the Java
+  home. A root imported into `cacerts` is ignored if a `jssecacerts` exists,
+  and each JDK on the machine has its own `cacerts`.
+- **`javax.net.ssl.trustStore` points at a store with only the private root.**
+  That store replaces the default, it does not add to it, so public sites
+  start failing with this error.
+- **The JDK was upgraded.** `cacerts` lives inside the Java installation, so a
+  new JDK comes with a fresh file that does not contain anything imported into
+  the old one.
+
+## How to fix it
+
+**1. Count what the server sends:**
+
+```bash
+echo | openssl s_client -connect example.com:443 -servername example.com -showcerts 2>/dev/null \
+  | grep -c 'BEGIN CERTIFICATE'
+```
+
+`1` for a publicly issued certificate means the intermediate is missing and
+the fix is on the server. Two or more, with the error still present, means the
+root is not trusted by this JVM.
+
+**2. Missing intermediate: serve the full chain.**
+
+```nginx
+ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
+ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+```
+
+Importing the intermediate into the truststore instead works only until the
+CA rotates its intermediates, and fixes only that one JVM. Fix the server.
+
+**3. Private CA: import the root into the truststore the JVM actually uses.**
+The `-cacerts` option makes `keytool` work on the `cacerts` file of the JDK it
+belongs to:
+
+```bash
+keytool -importcert -cacerts -alias internal-root -file internal-root.pem
+```
+
+Run the `keytool` that belongs to the JVM running the application, and check
+that no `jssecacerts` sits beside `cacerts` in the same directory.
+
+**4. Or build a separate truststore, and include the public roots.** If you
+point the JVM at your own store, copy `cacerts` first and import into the
+copy, so the store has the public roots as well as yours:
+
+```bash
+cp "$JAVA_HOME/lib/security/cacerts" /etc/myapp/truststore
+keytool -importcert -keystore /etc/myapp/truststore -alias internal-root -file internal-root.pem
+java -Djavax.net.ssl.trustStore=/etc/myapp/truststore -jar app.jar
+```
+
+**Do not install a trust manager that accepts everything.** An
+`X509TrustManager` whose `checkServerTrusted` returns without checking is the
+usual answer found on forums. It removes the error by removing verification,
+for every connection that uses that `SSLContext`.
+
+## Prevent it from recurring
+
+The server-side cause is a certificate deployed without its chain. CertMate
+writes `fullchain.pem` alongside `cert.pem` and `chain.pem` for every
+certificate it issues, passes deploy hooks the full chain as
+`CERTMATE_FULLCHAIN_PATH` and the intermediates alone as
+`CERTMATE_CHAIN_PATH`, and its typed deploy targets read `fullchain.pem`, so a
+deployment that uses those paths keeps the intermediate.
+
+The truststore is part of the JVM, and CertMate does not manage it. For its
+own connections to a private ACME CA, CertMate follows the rule this page
+recommends: it trusts the CA certificate you supply, passing it to certbot as
+`REQUESTS_CA_BUNDLE`, instead of disabling verification.
+
+## Related errors
+
+- `UNABLE_TO_VERIFY_LEAF_SIGNATURE`: the Node.js error for a leaf whose issuer cannot be found.
+- `x509: certificate signed by unknown authority`: the same failure in Go.
+- `NET::ERR_CERT_AUTHORITY_INVALID`: what Chromium shows when it cannot reach a trusted root.
+- `SEC_ERROR_UNKNOWN_ISSUER`: the Firefox equivalent.

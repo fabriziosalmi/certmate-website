@@ -1,0 +1,164 @@
+---
+title: "unable to get local issuer certificate"
+errorCode: "unable to get local issuer certificate"
+description: "Fix 'unable to get local issuer certificate' in curl and OpenSSL: the server left out its intermediate, or the client's CA bundle lacks the root."
+summary: "OpenSSL built the chain as far as the server's certificates and the local trust store allowed, and found no issuer for the last one. Either the server left out an intermediate, or this client's CA bundle lacks the root."
+browsers: ["curl", "OpenSSL", "Python"]
+order: 28
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## What it means
+
+This is OpenSSL's text for verification error 20,
+`X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY`. Programs built on OpenSSL wrap
+it in their own message:
+
+```text
+curl: (60) SSL certificate problem: unable to get local issuer certificate
+curl: (60) SSL certificate OpenSSL verify result: unable to get local issuer certificate (20)
+[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1082)
+verify error:num=20:unable to get local issuer certificate
+```
+
+The first line is curl up to 8.16, the second is curl 8.17 and later with the
+OpenSSL backend, the third is Python, the fourth is `openssl s_client`. Exit
+code 60 is curl's `CURLE_PEER_FAILED_VERIFICATION`.
+
+OpenSSL verifies by building a chain upwards from the server's certificate. It
+looks for each issuer in two places only: the certificates the server sent,
+and the trust store on this machine ("local"). When it can go no further, the
+last certificate it reached is not self-signed, and everything in the chain
+came from the server, it stops with error 20. Nothing in the chain is anchored
+to a root this client trusts.
+
+Two different situations end that way:
+
+- **The server sent its certificate without the intermediate.** The chain
+  stops at the leaf, depth 0. Trust stores hold roots, not intermediates, so
+  the client has nowhere to find the missing link.
+- **The server sent its chain, and the root is not in this client's store.**
+  The chain stops at the top intermediate, depth 1 or higher.
+
+curl and Python stop at the first verification error, so both situations
+print this message. `openssl s_client` keeps going after errors, so for a
+missing intermediate its last line reads `Verify return code: 21 (unable to
+verify the first certificate)`; the `num=20` line comes first. Node.js reports
+the missing intermediate as `UNABLE_TO_VERIFY_LEAF_SIGNATURE` for the same
+reason.
+
+<Handshake
+  caption="Where unable to get local issuer certificate is raised"
+  steps={[
+    { from: 'curl', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'curl', label: 'ServerHello, Certificate (leaf, with or without intermediates)' },
+    { from: 'curl', label: "OpenSSL looks for each certificate's issuer among the sent certificates, then in the local trust store" },
+    { from: 'curl', label: 'The last certificate reached is not self-signed, and its issuer is in neither place' },
+    { from: 'curl', to: 'Server', label: 'Verify result 20: connection abandoned, exit code 60 (unable to get local issuer certificate)', fails: true },
+  ]}
+/>
+
+## Common causes
+
+- **The server is configured with the leaf alone.** `cert.pem` where
+  `fullchain.pem` belongs, or a certificate file assembled by hand. A browser
+  may still load the site, which is why this often turns up first in a script
+  or a CI job.
+- **The client has no CA bundle, or the wrong one.** A minimal container image
+  without the distribution's CA package; `SSL_CERT_FILE` or `CURL_CA_BUNDLE`
+  pointing at a file that does not hold the root; `--cacert` given a file with
+  one internal CA, which replaces the default bundle rather than adding to it.
+- **The root belongs to a private or corporate CA** that this client was never
+  told about. If the server also sends that root, the message changes to
+  `self-signed certificate in certificate chain`.
+- **Python from the python.org macOS installer**, which ships its own OpenSSL
+  and does not read the macOS keychains. See `CERTIFICATE_VERIFY_FAILED`.
+
+## How to fix it
+
+**1. Find out which side is missing a certificate.** List what the server
+sends and where verification stopped:
+
+```bash
+openssl s_client -connect example.com:443 -servername example.com -showcerts </dev/null 2>&1 \
+  | grep -E '^depth|^verify error|^ *[0-9]+ s:|^ +i:'
+```
+
+One certificate listed (` 0 s:` only) with `num=20` at `depth=0`: the server
+is not sending its intermediate. Fix the server (step 2).
+
+Several certificates listed, with `num=20` at the highest depth: the chain
+arrived, and this machine does not hold the root named on that certificate's
+`i:` line. Fix the client (steps 3 and 4).
+
+`openssl s_client` uses OpenSSL's default store, which is not necessarily the
+one curl uses. `curl -v` prints the bundle it loaded, on the `CAfile:` and
+`CApath:` lines, when built with OpenSSL.
+
+**2. Serve the full chain.** Point the server at the file that holds the leaf
+followed by its intermediates:
+
+```nginx
+ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
+ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+```
+
+Reload and repeat step 1: two or more certificates should now be listed. This
+fixes every client at once, which no client-side change can.
+
+**3. Give the client a CA bundle.** On Debian and Ubuntu the `ca-certificates`
+package provides `/etc/ssl/certs/ca-certificates.crt`:
+
+```bash
+apt-get install -y ca-certificates
+```
+
+**4. For a private CA, trust its root explicitly.** Get the root certificate
+from whoever runs the CA, not from the connection that just failed. Then
+either for one command, for a process, or for the whole machine:
+
+```bash
+curl --cacert /etc/ssl/internal-root.pem https://internal.example.com/
+
+export CURL_CA_BUNDLE=/etc/ssl/bundle-with-internal-root.pem
+
+cp internal-root.pem /usr/local/share/ca-certificates/internal-root.crt
+update-ca-certificates
+```
+
+`--cacert`, `CURL_CA_BUNDLE` and `SSL_CERT_FILE` each replace the default
+bundle, so a file holding only the internal root breaks every public site. For
+anything other than a one-off, add the root to the system store (the last two
+lines, Debian and Ubuntu; the file must be PEM with a `.crt` extension) or
+build a combined bundle. Git over HTTPS reads its bundle from
+`http.sslCAInfo` or `GIT_SSL_CAINFO`.
+
+**`-k` is not a fix.** `--insecure` makes curl skip verification entirely: it
+would accept any certificate for that name, including an impostor's, and it
+leaves every other client of the same server still failing. curl's own
+documentation says never to skip verification in production.
+
+## Prevent it from recurring
+
+A missing intermediate is a deployment picking the wrong file, and it comes
+back each time someone copies a certificate by hand.
+
+CertMate writes `cert.pem`, `chain.pem` and `fullchain.pem` together for every
+certificate it issues or renews. Deploy hooks receive the full chain as
+`CERTMATE_FULLCHAIN_PATH` and the intermediates alone as `CERTMATE_CHAIN_PATH`,
+so a hook that copies `$CERTMATE_FULLCHAIN_PATH` into place ships the
+intermediate every time.
+
+When CertMate itself talks to a private ACME CA, it does what step 4
+describes: the CA certificate you paste into the account is handed to certbot
+as `REQUESTS_CA_BUNDLE` at issuance and at renewal. See
+[CA Providers](/docs/ca-providers.html).
+
+## Related errors
+
+- `self-signed certificate in certificate chain`: the server sent the root too, and this client does not trust it.
+- `CERTIFICATE_VERIFY_FAILED`: how Python reports this and the other verification errors.
+- `UNABLE_TO_VERIFY_LEAF_SIGNATURE`: Node.js's name for the missing intermediate.
+- `SEC_ERROR_UNKNOWN_ISSUER`: the Firefox equivalent.
+- `NET::ERR_CERT_AUTHORITY_INVALID`: the Chromium equivalent.
