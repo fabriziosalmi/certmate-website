@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Certificates - CertMate Documentation</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="preload" href="vendor/font-awesome/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/font-awesome/all.min.css"></noscript>
+    <link rel="preload" as="style" href="vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/fonts/fonts.css"></noscript>
+    <style>
+        .doc-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h1 {
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-6);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content p, .doc-content li {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+        .doc-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin: var(--spacing-6) 0;
+        }
+        .doc-content pre code {
+            background: none;
+            padding: 0;
+            color: white;
+        }
+        .doc-content ul, .doc-content ol {
+            margin: var(--spacing-4) 0;
+            padding-left: var(--spacing-8);
+        }
+        .doc-content li {
+            margin: var(--spacing-2) 0;
+        }
+    
+    /* In-page TOC, injected by toc.js. Sticky right column on lg+
+       viewports; collapsed to a top disclosure on smaller screens. */
+    .doc-toc {
+      display: none;
+    }
+    /* Shown only when it fits in the right margin: this page's content
+       column is 900px wide, the TOC 220px plus 24px of gap, so the viewport
+       must be at least 900 + 2 * 244 = 1388px. Below that the old rule
+       placed the TOC over the text (#588). */
+    @media (min-width: 1388px) {
+      .doc-toc {
+        display: block;
+        position: fixed;
+        top: 100px;
+        right: max(24px, calc((100vw - 900px) / 2 - 244px));
+        width: 220px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+      }
+    }
+    .doc-toc-inner {
+      border-left: 2px solid var(--gray-200);
+      padding-left: 16px;
+    }
+    .doc-toc-list { list-style: none; padding: 0; margin: 0; }
+    .doc-toc-item { margin: 4px 0; line-height: 1.4; }
+    .doc-toc-item-h3 { padding-left: 12px; }
+    .doc-toc-link {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: block;
+      padding: 2px 0;
+      transition: color 120ms ease;
+    }
+    .doc-toc-link:hover { color: var(--gray-900); }
+    .doc-toc-link.is-active {
+      color: var(--blue-600, #2563eb);
+      font-weight: 600;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="../assets/certmate_logo.png" alt="CertMate Logo" class="brand-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html#features" class="nav-link">Features</a>
+                <a href="../index.html#providers" class="nav-link">DNS Providers</a>
+                <a href="index.html" class="nav-link active">Documentation</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-id-card"></i> Client Certificates</h1>
+                <p class="docs-subtitle">The private CA CertMate uses to sign client certificates for mTLS and VPN access, and how to issue, download, renew and revoke them.</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <h2>What the Private CA Is For</h2>
+            <p>Server certificates come from an ACME certificate authority. Client certificates do not. CertMate signs them with its own private CA, which it generates on first start. A server that requires client certificates, for mTLS on an API or for VPN access, trusts that CA and accepts the certificates it signed.</p>
+            <p>The CA is self-signed and trusted by nothing until you install it. It is for identities inside your own systems, not for anything a browser or a public client has to accept.</p>
+
+            <h2>The CA</h2>
+            <p>The CA has a 4096-bit RSA key, is valid for 10 years and signs with SHA-256. It lives in the data directory (<code>data</code> by default, or <code>CERTMATE_DATA_DIR</code>), under <code>certs/ca/</code>:</p>
+            <ul>
+                <li><code>ca.crt</code>: the CA certificate.</li>
+                <li><code>ca.key</code>: the CA private key.</li>
+                <li><code>ca_metadata.json</code>: common name, dates, serial, key size and issuer fields.</li>
+                <li><code>crl.pem</code>: the current certificate revocation list.</li>
+            </ul>
+            <p>All four files are written atomically with mode <code>0600</code>. CertMate has no endpoint that serves <code>ca.crt</code> by itself. Copy it from the data directory, or take it from a <code>.pfx</code> download, which carries it as the chain.</p>
+            <p>On start, CertMate refuses to load a CA whose key does not match its certificate, and refuses to regenerate one when only <code>ca.crt</code> or only <code>ca.key</code> is present; it logs which file is missing so you can restore it. An expired CA signs nothing.</p>
+
+            <h3>Choosing the CA Subject</h3>
+            <p>Unless configured, the CA subject is <code>C=CH, ST=Switzerland, O=CertMate, OU=Certificate Authority, CN=CertMate CA</code>. Since v2.33.0 the <code>client_ca_subject</code> key in <code>settings.json</code> sets it:</p>
+            <pre><code>{
+  "client_ca_subject": {
+    "country": "IT",
+    "state": "Liguria",
+    "organization": "Acme SpA",
+    "organizational_unit": "IT Security",
+    "common_name": "Acme Client CA"
+  }
+}</code></pre>
+            <p><code>country</code> must be a two-letter ISO 3166-1 code; anything else is refused before a key is written. An empty field is left out of the subject. An empty <code>common_name</code> falls back to <code>CertMate CA</code>.</p>
+            <p>The setting is read once, when the CA is created. Changing it afterwards does nothing, because regenerating the CA would stop every certificate it signed from verifying. To set a subject on an instance that already has a CA, use the reset below.</p>
+            <p><code>POST /api/settings</code> does not accept <code>client_ca_subject</code>. Set it in <code>settings.json</code> before the first start, or pass the subject to the reset.</p>
+
+            <h3>Resetting the CA</h3>
+            <p><code>POST /api/client-certs/ca/reset</code> (admin) replaces the CA. The body must carry the confirmation phrase as a string. <code>subject</code> is optional and takes the same fields as <code>client_ca_subject</code>; without it, the new CA keeps the current subject.</p>
+            <pre><code>curl -X POST https://certmate.example.com/api/client-certs/ca/reset \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "confirm": "reset-client-ca",
+    "subject": {"country": "IT", "organization": "Acme SpA", "common_name": "Acme Client CA"}
+  }'</code></pre>
+            <p>A missing or different <code>confirm</code> returns 400, and so does an invalid subject; either way nothing changes. On success the reset:</p>
+            <ol>
+                <li>copies the old <code>ca.key</code>, <code>ca.crt</code> and <code>ca_metadata.json</code> to <code>certs/ca/backups/</code> with a timestamp in each name;</li>
+                <li>generates a new CA;</li>
+                <li>deletes every client certificate the old CA signed;</li>
+                <li>republishes the CRL, signed by the new key;</li>
+                <li>writes a <code>ca_reset</code> audit record with the number of certificates removed.</li>
+            </ol>
+            <p>The response gives <code>certificates_removed</code> and a warning. Server certificates, settings and DNS accounts are not touched. Afterwards, install the new <code>ca.crt</code> on every server that trusted the old one and issue the client certificates you still need. CRLs and OCSP answers published for the old CA can no longer be verified. Keep the backup: the old key is the only thing that can sign a CRL for the certificates the old CA issued.</p>
+
+            <h2>Issuing Client Certificates</h2>
+            <h3>In the web UI</h3>
+            <p>Client certificates have their own view on the dashboard (<code>/client-certificates</code> redirects to it). The create form takes a common name (required), email, organization, a usage type (<strong>API mTLS</strong>, <strong>VPN Access</strong>, <strong>User Authentication</strong> or <strong>Other</strong>), a validity in days and notes. <strong>Bulk Upload (CSV)</strong> creates up to 100 at once.</p>
+            <h3>Through the API</h3>
+            <pre><code>curl -X POST https://certmate.example.com/api/client-certs/create \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "common_name": "billing-service",
+    "email": "ops@example.com",
+    "organization": "Acme SpA",
+    "organizational_unit": "Payments",
+    "cert_usage": "api-mtls",
+    "days_valid": 365,
+    "notes": "calls the ledger API"
+  }'</code></pre>
+            <p>Only <code>common_name</code> is required, 1 to 64 characters. The defaults and limits:</p>
+            <ul>
+                <li><code>email</code>: empty; at most 254 characters.</li>
+                <li><code>organization</code>: <code>CertMate</code>; at most 64 characters.</li>
+                <li><code>organizational_unit</code>: <code>Users</code>; at most 64 characters.</li>
+                <li><code>cert_usage</code>: <code>api-mtls</code>.</li>
+                <li><code>days_valid</code>: 365; between 1 and 3650.</li>
+                <li><code>notes</code>: empty.</li>
+            </ul>
+            <p>The request needs the <code>operator</code> role and returns 201 with the new <code>identifier</code>, the on-disk <code>paths</code> and the full <code>metadata</code>. The identifier is the common name reduced to lowercase letters, digits, <code>.</code>, <code>_</code> and <code>-</code>, followed by a hyphen and eight hex characters: <code>billing-service-3f9a1c2e</code>. Every other call uses it.</p>
+            <p>CertMate generates the key pair. The create endpoint takes no CSR, so the private key is created on the CertMate host.</p>
+
+            <h3>What Is Issued</h3>
+            <ul>
+                <li>A 2048-bit RSA key.</li>
+                <li>Subject: the common name, organization, organizational unit and email you gave, with <code>C=CH</code> and <code>ST=Switzerland</code>. The client certificate subject does not follow <code>client_ca_subject</code>.</li>
+                <li>Issuer: the CA subject.</li>
+                <li>Extensions: <code>basicConstraints</code> <code>CA:FALSE</code>, <code>keyUsage</code> <code>digitalSignature, keyEncipherment</code> and <code>extendedKeyUsage</code> <code>clientAuth</code>, all critical; subject and authority key identifiers.</li>
+                <li>No CRL distribution point and no OCSP URL. A server that checks revocation has to be given the CRL itself (see below).</li>
+            </ul>
+            <p>Each certificate gets a directory under <code>certs/client/</code> in the data directory, named by its identifier. The parent is <code>vpn/</code> when the usage contains <code>vpn</code>, <code>api/</code> when it contains <code>api</code> or <code>mtls</code>, and <code>other/</code> for anything else. The directory holds <code>&lt;identifier&gt;.crt</code>, <code>&lt;identifier&gt;.key</code> (mode <code>0600</code>), <code>&lt;identifier&gt;.csr</code> and <code>metadata.json</code>.</p>
+
+            <h3>Batch Creation</h3>
+            <p><code>POST /api/client-certs/batch</code> (operator) takes CSV data already split into <code>headers</code> and <code>rows</code>. <code>headers</code> must include <code>common_name</code>; <code>email</code>, <code>organization</code>, <code>cert_usage</code>, <code>days_valid</code> and <code>notes</code> are also read. A batch of more than 100 rows is refused.</p>
+            <pre><code>curl -X POST https://certmate.example.com/api/client-certs/batch \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "headers": ["common_name", "email", "cert_usage", "days_valid"],
+    "rows": [
+      ["alice", "alice@example.com", "vpn", "365"],
+      ["bob", "bob@example.com", "vpn", "180"]
+    ]
+  }'</code></pre>
+            <p>In a batch, a <code>days_valid</code> that is not a number becomes 365, and one outside 1 to 3650 is clamped. One failed row does not stop the others. The 201 response gives <code>total</code>, <code>successful</code>, <code>failed</code>, the created <code>certificates</code> and an <code>errors</code> list whose <code>row</code> is the CSV line number, counting the header as line 1.</p>
+
+            <h2>Listing and Inspecting</h2>
+            <ul>
+                <li><code>GET /api/client-certs</code> returns <code>certificates</code> (metadata, newest first) and <code>total</code>. <code>?revoked=true</code> or <code>false</code> filters by revocation; <code>?search=</code> matches the common name or email; <code>?usage=</code> selects the storage group the usage falls into (<code>vpn</code>, <code>api</code> or <code>other</code>), not the exact usage string.</li>
+                <li><code>GET /api/client-certs/&lt;identifier&gt;</code> returns one certificate's metadata: subject fields, <code>serial_number</code> (decimal), <code>created_at</code>, <code>expires_at</code>, <code>days_valid</code>, <code>revoked</code>, <code>revoked_at</code>, <code>reason_revoked</code>, <code>renewal_enabled</code>, <code>renewal_threshold_days</code> and, once renewed, <code>superseded_by</code>.</li>
+                <li><code>GET /api/client-certs/stats</code> returns <code>total</code>, <code>active</code> (not revoked), <code>revoked</code>, counts <code>by_usage</code> and <code>by_organization</code>, and <code>ca_status</code> (<code>active</code> or <code>not_loaded</code>).</li>
+            </ul>
+            <p>All three need the <code>viewer</code> role.</p>
+
+            <h2>Downloading</h2>
+            <p><code>GET /api/client-certs/&lt;identifier&gt;/download/&lt;type&gt;</code>, where <code>type</code> is one of:</p>
+            <table>
+                <thead>
+                    <tr><th>Type</th><th>Content</th><th>Role</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>crt</code></td><td>The certificate, PEM.</td><td>viewer</td></tr>
+                    <tr><td><code>csr</code></td><td>The CSR CertMate generated, PEM.</td><td>viewer</td></tr>
+                    <tr><td><code>key</code></td><td>The private key, PEM.</td><td>operator</td></tr>
+                    <tr><td><code>pfx</code></td><td>PKCS#12 bundle: certificate, private key and the CA certificate as chain, encrypted with the PFX password.</td><td>operator</td></tr>
+                </tbody>
+            </table>
+            <p>A viewer asking for <code>key</code> or <code>pfx</code> gets 403. The <code>.pfx</code> is built on request and encrypted with the PFX password set in <strong>Settings</strong>, the same password as the server certificate export. Without one, the download returns 400 <code>Set a PFX password in Settings to enable PKCS#12 export</code>; CertMate never produces an unencrypted bundle. In the web UI the detail view of a certificate has a download button for each type.</p>
+            <pre><code>curl -fsS -H "Authorization: Bearer $TOKEN" \
+  -o billing-service.pfx \
+  https://certmate.example.com/api/client-certs/billing-service-3f9a1c2e/download/pfx</code></pre>
+
+            <h2>Renewal</h2>
+            <p><code>POST /api/client-certs/&lt;identifier&gt;/renew</code> (operator), or <strong>Renew</strong> in the list, issues a new certificate with a new key, a new serial and a new identifier. It keeps the subject, usage and validity of the original. The response is 201 with the new certificate, like a create.</p>
+            <p>The original is marked <code>superseded_by</code> the new identifier and its automatic renewal is turned off. It is not revoked: it stays valid until it expires or you revoke it. A revoked certificate cannot be renewed.</p>
+            <p>Every certificate is created with <code>renewal_enabled</code> true and <code>renewal_threshold_days</code> 30. A scheduled job runs daily around 03:00 (up to an hour either side) and renews each certificate that is not revoked, not superseded, not yet expired and within 30 days of expiry. An expired certificate is not renewed automatically. Scheduled renewals are written to the audit log. Renewal gives the holder a new key and certificate; the new files still have to reach the client.</p>
+
+            <h2>Revocation</h2>
+            <p><code>POST /api/client-certs/&lt;identifier&gt;/revoke</code> needs the <code>admin</code> role. <strong>Revoke</strong> in the web UI asks for confirmation first and sends <code>User requested</code> as the reason.</p>
+            <pre><code>curl -X POST https://certmate.example.com/api/client-certs/billing-service-3f9a1c2e/revoke \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"reason": "keyCompromise"}'</code></pre>
+            <p><code>reason</code> is free text and defaults to <code>unspecified</code>. The metadata records <code>revoked_at</code> and the reason, and the CRL is regenerated from every revoked certificate. When the reason names an RFC 5280 reason code (<code>keyCompromise</code>, <code>caCompromise</code>, <code>affiliationChanged</code>, <code>superseded</code>, <code>cessationOfOperation</code>, <code>certificateHold</code>, <code>privilegeWithdrawn</code>, <code>aACompromise</code> or <code>removeFromCRL</code>, in any case, with or without <code>_</code> or <code>-</code>), the CRL entry carries it. Any other reason, <code>unspecified</code> included, leaves the entry without a reason code.</p>
+            <p>A revocation takes effect only on servers that check the CRL. CertMate does not reach out to the servers that trust the CA.</p>
+
+            <h3>Deploy Hooks on Revocation</h3>
+            <p>A successful revocation fires the <code>revoked</code> deploy hook event. Client certificates are the only certificates CertMate can revoke, so this is the only time the event fires. <code>CERTMATE_DOMAIN</code> holds the client certificate's identifier and <code>CERTMATE_EVENT</code> is <code>revoked</code>. The path variables point into the server certificate directory and do not name the client certificate's files.</p>
+            <p>A hook runs on <code>revoked</code> only if its <code>on_events</code> includes it; new hooks get <code>created</code> and <code>renewed</code>. A global hook with <code>revoked</code> runs for every client certificate revocation. For example, to tell another system which identity was withdrawn:</p>
+            <pre><code>{
+  "id": "mtls-revoked",
+  "name": "Report revoked client certificate",
+  "command": "curl -fsS -X POST https://idp.internal/api/mtls/revoked/$CERTMATE_DOMAIN",
+  "enabled": true,
+  "timeout": 30,
+  "on_events": ["revoked"]
+}</code></pre>
+            <p>The hook runs inside the CertMate container, which has <code>curl</code>. See <a href="deploy-hooks.html">Deploy Hooks</a> for configuration and the command rules.</p>
+
+            <h2>CRL and Status Lookup</h2>
+            <p>Relying parties need these two endpoints without a CertMate account, so they take no authentication. Each has its own rate-limit bucket: 200 requests a minute for status lookups and 60 for CRL downloads by default.</p>
+            <h3>CRL</h3>
+            <p><code>GET /api/crl/download/&lt;format&gt;</code>, where <code>format</code> is:</p>
+            <ul>
+                <li><code>pem</code>: the CRL in PEM, as the attachment <code>ca.crl</code>.</li>
+                <li><code>der</code>: the same CRL in DER.</li>
+                <li><code>info</code>: JSON with <code>status</code>, <code>issuer</code>, <code>last_update</code>, <code>next_update</code>, <code>revoked_count</code> and <code>revoked_serials</code>.</li>
+            </ul>
+            <p>The CRL is signed by the CA and valid for 7 days. CertMate regenerates it on every revocation and on a CA reset, and again when it is requested after its <code>next_update</code> has passed, so a server that fetches it on a schedule never gets an expired one. Each entry keeps the revocation date it was recorded with.</p>
+            <pre><code>curl -fsS -o ca.crl https://certmate.example.com/api/crl/download/pem</code></pre>
+            <h3>Status by serial</h3>
+            <p><code>GET /api/ocsp/status/&lt;serial&gt;</code> takes the decimal serial number (the <code>serial_number</code> in the metadata) and returns JSON with <code>certificate_status</code> set to <code>good</code>, <code>revoked</code> or <code>unknown</code>. A revoked certificate also has <code>revocation_time</code> and <code>revocation_reason</code>. It answers from the certificate metadata at the moment of the request.</p>
+            <pre><code>curl -fsS https://certmate.example.com/api/ocsp/status/258328937016381437591925094542366227683</code></pre>
+            <p>This is a JSON lookup for scripts and monitoring. It is not an RFC 6960 OCSP responder, and the certificates carry no OCSP URL, so a TLS server does not query it on its own.</p>
+
+            <h2>Trusting the CA on a Server</h2>
+            <p>A server that accepts CertMate client certificates needs two things from CertMate:</p>
+            <ul>
+                <li><code>ca.crt</code>, as the CA it verifies client certificates against;</li>
+                <li>the CRL from <code>/api/crl/download/pem</code> (or <code>der</code>), fetched again before its <code>next_update</code>, if the server checks revocation.</li>
+            </ul>
+            <p>How to configure each is up to the server's own documentation; CertMate's documentation does not cover it.</p>
+
+            <h2>API Summary</h2>
+            <table>
+                <thead>
+                    <tr><th>Method and path</th><th>Role</th><th>Purpose</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>GET /api/client-certs</code></td><td>viewer</td><td>List, with <code>usage</code>, <code>revoked</code> and <code>search</code> filters.</td></tr>
+                    <tr><td><code>POST /api/client-certs/create</code></td><td>operator</td><td>Issue one certificate.</td></tr>
+                    <tr><td><code>POST /api/client-certs/batch</code></td><td>operator</td><td>Issue up to 100 from CSV rows.</td></tr>
+                    <tr><td><code>GET /api/client-certs/stats</code></td><td>viewer</td><td>Counts and CA status.</td></tr>
+                    <tr><td><code>GET /api/client-certs/&lt;id&gt;</code></td><td>viewer</td><td>Metadata.</td></tr>
+                    <tr><td><code>GET /api/client-certs/&lt;id&gt;/download/&lt;type&gt;</code></td><td>viewer; operator for <code>key</code> and <code>pfx</code></td><td>Download <code>crt</code>, <code>csr</code>, <code>key</code> or <code>pfx</code>.</td></tr>
+                    <tr><td><code>POST /api/client-certs/&lt;id&gt;/renew</code></td><td>operator</td><td>Issue a replacement.</td></tr>
+                    <tr><td><code>POST /api/client-certs/&lt;id&gt;/revoke</code></td><td>admin</td><td>Revoke and regenerate the CRL.</td></tr>
+                    <tr><td><code>POST /api/client-certs/ca/reset</code></td><td>admin</td><td>Replace the CA and delete the certificates it signed.</td></tr>
+                    <tr><td><code>GET /api/crl/download/&lt;format&gt;</code></td><td>none</td><td>CRL as <code>pem</code>, <code>der</code> or <code>info</code>.</td></tr>
+                    <tr><td><code>GET /api/ocsp/status/&lt;serial&gt;</code></td><td>none</td><td>Status of one serial.</td></tr>
+                </tbody>
+            </table>
+            <p>Errors carry <code>error</code>, <code>message</code>, <code>code</code> and <code>status</code>, like the rest of the API.</p>
+
+            <h2>Backups</h2>
+            <p>The CA and the client certificates are in the <code>certs</code> subtree of the data directory, which the unified backup includes. A share-safe backup leaves out <code>ca.key</code> and the client keys; only a disaster-recovery backup carries them. Without <code>ca.key</code>, a restored instance can neither issue client certificates nor sign a CRL for the ones already out. See <a href="backup-recovery.html">Backup and Recovery</a>.</p>
+
+            <h2>Next Steps</h2>
+            <ul>
+                <li><a href="deploy-hooks.html">Deploy Hooks</a>: hooks on the <code>revoked</code> event</li>
+                <li><a href="backup-recovery.html">Backup and Recovery</a>: keeping the CA key</li>
+                <li><a href="security.html">Security</a>: roles and API keys</li>
+                <li><a href="api-reference.html">API Reference</a>: authentication and the rest of the API</li>
+                <li><a href="csr-certificates.html">CSR Certificates</a>: server certificates whose key stays on your device</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributors</a></p>
+        </div>
+    </footer>
+    <script src="toc.js" defer></script>
+</body>
+</html>

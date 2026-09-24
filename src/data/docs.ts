@@ -150,36 +150,6 @@ export const DOC_PAGES: DocPage[] = [
     description:
       "CertMate's private CA for mTLS client certificates: CA subject and reset, issuing, PFX download, renewal, revocation, CRL and deploy hooks on revoke.",
   },
-  {
-    slug: 'revocation',
-    title: 'Revocation Checking - CertMate Documentation',
-    description:
-      'How CertMate checks whether a served certificate is revoked: OCSP first, CRL fallback, verified answers only, and why unavailable is never good.',
-  },
-  {
-    slug: 'monitoring',
-    title: 'Monitoring - CertMate Documentation',
-    description:
-      "CertMate's /health and /health/ready endpoints, the Prometheus metrics at /metrics, the eight shipped alert rules and the Grafana dashboard to import.",
-  },
-  {
-    slug: 'dns-01-delegation',
-    title: 'DNS-01 Delegation - CertMate Documentation',
-    description:
-      'Issue certificates for a domain whose DNS CertMate cannot write: CNAME _acme-challenge to an alias zone, set domain_alias, verify with dig and the API.',
-  },
-  {
-    slug: 'cli-sdk',
-    title: 'CLI and Python SDK - CertMate Documentation',
-    description:
-      'Install and configure the certmate CLI and certmate-sdk Python client: every command and method, the endpoint each calls, exit codes, errors and jobs.',
-  },
-  {
-    slug: 'sso',
-    title: 'Single Sign-On (OIDC) - CertMate Documentation',
-    description:
-      'Set up OpenID Connect SSO in CertMate: IdP redirect URI and discovery, role mapping from group claims, JIT users, email linking, and logout.',
-  },
 ];
 
 /** The published URL of a documentation page, absolute. */
