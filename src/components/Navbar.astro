@@ -1,107 +1,99 @@
 ---
 import { Icon } from 'astro-icon/components';
-// Section anchors are absolute (/#features …) so they resolve to the
-// homepage section from any page (e.g. /security), not just a same-page
-// hash. External links that point to certmate.org/#features keep landing
-// where they did pre-migration. /security is a standalone page.
-const links = [
-  { href: '/#features', label: 'Features' },
-  { href: '/#providers', label: 'DNS Providers' },
-  { href: '/#installation', label: 'Installation' },
-  { href: '/#api', label: 'API' },
-  { href: '/security', label: 'Security' },
-  { href: '/#docs', label: 'Documentation' },
-];
+import { NAV_LINKS, NAV_EXTERNAL, isCurrentSection, navLabel, type NavLocale } from '~/data/nav';
 
-// Public live demo + sister projects in the CertMate ecosystem. External
-// links open in a new tab; flagged with `external: true` so the menu renderer
-// attaches the noopener/noreferrer rels and a small "↗" affordance for screen
-// readers AND sighted users.
-const ecosystem = [
-  { href: 'https://demo.certmate.org', label: 'Live demo', external: true },
-  { href: 'https://agent.certmate.org', label: 'Agent', external: true },
-  { href: 'https://tools.certmate.org', label: 'Tools', external: true },
-];
+interface Props {
+  lang?: NavLocale;
+  /**
+   * The same page in the other language, when there is one. Without it the
+   * switch goes to the other language's home, which is the only page every
+   * route is sure to have a counterpart for.
+   */
+  altHref?: string;
+}
+
+// One header for every Astro page. The error, deploy, comparison and Italian
+// pages used to carry a two-link header of their own, from which a reader
+// could not reach the documentation, the demo or GitHub except through the
+// footer.
+//
+// The home's in-page anchors (Features, DNS Providers, Installation, API)
+// are no longer here: they only meant something on the home, which is one
+// scroll, and they pushed the entries that lead to other pages -- errors,
+// deploy guides, changelog -- out of a header that had eleven items.
+const { lang = 'en', altHref } = Astro.props;
+const other: NavLocale = lang === 'en' ? 'it' : 'en';
+const switchHref = altHref ?? (other === 'en' ? '/' : '/it/');
+const current = Astro.url.pathname;
+const isCurrent = (href: string) => isCurrentSection(href, current);
+const t = (key: Parameters<typeof navLabel>[1]) => navLabel(lang, key);
 ---
 
 <nav
   class="sticky top-0 z-40 border-b border-gray-200 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:border-gray-800 dark:bg-gray-950/80 dark:supports-[backdrop-filter]:bg-gray-950/60"
-  role="navigation"
-  aria-label="Main navigation"
+  aria-label={t('mainNav')}
 >
-  <div class="container-x flex h-16 items-center justify-between">
-    <a href="/" class="flex items-center gap-2.5" aria-label="CertMate home">
-      <!-- Logo at 40px renders crisp on the 64px nav strip without dwarfing
-           the brand text alongside it. The previous 32px size felt
-           anaemic on retina displays. width/height attrs match the
-           rendered size so the browser does not need to reflow on
-           load. -->
+  <div class="container-x flex h-16 items-center justify-between gap-4">
+    <a href={lang === 'en' ? '/' : '/it/'} class="flex shrink-0 items-center gap-2.5" aria-label={t('home')}>
       <img
         src="/assets/certmate_logo.png"
-        alt="CertMate logo"
+        alt=""
         class="h-10 w-10"
         width="40"
         height="40"
         loading="eager"
         decoding="async"
       />
-      <span class="text-lg font-bold tracking-tight">CertMate</span>
+      <span class="text-lg font-bold tracking-tight text-gray-900 dark:text-white">CertMate</span>
     </a>
 
-    <ul class="hidden items-center gap-1 md:flex" id="nav-menu">
-      {
-        links.map((link) => (
+    <ul class="hidden items-center lg:flex xl:gap-1">
+      {NAV_LINKS.map((link) => {
+        const href = link.href[lang];
+        return (
           <li>
             <a
-              href={link.href}
-              class="rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+              href={href}
+              aria-current={isCurrent(href) ? 'page' : undefined}
+              class="whitespace-nowrap rounded-md px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 xl:px-3 hover:text-gray-900 aria-[current=page]:text-primary dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white dark:aria-[current=page]:text-primary-500"
             >
-              {link.label}
+              {t(link.key)}
             </a>
           </li>
-        ))
-      }
-      {/* Sister-project links: separated from the in-page anchors above
-         with a thin vertical rule so a sighted user can tell which links
-         leave the current site without having to read the ↗ marker. */}
-      <li aria-hidden="true" class="h-5 w-px bg-gray-200 dark:bg-gray-700 mx-1" />
-      {
-        ecosystem.map((link) => (
-          <li>
-            <a
-              href={link.href}
-              class="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {link.label}
-              <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.65rem] opacity-60" aria-hidden="true" />
-              <span class="sr-only">(opens in new tab)</span>
-            </a>
-          </li>
-        ))
-      }
-      <li>
-        <a
-          href="https://github.com/fabriziosalmi/certmate"
-          class="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Icon name="fa6-brands:github" aria-hidden="true" />
-          GitHub
-          <span class="sr-only">(opens in new tab)</span>
-        </a>
-      </li>
+        );
+      })}
+      <li aria-hidden="true" class="mx-1 h-5 w-px bg-gray-200 dark:bg-gray-700" />
+      {NAV_EXTERNAL.map((link) => (
+        <li>
+          <a
+            href={link.href}
+            class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-2 text-sm xl:px-3 font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {link.icon && <Icon name={link.icon} aria-hidden="true" />}
+            {t(link.key)}
+            {!link.icon && <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.65rem] opacity-60" aria-hidden="true" />}
+            <span class="sr-only">{t('newTab')}</span>
+          </a>
+        </li>
+      ))}
     </ul>
 
-    <div class="flex items-center gap-2">
-      <!-- Theme toggle: pure-CSS-class flip wired through localStorage. -->
+    <div class="flex items-center gap-1">
+      <a
+        href={switchHref}
+        hreflang={other}
+        lang={other}
+        class="inline-flex h-11 min-w-11 items-center justify-center rounded-md px-2 text-sm font-semibold uppercase text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+        aria-label={other === 'it' ? 'Italiano' : 'English'}
+      >{other}</a>
+
       <button
-        id="theme-toggle"
         type="button"
-        class="rounded-md p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
-        aria-label="Toggle color theme"
+        data-theme-toggle
+        class="inline-flex h-11 w-11 items-center justify-center rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+        aria-label={t('theme')}
       >
         <Icon name="fa6-solid:sun" class="hidden dark:inline" aria-hidden="true" />
         <Icon name="fa6-solid:moon" class="inline dark:hidden" aria-hidden="true" />
@@ -110,92 +102,85 @@ const ecosystem = [
       <button
         id="nav-hamburger"
         type="button"
-        class="rounded-md p-2 text-gray-600 hover:bg-gray-100 md:hidden dark:text-gray-300 dark:hover:bg-gray-800"
-        aria-label="Toggle navigation menu"
+        class="group inline-flex h-11 w-11 items-center justify-center rounded-md text-gray-600 hover:bg-gray-100 lg:hidden dark:text-gray-300 dark:hover:bg-gray-800"
+        aria-label={t('menu')}
         aria-expanded="false"
         aria-controls="nav-menu-mobile"
       >
-        <Icon name="fa6-solid:bars" class="text-lg" aria-hidden="true" />
+        <Icon name="fa6-solid:bars" class="text-lg group-aria-expanded:hidden" aria-hidden="true" />
+        <Icon name="fa6-solid:xmark" class="hidden text-lg group-aria-expanded:inline" aria-hidden="true" />
       </button>
     </div>
   </div>
 
-  <!-- Mobile menu -->
   <div
     id="nav-menu-mobile"
-    class="hidden border-t border-gray-200 bg-white md:hidden dark:border-gray-800 dark:bg-gray-950"
+    class="hidden border-t border-gray-200 bg-white lg:hidden dark:border-gray-800 dark:bg-gray-950"
   >
-    <ul class="container-x flex flex-col gap-1 py-3">
-      {
-        links.map((link) => (
+    <ul class="container-x flex flex-col py-2">
+      {NAV_LINKS.map((link) => {
+        const href = link.href[lang];
+        return (
           <li>
             <a
-              href={link.href}
-              class="block rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+              href={href}
+              aria-current={isCurrent(href) ? 'page' : undefined}
+              class="flex min-h-11 items-center rounded-md px-3 text-base font-medium text-gray-700 hover:bg-gray-100 aria-[current=page]:text-primary dark:text-gray-300 dark:hover:bg-gray-800"
             >
-              {link.label}
+              {t(link.key)}
             </a>
           </li>
-        ))
-      }
-      <li aria-hidden="true" class="my-1 h-px bg-gray-200 dark:bg-gray-700 mx-3" />
-      {
-        ecosystem.map((link) => (
-          <li>
-            <a
-              href={link.href}
-              class="block rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {link.label}
-              <Icon name="fa6-solid:arrow-up-right-from-square" class="ml-1 text-[0.65rem] opacity-60" aria-hidden="true" />
-              <span class="sr-only">(opens in new tab)</span>
-            </a>
-          </li>
-        ))
-      }
-      <li>
-        <a
-          href="https://github.com/fabriziosalmi/certmate"
-          class="block rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Icon name="fa6-brands:github" class="mr-1" aria-hidden="true" /> GitHub
-        </a>
-      </li>
+        );
+      })}
+      <li aria-hidden="true" class="mx-3 my-1 h-px bg-gray-200 dark:bg-gray-700" />
+      {NAV_EXTERNAL.map((link) => (
+        <li>
+          <a
+            href={link.href}
+            class="flex min-h-11 items-center gap-2 rounded-md px-3 text-base font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {link.icon && <Icon name={link.icon} aria-hidden="true" />}
+            {t(link.key)}
+            {!link.icon && <Icon name="fa6-solid:arrow-up-right-from-square" class="text-xs opacity-60" aria-hidden="true" />}
+            <span class="sr-only">{t('newTab')}</span>
+          </a>
+        </li>
+      ))}
     </ul>
   </div>
 </nav>
 
 <script>
-  // Theme toggle: persist user choice in localStorage; the FOUC-prevention
-  // inline script in BaseLayout reads the same key.
-  const toggle = document.getElementById('theme-toggle');
-  toggle?.addEventListener('click', () => {
-    const html = document.documentElement;
-    const next = html.classList.toggle('dark') ? 'dark' : 'light';
-    try {
-      localStorage.setItem('theme', next);
-    } catch (_) {}
+  // Theme toggle: persist the choice; BaseLayout's inline script reads the
+  // same key before first paint.
+  document.querySelectorAll('[data-theme-toggle]').forEach((toggle) => {
+    toggle.addEventListener('click', () => {
+      const next = document.documentElement.classList.toggle('dark') ? 'dark' : 'light';
+      try {
+        localStorage.setItem('theme', next);
+      } catch (_) {
+        // Storage blocked (private window, site data off): the theme still
+        // flips for this page, it just is not remembered.
+      }
+    });
   });
 
-  // Mobile-menu disclosure.
   const burger = document.getElementById('nav-hamburger');
   const mobile = document.getElementById('nav-menu-mobile');
-  burger?.addEventListener('click', () => {
-    const open = mobile?.classList.toggle('hidden') === false;
-    burger.setAttribute('aria-expanded', String(open));
-  });
-
-  // Auto-close the mobile menu after the user taps a link — otherwise the
-  // disclosure stays open over the destination section and the user has
-  // to tap the hamburger again to dismiss it.
-  mobile?.querySelectorAll('a').forEach((link) => {
-    link.addEventListener('click', () => {
-      mobile.classList.add('hidden');
-      burger?.setAttribute('aria-expanded', 'false');
-    });
+  const setOpen = (open: boolean) => {
+    mobile?.classList.toggle('hidden', !open);
+    burger?.setAttribute('aria-expanded', String(open));
+  };
+  burger?.addEventListener('click', () => setOpen(burger.getAttribute('aria-expanded') !== 'true'));
+  // Close after a tap on a link, otherwise the menu stays open over the
+  // section the link scrolled to.
+  mobile?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setOpen(false)));
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && burger?.getAttribute('aria-expanded') === 'true') {
+      setOpen(false);
+      burger.focus();
+    }
   });
 </script>
