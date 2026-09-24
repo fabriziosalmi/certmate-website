@@ -93,9 +93,7 @@ from a public CA over DNS-01, so the host never has to be reachable from the
 internet to be trusted by it. For a host that genuinely has no public name, it
 issues over ACME from a private CA you run, such as step-ca, which is the
 difference between one root to distribute and a self-signed certificate on
-every machine. Since v2.35.0, a request for a CA that is not configured on the
-instance, a private CA included, is refused and names the CA; it is never
-issued by a different CA instead. Its probe
+every machine. Its probe
 reports self-signed as a distinct state, read from the served certificate, so a
 placeholder that was never replaced is something a check finds rather than a
 visitor.

@@ -61,7 +61,7 @@ export const features: Feature[] = [
     icon: 'fa6-solid:certificate',
     title: 'Multiple CA Support',
     body:
-      "Let's Encrypt and ZeroSSL (free), Google Trust Services, DigiCert, SSL.com and Sectigo (ACME with EAB), Actalis (EU CA), plus a built-in Private CA for internal certificates. A request for a CA that is not configured is refused, never issued by another CA.",
+      "Let's Encrypt and ZeroSSL (free), Google Trust Services, DigiCert, SSL.com and Sectigo (ACME with EAB), Actalis (EU CA), any ACME-compatible private CA you run, such as step-ca, and a built-in CA for client certificates. A request for a CA that is not configured is refused, never issued by another CA.",
   },
   {
     icon: 'fa6-solid:gears',
