@@ -72,7 +72,7 @@ export const features: Feature[] = [
     icon: 'fa6-solid:terminal',
     title: 'Auto-Deploy Hooks',
     body:
-      'Run shell commands automatically after certificate creation or renewal for seamless deployment, and, if you choose, when a client certificate is revoked.',
+      'Run shell commands after a certificate is created or renewed, to reload or push it where it is used, and, if you choose, when a client certificate is revoked.',
   },
   {
     icon: 'fa6-solid:globe',
