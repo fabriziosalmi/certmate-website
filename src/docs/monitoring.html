@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoring - CertMate Documentation</title>
+    <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="preload" href="vendor/font-awesome/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/font-awesome/all.min.css"></noscript>
+    <link rel="preload" as="style" href="vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/fonts/fonts.css"></noscript>
+    <style>
+        .doc-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h1 {
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-6);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content p, .doc-content li {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+        .doc-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin: var(--spacing-6) 0;
+        }
+        .doc-content pre code {
+            background: none;
+            padding: 0;
+            color: white;
+        }
+        .doc-content ul, .doc-content ol {
+            margin: var(--spacing-4) 0;
+            padding-left: var(--spacing-8);
+        }
+        .doc-content li {
+            margin: var(--spacing-2) 0;
+        }
+    
+    /* In-page TOC, injected by toc.js. Sticky right column on lg+
+       viewports; collapsed to a top disclosure on smaller screens. */
+    .doc-toc {
+      display: none;
+    }
+    /* Shown only when it fits in the right margin: this page's content
+       column is 900px wide, the TOC 220px plus 24px of gap, so the viewport
+       must be at least 900 + 2 * 244 = 1388px. Below that the old rule
+       placed the TOC over the text (#588). */
+    @media (min-width: 1388px) {
+      .doc-toc {
+        display: block;
+        position: fixed;
+        top: 100px;
+        right: max(24px, calc((100vw - 900px) / 2 - 244px));
+        width: 220px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+      }
+    }
+    .doc-toc-inner {
+      border-left: 2px solid var(--gray-200);
+      padding-left: 16px;
+    }
+    .doc-toc-list { list-style: none; padding: 0; margin: 0; }
+    .doc-toc-item { margin: 4px 0; line-height: 1.4; }
+    .doc-toc-item-h3 { padding-left: 12px; }
+    .doc-toc-link {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: block;
+      padding: 2px 0;
+      transition: color 120ms ease;
+    }
+    .doc-toc-link:hover { color: var(--gray-900); }
+    .doc-toc-link.is-active {
+      color: var(--blue-600, #2563eb);
+      font-weight: 600;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="../assets/certmate_logo.png" alt="CertMate Logo" class="brand-logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html#features" class="nav-link">Features</a>
+                <a href="../index.html#providers" class="nav-link">DNS Providers</a>
+                <a href="index.html" class="nav-link active">Documentation</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-chart-line"></i> Monitoring</h1>
+                <p class="docs-subtitle">The health and readiness endpoints, the Prometheus metrics CertMate exports, and the alert rules and Grafana dashboard shipped with it.</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <h2>Three Endpoints</h2>
+            <p>CertMate answers three different questions over HTTP:</p>
+            <ul>
+                <li><code>GET /health</code>: is the process serving requests, and is anything degraded? Public, always 200.</li>
+                <li><code>GET /health/ready</code>: can this instance renew certificates? Public, 200 or 503.</li>
+                <li><code>GET /metrics</code>: Prometheus metrics. Requires the viewer role.</li>
+            </ul>
+            <p>Notifications about certificate events (issued, renewed, failed) are a separate mechanism, pushed rather than scraped; see <a href="webhooks.html">Webhooks</a>.</p>
+
+            <h2>/health</h2>
+            <p><code>/health</code> is the liveness endpoint. It needs no authentication and returns HTTP 200 whenever Flask is serving, whatever the checks find. The published image's <code>HEALTHCHECK</code> and the <code>docker-compose.yml</code> healthcheck both run <code>curl -f</code> against it. Read the <code>status</code> field, not the HTTP code, to find out whether something is wrong.</p>
+            <pre><code>curl -s http://localhost:8000/health</code></pre>
+            <p>The response has four top-level fields:</p>
+            <ul>
+                <li><code>status</code>: <code>healthy</code>, or <code>degraded</code> when any check below fails.</li>
+                <li><code>version</code>: the CertMate release.</li>
+                <li><code>api_contract_version</code>: changes only when the API interface changes, so a client should check compatibility against this field rather than <code>version</code>. It is <code>2.14</code> in v2.35.0.</li>
+                <li><code>checks</code>: the individual results.</li>
+            </ul>
+            <p>The keys in <code>checks</code>:</p>
+            <table>
+                <thead>
+                    <tr><th>Key</th><th>Values</th><th>Degrades <code>status</code> when</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>scheduler</code></td><td><code>running</code>, <code>failed</code>, <code>not_running</code></td><td>not <code>running</code></td></tr>
+                    <tr><td><code>scheduler_error</code>, <code>scheduler_failed_at</code></td><td>Why and when scheduler setup failed</td><td>present only with <code>failed</code></td></tr>
+                    <tr><td><code>certbot</code></td><td><code>ok</code>, <code>failed</code>, <code>skipped</code>, <code>unknown</code></td><td><code>failed</code></td></tr>
+                    <tr><td><code>certbot_version</code></td><td>What <code>certbot --version</code> printed</td><td>-</td></tr>
+                    <tr><td><code>certbot_error</code></td><td>Why each candidate failed, with the tail of certbot's output</td><td>present only with <code>failed</code></td></tr>
+                    <tr><td><code>cert_dir</code></td><td><code>ok</code>, <code>missing</code></td><td><code>missing</code></td></tr>
+                    <tr><td><code>disk_free_mb</code></td><td>Free space, in MB, on the filesystem holding the certificate directory's parent</td><td>-</td></tr>
+                    <tr><td><code>disk_space</code></td><td><code>ok</code>, <code>low</code>, <code>unknown</code></td><td><code>low</code> (under 100 MB free)</td></tr>
+                </tbody>
+            </table>
+            <p>The scheduler is APScheduler, and it runs the automatic renewals. The certbot check runs <code>certbot --version</code> (first <code>.venv/bin/certbot</code>, then <code>certbot</code> on the <code>PATH</code>) with a 30-second timeout. Running the command is what catches a certbot that is installed but fails on import because a dependency changed version. A timeout counts as a failure. <code>skipped</code> means no real shell was available to run it with, as in tests.</p>
+            <p>The certbot result is cached. It is checked at startup and again when a request finds the cached answer older than <code>CERTMATE_CERTBOT_PROBE_TTL</code> seconds (default 300, clamped to between 30 and 3600). A certbot that breaks after startup therefore shows up within one TTL, and a probe every few seconds still runs certbot at most once per TTL.</p>
+
+            <h2>/health/ready</h2>
+            <p><code>/health/ready</code> is the readiness endpoint, for Kubernetes readiness probes, compose healthchecks and deploy gates. It needs no authentication. It returns 200 when the instance can renew and 503 when it cannot.</p>
+            <p>The reason for a separate endpoint: <code>/health</code> stays 200 while the scheduler is down, but an instance whose scheduler failed to start serves the UI and API and never renews anything. <code>/health/ready</code> makes that case fail loudly.</p>
+            <p>It is ready when both hold:</p>
+            <ul>
+                <li>the scheduler is running and its recorded state is not <code>failed</code>;</li>
+                <li>the certbot check is not <code>failed</code>. <code>unknown</code> (not checked yet) and <code>skipped</code> count as ready, because neither is evidence of a problem.</li>
+            </ul>
+            <p>The body:</p>
+            <pre><code>{
+  "ready": false,
+  "scheduler": "running",
+  "certbot": "failed",
+  "certbot_error": ".venv/bin/certbot: ...; certbot: exited 1: ..."
+}</code></pre>
+            <p><code>scheduler</code> is <code>running</code>, otherwise the recorded scheduler state (such as <code>failed</code>) or <code>not_running</code>. <code>certbot</code> is the certbot check's state, or <code>unknown</code>. <code>scheduler_error</code> and <code>certbot_error</code> are added only when that side is the reason for the 503 and an error was recorded.</p>
+            <p>A 503 means this instance will not renew certificates until the cause is fixed. The app keeps running either way; a failed certbot check never stops startup, so the web UI stays available for diagnosis. Check the error field, then the logs, which carry a critical line when certbot cannot run.</p>
+
+            <h2>/metrics</h2>
+            <p><code>/metrics</code> returns the Prometheus text format. It requires authentication with at least the <strong>viewer</strong> role. It is not public because the series name every managed domain. For Prometheus, create a dedicated API key with the viewer role and send it as a Bearer token; see <a href="security.html">Security</a> for roles and keys.</p>
+            <pre><code>curl -s -H "Authorization: Bearer $TOKEN" https://certmate.example.com/metrics</code></pre>
+            <p>If the <code>prometheus_client</code> library is missing, the endpoint returns 503 with a plain-text comment saying so. It is in <code>requirements.txt</code>, which the Docker image installs by default; an image built with <code>REQUIREMENTS_FILE=requirements-minimal.txt</code> does not include it. If collection fails, the endpoint returns 500.</p>
+            <p>Inventory gauges are recomputed when <code>/metrics</code> is requested, but at most once every 30 seconds; a scrape within 30 seconds of the last collection gets the previous values. Counters and histograms are updated when the event happens.</p>
+
+            <h3>Inventory</h3>
+            <table>
+                <thead>
+                    <tr><th>Metric</th><th>Type, labels</th><th>What it measures</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>certmate_domains_total</code></td><td>gauge</td><td>Domains in settings.</td></tr>
+                    <tr><td><code>certmate_certificates_total</code></td><td>gauge</td><td>Certificates that exist on disk.</td></tr>
+                    <tr><td><code>certmate_certificates_by_status</code></td><td>gauge; <code>status</code></td><td>Count per state: <code>valid</code>, <code>expiring_soon</code> (days left at or below the renewal threshold, default 30), <code>expired</code>, <code>missing</code> (no certificate on disk, or its expiry could not be read).</td></tr>
+                    <tr><td><code>certmate_certificates_by_provider</code></td><td>gauge; <code>provider</code></td><td>Domains per DNS provider.</td></tr>
+                    <tr><td><code>certmate_certificate_expiry_days</code></td><td>gauge; <code>domain</code>, <code>dns_provider</code></td><td>Days until expiry. Clamped at 0, so an expired certificate reads 0; use <code>certificates_by_status{status="expired"}</code> to tell expired from expiring today.</td></tr>
+                    <tr><td><code>certmate_certificate_last_renewal_timestamp</code></td><td>gauge; <code>domain</code>, <code>dns_provider</code></td><td>Unix time of the last renewal, or of creation for a certificate never renewed, from the certificate's metadata. No sample when neither is known.</td></tr>
+                    <tr><td><code>certmate_certificate_next_renewal_timestamp</code></td><td>gauge; <code>domain</code>, <code>dns_provider</code></td><td>Unix time the certificate enters the renewal window (expiry minus the threshold); now, if it is already inside it.</td></tr>
+                    <tr><td><code>certmate_dns_provider_accounts</code></td><td>gauge; <code>provider</code></td><td>Configured accounts per DNS provider.</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Issuance and renewal</h3>
+            <table>
+                <thead>
+                    <tr><th>Metric</th><th>Type, labels</th><th>What it measures</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>certmate_certificate_requests_total</code></td><td>counter; <code>domain</code>, <code>dns_provider</code>, <code>status</code></td><td>Issuance attempts, <code>status</code> <code>success</code> or <code>failure</code>.</td></tr>
+                    <tr><td><code>certmate_certificate_creation_duration_seconds</code></td><td>histogram; <code>dns_provider</code></td><td>Time taken per issuance. Buckets 30, 60, 120, 300, 600, 1200, 3600.</td></tr>
+                    <tr><td><code>certmate_certificate_renewals_total</code></td><td>counter; <code>domain</code>, <code>dns_provider</code>, <code>status</code></td><td>Renewal attempts made by the renewal sweep, <code>success</code> or <code>failure</code>.</td></tr>
+                    <tr><td><code>certmate_certificate_renewal_duration_seconds</code></td><td>histogram; <code>dns_provider</code></td><td>Time taken per renewal. Same buckets.</td></tr>
+                    <tr><td><code>certmate_acme_errors_total</code></td><td>counter; <code>error_type</code>, <code>domain</code>, <code>dns_provider</code></td><td>Failed issuances and renewals. <code>error_type</code> is the exception's class name.</td></tr>
+                    <tr><td><code>certmate_acme_rate_limit_hits_total</code></td><td>counter; <code>limit_type</code>, <code>dns_provider</code></td><td>Failures that were a CA rate limit. <code>limit_type</code> is <code>issuance</code> or <code>renewal</code>. Counted apart from other errors because retrying makes a rate limit worse.</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Renewal sweep and background jobs</h3>
+            <table>
+                <thead>
+                    <tr><th>Metric</th><th>Type, labels</th><th>What it measures</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>certmate_renewal_sweep_duration_seconds</code></td><td>gauge</td><td>How long the last renewal sweep took.</td></tr>
+                    <tr><td><code>certmate_renewal_sweep_certificates_examined</code></td><td>gauge</td><td>Certificates the last sweep looked at.</td></tr>
+                    <tr><td><code>certmate_renewal_sweep_completed_timestamp_seconds</code></td><td>gauge</td><td>Unix time the last sweep finished. If it stops moving, sweeps have stopped finishing.</td></tr>
+                    <tr><td><code>certmate_renewal_sweep_unfinished</code></td><td>gauge</td><td>1 when a sweep started and did not reach the end (the process died, or it was still running when the next began), else 0.</td></tr>
+                    <tr><td><code>certmate_background_job_last_run_timestamp</code></td><td>gauge; <code>job_type</code></td><td>Unix time a scheduled job last ran, whether it succeeded or failed. <code>job_type</code> is the manager and method name, such as <code>certificates.check_renewals</code>.</td></tr>
+                    <tr><td><code>certmate_background_job_duration_seconds</code></td><td>histogram; <code>job_type</code></td><td>Job run time. Buckets 1, 5, 15, 30, 60, 300, 600.</td></tr>
+                </tbody>
+            </table>
+
+            <h3>Queues</h3>
+            <table>
+                <thead>
+                    <tr><th>Metric</th><th>Type</th><th>What it measures</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>certmate_issuance_queue_depth</code></td><td>gauge</td><td>Async issuance jobs queued or running.</td></tr>
+                    <tr><td><code>certmate_issuance_queue_limit</code></td><td>gauge</td><td>The configured ceiling on that queue. When the queue is full, issuance requests get 429 with code <code>ISSUANCE_QUEUE_FULL</code>.</td></tr>
+                    <tr><td><code>certmate_event_dispatch_backlog</code></td><td>gauge</td><td>Event listener invocations waiting for an event-bus worker.</td></tr>
+                </tbody>
+            </table>
+            <p>These tell you whether to raise <code>CERTMATE_ISSUANCE_WORKERS</code> or <code>CERTMATE_EVENT_WORKERS</code>.</p>
+
+            <h3>Process and cache</h3>
+            <table>
+                <thead>
+                    <tr><th>Metric</th><th>Type, labels</th><th>What it measures</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>certmate_application_uptime_seconds</code></td><td>gauge</td><td>Seconds since the process started.</td></tr>
+                    <tr><td><code>certmate_version_info</code></td><td>gauge; <code>version</code>, <code>python_version</code></td><td>Always 1; the labels carry the CertMate and Python versions.</td></tr>
+                    <tr><td><code>certmate_cache_entries</code></td><td>gauge</td><td>Entries in the deployment-status cache.</td></tr>
+                    <tr><td><code>certmate_cache_hits_total</code>, <code>certmate_cache_misses_total</code></td><td>counter</td><td>Lookups in that cache that hit or missed.</td></tr>
+                </tbody>
+            </table>
+            <p>There is no metric for DNS provider API calls. certbot makes those calls in its own subprocess, so CertMate cannot count them.</p>
+
+            <h2>Scrape Configuration</h2>
+            <p>The repository's <code>monitoring/</code> directory holds a scrape job, alert rules and a Grafana dashboard. The scrape job, from <code>monitoring/prometheus-scrape.example.yml</code>, goes in the <code>scrape_configs:</code> list of <code>prometheus.yml</code>:</p>
+            <pre><code>scrape_configs:
+  - job_name: certmate
+    metrics_path: /metrics
+    scheme: http            # set to https when CertMate is behind TLS
+    scrape_interval: 60s
+    authorization:
+      type: Bearer
+      # credentials_file: /etc/prometheus/certmate-token   # recommended
+      credentials: "REPLACE_WITH_ADMIN_API_TOKEN"
+    static_configs:
+      - targets: ["certmate:8000"]   # host:port of your CertMate instance
+        labels:
+          instance: certmate</code></pre>
+            <p>The placeholder asks for an admin token, but a viewer key is enough for <code>/metrics</code> and exposes less if the scrape configuration leaks. Put the token in a file and use <code>credentials_file</code> rather than writing it in the configuration. Keep <code>job_name: certmate</code>: the <code>CertMateDown</code> rule matches on it.</p>
+
+            <h2>Alert Rules</h2>
+            <p>Copy <code>monitoring/prometheus-alerts.yml</code> to where Prometheus can read it and load it:</p>
+            <pre><code># prometheus.yml
+rule_files:
+  - /etc/prometheus/certmate-alerts.yml</code></pre>
+            <p>The file holds eight rules in three groups.</p>
+            <table>
+                <thead>
+                    <tr><th>Alert</th><th>Fires when</th><th>For</th><th>Severity</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>CertMateDown</code></td><td><code>up{job="certmate"} == 0</code>: Prometheus cannot scrape CertMate.</td><td>5m</td><td>critical</td></tr>
+                    <tr><td><code>CertMateCertificateExpiringSoon</code></td><td>A domain's <code>certmate_certificate_expiry_days</code> is below 14 and above 2.</td><td>1h</td><td>warning</td></tr>
+                    <tr><td><code>CertMateCertificateExpiringCritical</code></td><td>A domain's <code>certmate_certificate_expiry_days</code> is 2 or less. This includes expired certificates, which read 0.</td><td>30m</td><td>critical</td></tr>
+                    <tr><td><code>CertMateCertificatesExpired</code></td><td><code>sum(certmate_certificates_by_status{status="expired"}) &gt; 0</code>.</td><td>10m</td><td>critical</td></tr>
+                    <tr><td><code>CertMateRenewalsFailing</code></td><td>Any renewal failure in the last 6 hours: <code>increase(certmate_certificate_renewals_total{status="failure"}[6h])</code> summed is above 0.</td><td>15m</td><td>critical</td></tr>
+                    <tr><td><code>CertMateIssuanceFailing</code></td><td>More than 3 failed issuances in the last hour, from <code>certmate_certificate_requests_total{status="failure"}</code>.</td><td>15m</td><td>warning</td></tr>
+                    <tr><td><code>CertMateACMERateLimited</code></td><td>Any rate-limit refusal in the last 24 hours, from <code>certmate_acme_rate_limit_hits_total</code>.</td><td>5m</td><td>critical</td></tr>
+                    <tr><td><code>CertMateACMEErrors</code></td><td>More than 5 ACME errors of one <code>error_type</code> in the last hour.</td><td>30m</td><td>warning</td></tr>
+                </tbody>
+            </table>
+            <p>The counter-based rules use <code>increase()</code> over a window, so they fire on failures happening now, not on any failure since the process started. The expiry thresholds (14 and 2 days) are the rule file's own and are separate from CertMate's renewal threshold, which decides <code>expiring_soon</code> in <code>certmate_certificates_by_status</code>.</p>
+            <p>None of the rules uses <code>/health/ready</code>. To alert on an instance that is up but cannot renew, probe that endpoint with your orchestrator or a blackbox check, or alert on <code>certmate_renewal_sweep_completed_timestamp_seconds</code> falling behind.</p>
+
+            <h2>Grafana Dashboard</h2>
+            <p><code>monitoring/grafana-dashboard.json</code> is a dashboard titled <strong>CertMate - Certificates &amp; ACME</strong>, uid <code>certmate-overview</code>, tagged <code>certmate</code>, <code>tls</code> and <code>certificates</code>, refreshing every minute over the last 24 hours by default. To import it: in Grafana, go to <strong>Dashboards &gt; New &gt; Import</strong>, upload the file, and pick your Prometheus datasource when prompted.</p>
+            <p>Its eleven panels:</p>
+            <ul>
+                <li>Stats: <strong>Managed domains</strong>, <strong>Total certificates</strong>, <strong>Valid</strong>, <strong>Expiring soon</strong>, <strong>Expired</strong>.</li>
+                <li><strong>Days until expiry (per certificate)</strong>: a table of <code>certmate_certificate_expiry_days</code>.</li>
+                <li><strong>Certificates by status</strong> (pie chart) and <strong>Certificates by DNS provider</strong> (bar gauge).</li>
+                <li>Stats: <strong>Uptime</strong>, <strong>Cache entries</strong>, <strong>Version</strong>.</li>
+            </ul>
+            <p>The dashboard shows inventory state only. The issuance, renewal, sweep and queue metrics above are not on it; add panels for them if you need them.</p>
+
+            <h2>Next Steps</h2>
+            <ul>
+                <li><a href="webhooks.html">Webhooks</a>: pushing certificate events to Slack, Discord, Telegram, email or your own endpoint</li>
+                <li><a href="security.html">Security</a>: roles and API keys for the scrape token</li>
+                <li><a href="docker-deployment.html">Docker Deployment</a>: the container and its healthcheck</li>
+                <li><a href="troubleshooting.html">Troubleshooting</a>: common problems and their fixes</li>
+                <li><a href="api-reference.html">API Reference</a>: the rest of the HTTP API</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributors</a></p>
+        </div>
+    </footer>
+    <script src="toc.js" defer></script>
+</body>
+</html>
