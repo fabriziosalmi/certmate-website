@@ -23,12 +23,14 @@ const canonical = 'https://www.certmate.org/changelog/';
           CertMate changelog
         </h1>
         <p class="mt-3 max-w-2xl text-gray-600 dark:text-gray-300 leading-relaxed">
-          Every release, newest first. Each entry summarises what changed; where
-          a release has published notes, the entry links to them on GitHub.
+          Every release, newest first, dated by the day its GitHub release was
+          published. Each entry summarises what changed, lists apart what can
+          break an existing setup, and links to the release notes where they
+          were published. Every entry has its own address: /changelog/#v2.34.0.
         </p>
 
         <ul class="mt-10 divide-y divide-gray-200 dark:divide-gray-800 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden bg-white dark:bg-gray-900" role="list">
-          {updates.map((u) => <UpdateRow u={u} level={2} />)}
+          {updates.map((u) => <UpdateRow u={u} level={2} permalink />)}
         </ul>
       </div>
     </section>

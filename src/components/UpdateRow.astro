@@ -6,12 +6,14 @@ interface Props {
   u: UpdateCard;
   /** 3 under the home page's h2; 2 on /changelog/, where the list sits under the h1. */
   level?: 2 | 3;
+  /** On /changelog/: give the row an id and a link to itself. */
+  permalink?: boolean;
 }
-const { u, level = 3 } = Astro.props;
+const { u, level = 3, permalink = false } = Astro.props;
 const Heading = `h${level}` as 'h2' | 'h3';
 
-// Badge → Tailwind class mapping. Kept here so WhatsNew and the collapsed
-// "earlier releases" list render identical rows.
+// Badge → Tailwind class mapping. Kept here so WhatsNew and the changelog
+// render identical rows.
 const badgeClasses: Record<string, string> = {
   milestone: 'bg-amber-100 text-amber-800 ring-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:ring-amber-800',
   security: 'bg-red-100 text-red-800 ring-red-200 dark:bg-red-900/30 dark:text-red-300 dark:ring-red-800',
@@ -19,41 +21,86 @@ const badgeClasses: Record<string, string> = {
   feature: 'bg-emerald-100 text-emerald-800 ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:ring-emerald-800',
 };
 
-const CardTag = u.href ? 'a' : 'div';
-const wrap = u.href ? { href: u.href, target: '_blank', rel: 'noopener noreferrer' } : {};
+// The anchor is the release the card links to (the last one, for a card that
+// folds several), or its label when it links none: /changelog/#v2.34.0.
+const tag = u.href?.match(/\/releases\/tag\/([^/?#]+)$/)?.[1];
+const id = (tag ?? u.badgeLabel).toLowerCase().replace(/[^a-z0-9.]+/g, '-');
+
+const when = u.released
+  ? new Date(`${u.released}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+  : u.date;
 ---
 
-<li role="listitem">
-  <CardTag
-    {...wrap}
-    class={`group flex flex-col items-start gap-2 px-5 py-4 sm:flex-row sm:gap-4 transition-colors ${u.href ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50' : ''} ${u.highlight ? 'border-l-4 border-primary bg-blue-50/40 dark:bg-blue-900/10' : ''}`}
-  >
-    <span class={`badge ring-1 ring-inset shrink-0 ${badgeClasses[u.badge]}`}>
-      <Icon name={u.icon} aria-hidden="true" />
-      {u.badgeLabel}
-    </span>
+<li
+  id={permalink ? id : undefined}
+  class={`scroll-mt-24 ${u.highlight ? 'border-l-4 border-primary bg-blue-50/40 dark:bg-blue-900/10' : ''}`}
+>
+  {/* The whole row used to be one link to GitHub, which left no room for a
+     link to the row itself; the release notes are now a link of their own. */}
+  <div class="flex flex-col items-start gap-2 px-5 py-4 sm:flex-row sm:gap-4">
+    <div class="shrink-0 sm:w-40">
+      <span class={`badge ring-1 ring-inset ${badgeClasses[u.badge]}`}>
+        <Icon name={u.icon} aria-hidden="true" />
+        {u.badgeLabel}
+      </span>
+    </div>
 
     <div class="min-w-0 flex-1">
       <Heading class="text-sm font-semibold text-gray-900 dark:text-white sm:text-base">
         {u.title}
+        {permalink && (
+          <a href={`#${id}`} class="ml-1 font-normal text-gray-500 no-underline hover:text-primary dark:text-gray-400" aria-label={`Link to ${u.badgeLabel}`}>#</a>
+        )}
       </Heading>
+      <p class="mt-1 text-xs text-gray-600 dark:text-gray-400 sm:hidden">
+        {u.released ? <time datetime={u.released}>{when}</time> : when}
+      </p>
       <p class="mt-1 text-xs text-gray-600 dark:text-gray-300 sm:text-sm">
         {u.description}
       </p>
+      {u.beforeUpgrading && u.beforeUpgrading.length > 0 && (
+        <div class="mt-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200 sm:text-sm">
+          <p class="flex items-center gap-2 font-semibold">
+            <Icon name="fa6-solid:triangle-exclamation" aria-hidden="true" />
+            Before upgrading
+          </p>
+          <ul class="mt-1 list-disc space-y-1 pl-5">
+            {u.beforeUpgrading.map((item) => <li>{item}</li>)}
+          </ul>
+        </div>
+      )}
     </div>
 
     <div class="hidden shrink-0 flex-col items-end gap-1 text-right sm:flex">
-      <span class="text-xs text-gray-500 dark:text-gray-400">{u.date}</span>
+      <span class="text-xs text-gray-600 dark:text-gray-400">
+        {u.released ? <time datetime={u.released}>{when}</time> : when}
+      </span>
       {u.href && (
-        <span class="text-xs font-medium text-primary inline-flex items-center gap-1">
-          Release notes
+        <a
+          href={u.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="group inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+        >
+          Release notes<span class="sr-only"> for {u.badgeLabel} (opens in new tab)</span>
           <Icon
             name="fa6-solid:arrow-right"
             class="transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:transform-none"
             aria-hidden="true"
           />
-        </span>
+        </a>
       )}
     </div>
-  </CardTag>
+    {u.href && (
+      <a
+        href={u.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex min-h-11 items-center gap-1 text-xs font-medium text-primary sm:hidden"
+      >
+        Release notes<span class="sr-only"> for {u.badgeLabel} (opens in new tab)</span>
+        <Icon name="fa6-solid:arrow-right" aria-hidden="true" />
+      </a>
+    )}
+  </div>
 </li>
