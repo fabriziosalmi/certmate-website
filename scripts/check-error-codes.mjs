@@ -23,6 +23,11 @@
  * those sources and diffs them. This gate is the offline half: it refuses any
  * code on a page that is not in the table.
  *
+ * The table covers clients as well as browsers: OpenSSL's messages (as curl,
+ * Python and Node.js print them), Python's reason codes, Node.js `err.code`
+ * values, Go's `x509: ...` errors and Java's PKIX failure. Their codes do not
+ * share the browsers' naming, so each has its own recognisable shape below.
+ *
  * Two further rules, both from defects this section already had:
  *
  * - A cited code must be in the table too, not just a page's own code. Before
@@ -46,7 +51,36 @@ const CONTENT = join(ROOT, 'src', 'content', 'errors');
 const TABLE = join(ROOT, 'src', 'data', 'error-codes.json');
 
 const verified = JSON.parse(readFileSync(TABLE, 'utf8'));
+
+/**
+ * What a page may name. Browser codes are only ever cited in the form the
+ * browser displays (`NET::ERR_CERT_DATE_INVALID`, not the bare Chromium
+ * symbol). A client entry is a message or code a library prints, and its
+ * `symbol` is a different, equally real constant the reader may meet in the
+ * library's docs or source (`X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN`), so for
+ * those the symbol counts as the entry too.
+ */
+const isBrowser = (e) => /^(chromium|gecko|nss)\//.test(e.source);
+const aliases = new Map();
+for (const e of verified) {
+  aliases.set(e.code, e.code);
+  if (!isBrowser(e) && e.symbol !== e.code) aliases.set(e.symbol, e.code);
+}
 const known = new Set(verified.map((e) => e.code));
+
+/**
+ * Client codes that are sentences rather than symbols. Libraries print them
+ * with detail after them (Go appends the rejected authority, Java appends the
+ * underlying exception), so a code span that starts with one of these is a
+ * citation of it.
+ */
+const sentences = verified.filter((e) => !isBrowser(e) && /\s/.test(e.code)).map((e) => e.code);
+
+/** The verified code a code span names, or undefined. */
+function resolve(span) {
+  if (aliases.has(span)) return aliases.get(span);
+  return sentences.find((code) => span.startsWith(code));
+}
 
 /**
  * Anything shaped like an error symbol, in backticks.
@@ -56,6 +90,61 @@ const known = new Set(verified.map((e) => e.code));
  * prefix is optional because Chrome prints it and the site follows Chrome.
  */
 const CODE_SPAN = /`((?:NET::)?(?:ERR|SEC_ERROR|SSL_ERROR|TLS_ERROR|MOZILLA_PKIX_ERROR)_[A-Z0-9_]+)`/g;
+
+/**
+ * The same, for clients. Each alternative is a shape that only an error
+ * identifier has, so a match that is not in the table is a claim the table
+ * cannot vouch for:
+ *
+ * - OpenSSL constants: `X509_V_ERR_*`, `SSL_R_*`.
+ * - Node.js `err.code` values, which are the X509_V_ERR_ names without the
+ *   prefix (`UNABLE_TO_VERIFY_LEAF_SIGNATURE`, `CERT_HAS_EXPIRED`, ...), and
+ *   OpenSSL reason names as Python prints them (`CERTIFICATE_VERIFY_FAILED`).
+ * - Go's messages, which all start `x509: `.
+ * - Java's `PKIX path building failed...`.
+ * - OpenSSL's messages as curl (`SSL certificate problem: ...`) and Python
+ *   (`certificate verify failed: ...`) wrap them: the part after the colon
+ *   must be a verified OpenSSL message.
+ *
+ * A bare lowercase OpenSSL message has no shape of its own, so it is only
+ * recognised when it is in the table (see resolve()).
+ */
+const CLIENT_SPAN = new RegExp(
+  '`('
+    + '(?:X509_V_ERR|SSL_R)_[A-Z0-9_]+'
+    + '|(?:UNABLE_TO|DEPTH_ZERO|SELF_SIGNED|CERT|CERTIFICATE|CRL|HOSTNAME|INVALID_CA|PATH_LENGTH)_[A-Z0-9_]+'
+    + '|x509: [^`]+'
+    + '|PKIX path building failed[^`]*'
+    + ')`',
+  'g',
+);
+/**
+ * Wrappers a client prints around another library's code. Whatever sits in
+ * the wrapper's slot has to be verified too, wherever in a code span the
+ * wrapper appears:
+ *
+ * - Python: `[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed:
+ *   unable to get local issuer certificate (_ssl.c:1000)`
+ * - curl: `SSL certificate problem: unable to get local issuer certificate`
+ */
+const PYTHON_REASON = /\[SSL: ([A-Z0-9_]+)\]/g;
+const WRAPPED_MESSAGE = /(?:SSL certificate problem|certificate verify failed): (.+?)(?: \(_ssl\.c:\d+\))?$/;
+
+/** Every code a page's body names: [what the page wrote, verified code or undefined]. */
+function citations(text) {
+  const found = [];
+  for (const [, span] of text.matchAll(CODE_SPAN)) found.push([span, known.has(span) ? span : undefined]);
+  for (const [, span] of text.matchAll(CLIENT_SPAN)) found.push([span, resolve(span)]);
+  for (const [, span] of text.matchAll(/`([^`\n]+)`/g)) {
+    for (const [, reason] of span.matchAll(PYTHON_REASON)) found.push([reason, resolve(reason)]);
+    const wrapped = span.match(WRAPPED_MESSAGE)?.[1];
+    if (wrapped) found.push([wrapped, resolve(wrapped)]);
+    // Any other code span that is a verified client code or alias.
+    const code = resolve(span);
+    if (code) found.push([span, code]);
+  }
+  return found;
+}
 
 const problems = [];
 const locales = readdirSync(CONTENT).filter((d) => !d.startsWith('.'));
@@ -84,8 +173,8 @@ for (const locale of locales) {
     }
 
     // Every code the body cites.
-    for (const [, cited] of text.matchAll(CODE_SPAN)) {
-      if (known.has(cited)) continue;
+    for (const [cited, code] of citations(text)) {
+      if (code) continue;
       problems.push(
         `${relative}: cites ${cited}, which is not a verified code. `
           + `A reader who follows that name searches for something no implementation emits.`,
@@ -117,7 +206,7 @@ for (const locale of locales) {
     const text = readFileSync(join(CONTENT, locale, file), 'utf8');
     const declared = text.match(/^errorCode:\s*"([^"]+)"/m)?.[1];
     if (declared) used.add(declared);
-    for (const [, cited] of text.matchAll(CODE_SPAN)) used.add(cited);
+    for (const [, code] of citations(text)) if (code) used.add(code);
   }
 }
 for (const entry of verified) {
