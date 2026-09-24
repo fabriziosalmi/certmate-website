@@ -147,7 +147,7 @@
         <section class="docs-hero" style="padding: 100px 0 60px;">
             <div class="container">
                 <h1 class="docs-title"><i class="fas fa-rocket"></i> Getting Started</h1>
-                <p class="docs-subtitle">Get CertMate up and running in under 5 minutes</p>
+                <p class="docs-subtitle">Install CertMate with Docker or as a systemd service, and issue a first certificate</p>
             </div>
         </section>
 
@@ -191,13 +191,13 @@ CLOUDFLARE_TOKEN=your_cloudflare_api_token_here</code></pre>
 
             <h3>3. Deploy</h3>
             <pre><code># Start all services
-docker-compose up -d
+docker compose up -d
 
 # Check status
-docker-compose ps
+docker compose ps
 
 # View logs
-docker-compose logs -f certmate</code></pre>
+docker compose logs -f certmate</code></pre>
 
             <h3>4. Access CertMate</h3>
             <table style="width: 100%; border-collapse: collapse; margin: var(--spacing-6) 0;">
@@ -268,6 +268,148 @@ python app.py</code></pre>
                 <strong>Security Note:</strong> Set <code>API_BEARER_TOKEN</code> yourself, or keep the port bound to localhost, before the instance is reachable from a network.
             </div>
 
+            <h2>Running as a systemd service (without Docker)</h2>
+            <p>Docker is the way CertMate is tested and released. For a Linux host without Docker, the repository ships a systemd unit, <code>certmate.service</code>, that runs the application under gunicorn from a virtualenv in <code>/opt/certmate</code> as a dedicated <code>certmate</code> user.</p>
+
+            <h3>Prerequisites</h3>
+            <ul>
+                <li>Linux with systemd</li>
+                <li>Python 3.12: the version the container image is built on and the only one CI tests. <code>requirements.txt</code> does not install on Python 3.9.</li>
+                <li>root or sudo access</li>
+            </ul>
+            <p>Packages needed to build the Python dependencies:</p>
+            <pre><code># Ubuntu / Debian
+sudo apt update
+sudo apt install python3-dev python3-venv build-essential libssl-dev libffi-dev
+
+# CentOS / RHEL / Rocky
+sudo yum install python3-devel gcc openssl-devel libffi-devel</code></pre>
+
+            <h3>1. Application directory and user</h3>
+            <p>Clone into <code>/opt/certmate</code>, then create a system user whose home is that directory and give it ownership:</p>
+            <pre><code>sudo git clone https://github.com/fabriziosalmi/certmate.git /opt/certmate
+
+sudo useradd --system --shell /bin/false --home-dir /opt/certmate certmate
+sudo chown -R certmate:certmate /opt/certmate</code></pre>
+
+            <h3>2. Virtualenv and state directories</h3>
+            <p>The unit expects the virtualenv at <code>/opt/certmate/venv</code>. Create it as the <code>certmate</code> user and install from the shipped requirements file:</p>
+            <pre><code>cd /opt/certmate
+sudo -u certmate python3 -m venv venv
+sudo -u certmate ./venv/bin/pip install -r requirements.txt</code></pre>
+            <p>CertMate keeps its state in four directories under the install root: <code>certificates</code>, <code>data</code>, <code>backups</code> and <code>logs</code>. At startup it checks that all four are writable and refuses to start if one is not. The unit makes the rest of the filesystem read-only, so create all four before the first start:</p>
+            <pre><code>sudo -u certmate mkdir -p certificates data backups logs</code></pre>
+
+            <h3>3. Environment file</h3>
+            <p>The unit reads its settings from <code>/etc/certmate/certmate.env</code> (<code>EnvironmentFile=-/etc/certmate/certmate.env</code>; the leading <code>-</code> makes the file optional). CertMate does not read a <code>.env</code> file from its install directory, so settings placed in <code>/opt/certmate/.env</code> have no effect on this service.</p>
+            <pre><code>sudo mkdir -p /etc/certmate
+sudo tee /etc/certmate/certmate.env &gt; /dev/null &lt;&lt;'EOF'
+API_BEARER_TOKEN=your_super_secure_api_token_here_change_this
+# Set when a reverse proxy sits in front of CertMate
+BEHIND_PROXY=true
+# Encrypts backups at rest; the same passphrase is needed to restore
+CERTMATE_BACKUP_PASSPHRASE=choose-a-long-random-passphrase
+# Optional: sets the default Cloudflare account
+CLOUDFLARE_TOKEN=your_cloudflare_token
+EOF
+sudo chmod 600 /etc/certmate/certmate.env</code></pre>
+            <p>The unit itself carries no credential. With no token in the file, the application generates one at startup. <code>API_BEARER_TOKEN_FILE</code> and <code>SECRET_KEY_FILE</code> take a path to a file holding the value and take precedence over <code>API_BEARER_TOKEN</code> and <code>SECRET_KEY</code>. Cloudflare is the only DNS provider read from the environment; the others are configured in Settings &rarr; DNS Providers or through the API.</p>
+            <p>The environment file does not set the listen address: gunicorn is started with <code>--bind 0.0.0.0:8000</code> in <code>ExecStart</code>, so a <code>PORT</code> entry here changes nothing. To listen elsewhere, override <code>ExecStart</code> (see step 4).</p>
+
+            <h3>4. The unit file</h3>
+            <p>This is <code>certmate.service</code> as shipped in v2.35.0, with its comments removed:</p>
+            <pre><code>[Unit]
+Description=CertMate SSL Certificate Manager
+Documentation=https://github.com/fabriziosalmi/certmate
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=certmate
+Group=certmate
+WorkingDirectory=/opt/certmate
+Environment=PATH=/opt/certmate/venv/bin
+Environment=GUNICORN_TIMEOUT=300
+EnvironmentFile=-/etc/certmate/certmate.env
+ExecStart=/opt/certmate/venv/bin/gunicorn --bind 0.0.0.0:8000 --workers 1 --threads 8 --timeout ${GUNICORN_TIMEOUT} app:app
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=10
+KillMode=mixed
+TimeoutStopSec=5
+
+# Security settings
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/certmate/certificates /opt/certmate/data /opt/certmate/backups /opt/certmate/logs
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+            <ul>
+                <li><code>--timeout ${GUNICORN_TIMEOUT}</code> (300 seconds) matches the container image. DNS-01 issuance waits on propagation and can run for minutes; gunicorn's own default of 30 seconds would stop the worker in the middle of an issuance.</li>
+                <li><code>ProtectSystem=strict</code> leaves only the four <code>ReadWritePaths</code> writable, which is why they must exist before the first start.</li>
+                <li><code>--workers 1 --threads 8</code> is the same as the container image. See the single-instance constraint below.</li>
+            </ul>
+            <p>Install it, enable it at boot and start it:</p>
+            <pre><code>sudo cp /opt/certmate/certmate.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable certmate
+sudo systemctl start certmate</code></pre>
+            <p>To change a directive such as the bind address, use a drop-in rather than editing the copied file. <code>ExecStart</code> has to be cleared before it is set again:</p>
+            <pre><code>sudo systemctl edit certmate
+
+# in the editor:
+[Service]
+ExecStart=
+ExecStart=/opt/certmate/venv/bin/gunicorn --bind 127.0.0.1:8000 --workers 1 --threads 8 --timeout ${GUNICORN_TIMEOUT} app:app</code></pre>
+
+            <h3>5. Status and logs</h3>
+            <pre><code>sudo systemctl status certmate
+sudo journalctl -u certmate --lines=50     # recent logs
+sudo journalctl -u certmate -f             # follow
+curl http://localhost:8000/health          # health check</code></pre>
+            <p>The application logs to stdout, so its log lines are in the journal. Set <code>CERTMATE_LOG_FILE</code> in the environment file to also write a rotated log file.</p>
+            <p>Other management commands:</p>
+            <pre><code>sudo systemctl stop certmate
+sudo systemctl restart certmate
+sudo systemctl reload certmate        # sends SIGHUP to the gunicorn master
+sudo systemctl is-enabled certmate
+sudo systemctl is-active certmate
+sudo systemctl disable certmate</code></pre>
+            <p>After editing <code>/etc/certmate/certmate.env</code>, use <code>restart</code>: systemd reads the environment file when it starts the service.</p>
+
+            <h3>6. File permissions</h3>
+            <pre><code>sudo chown -R certmate:certmate /opt/certmate
+sudo chmod 755 /opt/certmate
+sudo chmod 750 /opt/certmate/certificates /opt/certmate/data /opt/certmate/backups /opt/certmate/logs
+sudo chmod 644 /opt/certmate/*.py /opt/certmate/*.md
+sudo chmod 755 /opt/certmate/venv/bin/*
+sudo chmod 600 /etc/certmate/certmate.env</code></pre>
+            <p>The environment file holds the API token and any provider credential; keep it readable by root only. Issued certificates and their private keys are written to <code>/opt/certmate/certificates</code>.</p>
+
+            <h3>Single instance</h3>
+            <p>CertMate runs as a single instance. Its renewal scheduler runs inside the web process, so a second copy is a second scheduler issuing against the same certificates: duplicate ACME orders and the CA's duplicate-certificate rate limit. The unit starts one gunicorn worker for the same reason: sessions, session revocation and the login rate limiter are held in memory per process, and each extra worker would run its own renewal job. Keep <code>--workers 1</code> in any override, run the unit on one host only, and do not run it alongside a CertMate container managing the same certificates. To handle more certificates, give the host more CPU and memory.</p>
+
+            <h3>Exposure</h3>
+            <p>The shipped unit binds <code>0.0.0.0:8000</code>. Before the host is reachable from a network, set <code>API_BEARER_TOKEN</code> in the environment file or bind to <code>127.0.0.1</code> with a drop-in, and put a reverse proxy in front with <code>BEHIND_PROXY=true</code> set. Without that setting every request appears to come from the proxy's address, and per-client rate limiting collapses into one bucket.</p>
+
+            <h3>Troubleshooting</h3>
+            <ol>
+                <li><strong>Check the service state:</strong> <code>sudo systemctl status certmate</code></li>
+                <li><strong>Read the log:</strong> <code>sudo journalctl -u certmate --lines=100</code></li>
+                <li><strong>"Required directories are not writable by the CertMate process."</strong> The log line names each directory that failed. Check that it exists, is owned by <code>certmate</code>, and is listed in <code>ReadWritePaths</code>.</li>
+                <li><strong>Check permissions:</strong> the <code>certmate</code> user must be able to read everything under <code>/opt/certmate</code>.</li>
+                <li><strong>Run it by hand</strong> as the service user, outside systemd: <code>sudo -u certmate /opt/certmate/venv/bin/python /opt/certmate/app.py</code>. This starts the development server on port 8000 and does not read <code>/etc/certmate/certmate.env</code>.</li>
+                <li><strong>Check the certbot plugins</strong> installed in the virtualenv: <code>sudo -u certmate /opt/certmate/venv/bin/certbot plugins --text</code></li>
+                <li><strong>A provider's plugin fails to install:</strong> install <code>requirements-minimal.txt</code> first, then the provider's own file (<code>requirements-aws.txt</code>, <code>requirements-gcp.txt</code>, <code>requirements-azure.txt</code>) on top, rather than pinning packages by hand.</li>
+            </ol>
+
             <h2>Authentication options</h2>
             <p>CertMate ships three authentication paths; they coexist and are configured independently.</p>
             <ul>
@@ -280,9 +422,9 @@ python app.py</code></pre>
             <ul>
                 <li><a href="dns-providers.html">Configure DNS Providers</a> - Set up your DNS provider(s)</li>
                 <li><a href="api-reference.html">API Reference</a> - Learn about the REST API</li>
-                <li><a href="storage-backends.html">Storage Backends</a> - Configure enterprise storage</li>
+                <li><a href="storage-backends.html">Storage Backends</a> - Where certificates and keys are stored</li>
                 <li><a href="backup-recovery.html">Backup &amp; Recovery</a> - Set up backup procedures</li>
-                <li><a href="security.html">Security</a> - OIDC / SSO + audit-era hardening</li>
+                <li><a href="security.html">Security</a> - Authentication, network exposure and key handling</li>
             </ul>
         </section>
     </main>
@@ -292,8 +434,6 @@ python app.py</code></pre>
             <p>&copy; 2026 CertMate. Made with <i class="fas fa-heart" style="color: #ef4444;"></i> by <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> and <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributors</a></p>
         </div>
     </footer>
-
-    <script src="../assets/script.js"></script>
     <script src="toc.js" defer></script>
 </body>
 </html>

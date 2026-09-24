@@ -46,7 +46,7 @@ export const DOC_PAGES: DocPage[] = [
     slug: 'getting-started',
     title: 'Getting Started - CertMate Documentation',
     description:
-      'Install CertMate with Docker or from source, complete the first-run setup, add a DNS provider and issue your first certificate.',
+      'Install CertMate with Docker Compose, or run it without Docker as a systemd service under gunicorn with a dedicated user.',
   },
   {
     slug: 'dns-providers',
