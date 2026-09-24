@@ -194,9 +194,59 @@ export const DOC_PAGES: DocPage[] = [
   },
 ];
 
+/**
+ * The Italian documentation pages. Each is a translation of the English page
+ * with the same slug, so the two declare each other as hreflang alternates.
+ * A page belongs here only when its Italian text says what the English one
+ * says: an alternate that differs in substance is not an alternate.
+ */
+export const DOC_PAGES_IT: DocPage[] = [
+  {
+    slug: 'docker-deployment',
+    title: 'Deploy con Docker - Documentazione CertMate',
+    description:
+      'CertMate in Docker: tag, docker run e Compose, variabili che funzionano e no, bind su localhost, volumi, backup, aggiornamenti, health check.',
+  },
+  {
+    slug: 'dns-providers',
+    title: 'Provider DNS - Documentazione CertMate',
+    description:
+      'Configura i provider DNS che CertMate supporta per la challenge DNS-01 di ACME, anche con più account per provider.',
+  },
+  {
+    slug: 'mcp-server',
+    title: 'Server MCP - Documentazione CertMate',
+    description:
+      'Installare e configurare il server MCP di CertMate: strumenti, route API e ruolo minimo di ciascuno, token, chiavi agente e attribuzione audit.',
+  },
+  {
+    slug: 'compliance',
+    title: 'Evidenze di conformità - Documentazione CertMate',
+    description:
+      'Traccia di audit come evidenza: attribuzione, catena SHA-256, export firmato, ricerca, sink SIEM, potatura e limiti per NIS2, AI Act, ISO 42001.',
+  },
+  {
+    slug: 'getting-started',
+    title: 'Per iniziare - Documentazione CertMate',
+    description:
+      'Installa CertMate con Docker o come servizio systemd, completa il primo avvio, aggiungi un provider DNS ed emetti il primo certificato.',
+  },
+];
+
 /** The published URL of a documentation page, absolute. */
-export function docUrl(slug: string, site = 'https://www.certmate.org'): string {
+export function docUrl(slug: string, site = 'https://www.certmate.org', locale: 'en' | 'it' = 'en'): string {
+  const base = locale === 'it' ? `${site}/it/docs` : `${site}/docs`;
   // index.html is served at both /docs/ and /docs/index.html. The directory
   // form is the one advertised, so that is the canonical one.
-  return slug === 'index' ? `${site}/docs/` : `${site}/docs/${slug}.html`;
+  return slug === 'index' ? `${base}/` : `${base}/${slug}.html`;
+}
+
+/** hreflang alternates for a slug, or none when it exists in one language only. */
+export function docAlternates(slug: string): { hreflang: string; href: string }[] {
+  if (!DOC_PAGES_IT.some((page) => page.slug === slug)) return [];
+  return [
+    { hreflang: 'en', href: docUrl(slug) },
+    { hreflang: 'it', href: docUrl(slug, undefined, 'it') },
+    { hreflang: 'x-default', href: docUrl(slug) },
+  ];
 }

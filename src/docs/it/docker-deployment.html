@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deploy con Docker - Documentazione CertMate</title>
+    <link rel="stylesheet" href="../../assets/styles.css">
+    <link rel="preload" href="../../docs/vendor/font-awesome/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="../../docs/vendor/font-awesome/all.min.css"></noscript>
+    <link rel="preload" as="style" href="../../docs/vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="../../docs/vendor/fonts/fonts.css"></noscript>
+    <style>
+        .doc-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h1 {
+            font-size: var(--font-size-4xl);
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: var(--spacing-6);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content p, .doc-content li {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+        .doc-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin: var(--spacing-6) 0;
+        }
+        .doc-content pre code {
+            background: none;
+            padding: 0;
+            color: white;
+        }
+        .doc-content ul, .doc-content ol {
+            margin: var(--spacing-4) 0;
+            padding-left: var(--spacing-8);
+        }
+        .doc-content li {
+            margin: var(--spacing-2) 0;
+        }
+    
+    /* In-page TOC, injected by toc.js. Sticky right column on lg+
+       viewports; collapsed to a top disclosure on smaller screens. */
+    .doc-toc {
+      display: none;
+    }
+    /* Shown only when it fits in the right margin: this page's content
+       column is 900px wide, the TOC 220px plus 24px of gap, so the viewport
+       must be at least 900 + 2 * 244 = 1388px. Below that the old rule
+       placed the TOC over the text (#588). */
+    @media (min-width: 1388px) {
+      .doc-toc {
+        display: block;
+        position: fixed;
+        top: 100px;
+        right: max(24px, calc((100vw - 900px) / 2 - 244px));
+        width: 220px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+      }
+    }
+    .doc-toc-inner {
+      border-left: 2px solid var(--gray-200);
+      padding-left: 16px;
+    }
+    .doc-toc-list { list-style: none; padding: 0; margin: 0; }
+    .doc-toc-item { margin: 4px 0; line-height: 1.4; }
+    .doc-toc-item-h3 { padding-left: 12px; }
+    .doc-toc-link {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: block;
+      padding: 2px 0;
+      transition: color 120ms ease;
+    }
+    .doc-toc-link:hover { color: var(--gray-900); }
+    .doc-toc-link.is-active {
+      color: var(--blue-600, #2563eb);
+      font-weight: 600;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="../../assets/certmate_logo.png" alt="Logo CertMate" class="brand-logo">
+                <a href="../../it/" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../../it/#features" class="nav-link">Funzionalità</a>
+                <a href="../../it/#providers" class="nav-link">Provider DNS</a>
+                <a href="../../docs/index.html" class="nav-link active">Documentazione</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fab fa-docker"></i> Deploy con Docker</h1>
+                <p class="docs-subtitle">Immagine, Compose, ambiente, volumi, aggiornamenti e health check</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <h2>Immagine e tag</h2>
+            <p>L'immagine è pubblicata su <a href="https://hub.docker.com/r/fabriziosalmi/certmate" target="_blank" rel="noopener noreferrer">Docker Hub</a> come <code>fabriziosalmi/certmate</code>. Le build di release sono pubblicate per <code>linux/amd64</code> e <code>linux/arm64</code>; Docker scarica automaticamente l'architettura corrispondente. <code>linux/arm/v7</code> non è pubblicata, ma l'immagine si può compilare per quella piattaforma (vedi Compilare l'immagine più sotto).</p>
+            <p>Tag:</p>
+            <ul>
+                <li><code>latest</code>: si sposta solo con un tag di release <code>v*</code>. I push su <code>main</code> pubblicano <code>:main</code>, non <code>:latest</code>.</li>
+                <li><code>MAJOR</code>, <code>MAJOR.MINOR</code> e <code>MAJOR.MINOR.PATCH</code>, più <code>vMAJOR.MINOR</code> e <code>vMAJOR.MINOR.PATCH</code>.</li>
+            </ul>
+            <p>In produzione, fissa un tag di versione come <code>fabriziosalmi/certmate:2.19</code>, così un nuovo pull non ti aggiorna senza volerlo.</p>
+            <p>Il container gira come utente non root <code>certmate</code> (UID 1000) sotto <code>tini</code> e serve l'applicazione con gunicorn, con un worker e otto thread. Usa un solo container per volume di dati: lo scheduler dei rinnovi gira dentro il processo web, quindi una seconda replica sarebbe un secondo scheduler che invia ordini ACME duplicati sullo stesso archivio di certificati.</p>
+
+            <h2>Avvio con docker run</h2>
+            <pre><code>docker run -d --name certmate \
+  --env-file .env \
+  -p 127.0.0.1:8000:8000 \
+  -v certmate_data:/app/data \
+  -v certmate_certificates:/app/certificates \
+  -v certmate_logs:/app/logs \
+  -v certmate_backups:/app/backups \
+  fabriziosalmi/certmate:latest</code></pre>
+            <p>Tieni il file <code>.env</code> sull'host. <code>.dockerignore</code> esclude ogni file <code>.env</code> dal contesto di build, quindi la configurazione viene fornita a runtime e non finisce mai dentro l'immagine.</p>
+            <p>L'interfaccia web è poi su <code>http://localhost:8000</code>, e la documentazione delle API su <code>/docs/</code> e <code>/redoc/</code>.</p>
+
+            <h2>Avvio con Docker Compose</h2>
+            <p>Il <code>docker-compose.yml</code> del repository compila l'immagine dai sorgenti; per usare invece l'immagine pubblicata, togli il commento alla sua riga <code>image:</code>.</p>
+            <pre><code>git clone https://github.com/fabriziosalmi/certmate.git
+cd certmate
+cp .env.example .env
+# edit .env
+
+# bind mounts: prepare the host directories once (see Volumes)
+mkdir -p ./{certificates,data,logs,backups}
+chgrp -R 0 ./{certificates,data,logs,backups}
+chmod -R g+rwX ./{certificates,data,logs,backups}
+
+docker compose up -d
+docker compose ps
+docker compose logs -f certmate</code></pre>
+            <p>Il servizio compose pubblica <code>127.0.0.1:8000:8000</code>, rimuove tutte le capability Linux, si riavvia con <code>unless-stopped</code>, limita il container a 512 MB di memoria e una CPU, e ruota il log json-file a 10 MB, conservando tre file.</p>
+            <p>Per compilare con plugin DNS o backend di storage opzionali, imposta <code>EXTRA_REQUIREMENTS</code> in <code>.env</code> con un elenco di file di requirements separati da spazi, ad esempio <code>EXTRA_REQUIREMENTS=requirements-azure.txt requirements-storage-all.txt</code>. È un argomento di build, quindi ha effetto alla build successiva.</p>
+
+            <h2>Variabili d'ambiente</h2>
+            <p>Queste sono lette dall'applicazione. <code>.env.example</code> elenca solo variabili che qualcosa legge, e un test fa fallire la build se una non lo è.</p>
+            <ul>
+                <li><code>API_BEARER_TOKEN</code>: token di autenticazione delle API, generato automaticamente se non impostato. Impostalo prima che un'istanza non ancora configurata sia raggiungibile dalla rete: finché non esiste il primo admin, un'istanza senza di esso offre il bypass del setup a chiunque la raggiunga. Quando è impostato, la schermata del primo avvio chiede di incollarlo una volta per creare l'admin. Il valore è vincolante: se differisce dal token memorizzato, quello memorizzato viene sostituito all'avvio.</li>
+                <li><code>API_BEARER_TOKEN_FILE</code>: percorso di un file che contiene il token; ha la precedenza su <code>API_BEARER_TOKEN</code>.</li>
+                <li><code>SECRET_KEY</code>: chiave di sessione di Flask. Se non è impostata, o è impostata su un segnaposto come <code>change-me</code>, CertMate ne genera una e la salva come <code>/app/data/.secret_key</code>, così le sessioni sopravvivono ai riavvii.</li>
+                <li><code>SECRET_KEY_FILE</code>: percorso di un file che contiene la chiave; ha la precedenza su <code>SECRET_KEY</code>. Se il file non si può leggere o è vuoto, CertMate si rifiuta di avviarsi.</li>
+                <li><code>CERTMATE_BACKUP_PASSPHRASE</code>: vedi Backup più sotto.</li>
+                <li><code>CLOUDFLARE_TOKEN</code>: inizializza l'account DNS Cloudflare predefinito.</li>
+                <li><code>LETSENCRYPT_EMAIL</code>: email dell'account ACME. Prevale sull'email salvata nell'interfaccia web.</li>
+                <li><code>PORT</code>: porta di ascolto dentro il container, predefinita <code>8000</code>. Se la cambi, cambia anche la mappatura <code>ports:</code>.</li>
+                <li><code>GUNICORN_TIMEOUT</code>: timeout del worker in secondi, predefinito <code>300</code>. Le challenge DNS-01 su servizi DNS lenti possono richiedere fino a cinque minuti.</li>
+                <li><code>BEHIND_PROXY</code>: vedi Reverse proxy più sotto.</li>
+                <li><code>SESSION_TIMEOUT_HOURS</code>: durata della sessione di login, predefinita <code>8</code>.</li>
+                <li><code>CERTMATE_LOG_LEVEL</code> (predefinita <code>INFO</code>), <code>CERTMATE_LOG_JSON</code> (predefinita <code>true</code>), <code>CERTMATE_LOG_FILE</code>: vedi Log più sotto.</li>
+                <li><code>CERTMATE_CERT_DIR</code>: dove risiedono i certificati emessi, predefinita <code>/app/certificates</code>. Vedi Volumi più sotto.</li>
+            </ul>
+            <h3>Variabili che non hanno effetto</h3>
+            <ul>
+                <li>Le credenziali DNS diverse da quelle di Cloudflare. Route53, Azure, Google Cloud DNS, PowerDNS e gli altri si configurano nell'interfaccia web (Settings, DNS Providers) o tramite l'API. Impostare <code>AWS_ACCESS_KEY_ID</code> o <code>AZURE_CLIENT_ID</code> nel container non ha alcun effetto.</li>
+                <li><code>CLOUDFLARE_API_TOKEN</code>. La variabile è <code>CLOUDFLARE_TOKEN</code>.</li>
+                <li><code>LOG_LEVEL</code>. La variabile è <code>CERTMATE_LOG_LEVEL</code>.</li>
+                <li><code>HOST</code> e <code>FLASK_DEBUG</code>. L'indirizzo di bind non è configurabile: il container ascolta sempre su <code>0.0.0.0</code> dentro il proprio namespace di rete.</li>
+            </ul>
+            <p>Una credenziale DNS configurata nell'interfaccia viene salvata in <code>settings.json</code>. Per tenerla fuori da quel file, un campo credenziale può invece indicarne la fonte, con <code>api_token_file</code> (un percorso) o <code>api_token_env</code> (il nome di una variabile). Il valore viene letto quando certbot viene eseguito e non viene riscritto.</p>
+
+            <h2>Porte e reverse proxy</h2>
+            <p>Poiché l'indirizzo di bind dentro il container è fisso, limita l'esposizione quando pubblichi la porta: <code>-p 127.0.0.1:8000:8000</code> rende CertMate raggiungibile solo sul loopback dell'host. Per l'accesso dall'esterno, mettigli davanti un reverse proxy con TLS.</p>
+            <p>Quando c'è un proxy davanti, imposta <code>BEHIND_PROXY=true</code>. CertMate si fida allora degli header <code>X-Forwarded-*</code> di un solo hop di proxy, così il rate limiting e le voci di audit vedono l'indirizzo del client anziché quello del proxy. Lasciala non impostata quando non c'è un proxy: con l'opzione attiva, un client può falsificare il proprio indirizzo, che è la chiave su cui si basa il rate limit del login. Quando il TLS termina sul proxy, valuta anche <code>PREFERRED_URL_SCHEME=https</code>, che marca il cookie di sessione come <code>Secure</code>.</p>
+            <p>Il file compose include un servizio nginx opzionale nel profilo <code>nginx</code>. Crea la sua configurazione prima di avviarlo; se <code>nginx.conf</code> non esiste sull'host, Docker crea al suo posto una directory vuota e nginx non si avvia.</p>
+            <pre><code>cp nginx.conf.example nginx.conf
+# replace every &lt;your-domain&gt; in ssl_certificate / ssl_certificate_key
+docker compose --profile nginx up -d</code></pre>
+
+            <h2>Volumi</h2>
+            <p>Tutto lo stato persistente risiede in quattro directory:</p>
+            <ul>
+                <li><code>/app/data</code>: <code>settings.json</code>, gli utenti admin, la <code>.secret_key</code> generata, la chiave di firma dell'audit e il database dello scheduler.</li>
+                <li><code>/app/certificates</code>: certificati emessi e chiavi.</li>
+                <li><code>/app/logs</code>: log dell'applicazione e di audit.</li>
+                <li><code>/app/backups</code>: archivi di backup.</li>
+            </ul>
+            <p>L'immagine assegna queste directory al gruppo 0, le rende scrivibili dal gruppo e con setgid, così un processo che gira con qualsiasi UID nel gruppo 0 (podman rootless, OpenShift) può scriverci. I file segreti vengono creati con modalità <code>0600</code>.</p>
+            <p>I volumi nominati ereditano questi permessi e non richiedono preparazione. I bind mount mantengono la proprietà della directory dell'host; Docker crea le directory mancanti con proprietario root, e il processo non root non può scriverci. Preparale con i comandi <code>chgrp -R 0</code> e <code>chmod -R g+rwX</code> mostrati sopra oppure, con podman, aggiungi <code>:U</code> a ogni mount. Se una directory non è scrivibile, CertMate si rifiuta di avviarsi con il messaggio "Required directories are not writable by the CertMate process".</p>
+            <p>Per tenere i certificati in un percorso diverso da <code>/app/certificates</code>, imposta <code>CERTMATE_CERT_DIR</code> e monta quel percorso. Dalla v2.35.0 lo segue anche il backend di storage locale, a meno che <code>certificate_storage.cert_dir</code> nelle impostazioni non indichi una directory propria, nel qual caso prevale quella.</p>
+
+            <h2>Backup</h2>
+            <p>Imposta <code>CERTMATE_BACKUP_PASSPHRASE</code> se vuoi backup automatici da cui poter ripristinare. Con la passphrase, i backup sono completi e cifrati a riposo (<code>.zip.enc</code>, PBKDF2-SHA256 e Fernet). Senza, i backup automatici hanno le credenziali mascherate: l'elenco dei backup li marca <code>can_restore: false</code> e l'API di ripristino li rifiuta su un'istanza che contiene già certificati. La passphrase viene letta dall'ambiente e mai salvata in <code>settings.json</code>, e per il ripristino serve la stessa passphrase. Gli archivi sull'host vengono eliminati dopo 30 giorni e la perdita del volume li porta via con sé, quindi tienine una copia fuori dall'host.</p>
+
+            <h2>Aggiornamento</h2>
+            <p>Lo stato risiede nei volumi, non nell'immagine, quindi aggiornare significa scaricare un'immagine più recente e ricreare il container con gli stessi mount. Fai prima un backup (da Settings, Backup, oppure tramite l'API). Le migrazioni del formato delle impostazioni vengono eseguite automaticamente all'avvio.</p>
+            <pre><code># Docker Compose, with the image: line in use
+docker compose pull
+docker compose up -d
+
+# docker run
+docker pull fabriziosalmi/certmate:latest
+docker rm -f certmate
+# re-run the original docker run command with the same -v mounts</code></pre>
+            <h3>Prima di aggiornare alla v2.35.0</h3>
+            <ul>
+                <li>Un certificato richiesto a una CA non configurata sull'istanza viene rifiutato con HTTP 400, indicando la CA. Let's Encrypt, e la sua voce di staging, funzionano ancora senza nulla di salvato. Configura la CA che richiedi, oppure richiedine una configurata.</li>
+                <li>Se imposti <code>CERTMATE_CERT_DIR</code> e le impostazioni non indicano un <code>certificate_storage.cert_dir</code> proprio, ora anche il livello di storage scrive in <code>CERTMATE_CERT_DIR</code>.</li>
+                <li>Un URL di directory ACME configurato su un account CA deve usare <code>https</code>. Un URL <code>http</code> semplice viene rifiutato.</li>
+            </ul>
+            <p>Una build si rifiuta di leggere un <code>settings.json</code> o un <code>metadata.json</code> scritto da una versione più recente. <code>CERTMATE_ALLOW_SCHEMA_DOWNGRADE=1</code> scavalca questo controllo, al prezzo di perdere i campi che la build più vecchia non comprende.</p>
+
+            <h2>Health check</h2>
+            <ul>
+                <li><code>/health</code> è l'endpoint di liveness. Restituisce 200 ogni volta che l'applicazione serve richieste; il suo campo JSON <code>status</code> vale <code>healthy</code> o <code>degraded</code>, con i <code>checks</code> per componente. L'<code>HEALTHCHECK</code> dell'immagine lo chiama con curl ogni 30 secondi, con un periodo di avvio di 40 secondi, come <code>docker-compose.yml</code>.</li>
+                <li><code>/health/ready</code> restituisce 503 quando lo scheduler dei rinnovi non è in esecuzione o quando la verifica di certbot è stata eseguita ed è fallita. Usalo per le readiness probe e i gate di deploy: in entrambi i casi l'istanza è attiva ma non rinnoverebbe nulla.</li>
+            </ul>
+
+            <h2>Log</h2>
+            <p>Il container scrive i log su stdout, in JSON per impostazione predefinita (<code>CERTMATE_LOG_JSON=false</code> per righe semplici), quindi <code>docker logs certmate</code> o <code>docker compose logs -f certmate</code> li mostrano. Per scrivere anche un file ruotato sul volume, imposta <code>CERTMATE_LOG_FILE=/app/logs/certmate.log</code>; lo stream dei log dell'interfaccia web legge quel file.</p>
+
+            <h2>Recuperare l'accesso admin</h2>
+            <p>Se hai perso la password dell'admin:</p>
+            <pre><code>docker exec -it certmate python scripts/reset_admin_password.py</code></pre>
+
+            <h2>Compilare l'immagine</h2>
+            <pre><code>docker build -t certmate:latest .
+
+# multi-platform, from the repository's build script
+./build-multiplatform.sh -r YOUR_DOCKERHUB_USERNAME -p
+./build-multiplatform.sh --platforms linux/arm/v7 -r YOUR_DOCKERHUB_USERNAME -p</code></pre>
+
+            <h2>Prossimi passi</h2>
+            <ul>
+                <li><a href="getting-started.html">Per iniziare</a>: primo avvio e primo certificato</li>
+                <li><a href="dns-providers.html">Provider DNS</a>: configurare le credenziali DNS</li>
+                <li><a href="../../docs/backup-recovery.html">Backup e ripristino</a>: creare e ripristinare i backup</li>
+                <li><a href="../../docs/security.html">Sicurezza</a>: autenticazione e hardening</li>
+                <li><a href="../../docs/troubleshooting.html">Risoluzione dei problemi</a>: diagnosticare i problemi del container</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Realizzato con <i class="fas fa-heart" style="color: #ef4444;"></i> da <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> e dai <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributori</a></p>
+        </div>
+    </footer>
+    <script src="../../docs/toc.js" defer></script>
+</body>
+</html>

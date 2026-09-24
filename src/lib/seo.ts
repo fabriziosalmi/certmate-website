@@ -33,6 +33,8 @@ export type HeadInput = {
   ogType?: string;
   /** Serialised JSON-LD objects, already stringified. */
   jsonLd?: unknown[];
+  /** hreflang alternates, each an absolute URL; the page itself included. */
+  alternates?: { hreflang: string; href: string }[];
 };
 
 /**
@@ -44,7 +46,7 @@ export type HeadInput = {
  * says. New markup follows the specifications.
  */
 export function buildHead(input: HeadInput): string {
-  const { title, description, canonical, ogImage, ogType = 'article', jsonLd = [] } = input;
+  const { title, description, canonical, ogImage, ogType = 'article', jsonLd = [], alternates = [] } = input;
   // Every URL this emits goes into an href or a content attribute built by
   // concatenation. attr() escapes the quoting, which is not the same as
   // checking the value is a URL at all: a canonical that is not an absolute
@@ -70,6 +72,15 @@ export function buildHead(input: HeadInput): string {
     `<meta name="twitter:description" content="${attr(description)}">`,
     `<meta name="twitter:image" content="${attr(ogImage)}">`,
   ];
+  for (const alt of alternates) {
+    if (!/^https?:\/\//.test(alt.href)) {
+      throw new Error(
+        `buildHead: alternate ${alt.hreflang} must be an absolute http(s) URL, got ${JSON.stringify(alt.href)}`,
+      );
+    }
+    // slopless-disable-next-line VBC-944 -- href is rejected above unless it is an absolute http(s) URL
+    lines.push(`<link rel="alternate" hreflang="${attr(alt.hreflang)}" href="${attr(alt.href)}">`);
+  }
   for (const node of jsonLd) {
     // </script> inside a JSON string would close this element early.
     const json = JSON.stringify(node).replace(/</g, '\\u003c');

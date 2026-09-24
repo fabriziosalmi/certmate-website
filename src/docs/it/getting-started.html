@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Per iniziare - Documentazione CertMate</title>
+    <link rel="stylesheet" href="../../assets/styles.css">
+    <link rel="preload" href="../../docs/vendor/font-awesome/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="../../docs/vendor/font-awesome/all.min.css"></noscript>
+    <link rel="preload" as="style" href="../../docs/vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="../../docs/vendor/fonts/fonts.css"></noscript>
+    <style>
+        .doc-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+        .doc-content h2 {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: var(--spacing-12);
+            margin-bottom: var(--spacing-6);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .doc-content h3 {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-top: var(--spacing-8);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content p {
+            line-height: 1.8;
+            color: var(--gray-700);
+            margin-bottom: var(--spacing-4);
+        }
+        .doc-content code {
+            background: var(--gray-100);
+            padding: var(--spacing-1) var(--spacing-2);
+            border-radius: var(--radius);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+        .doc-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            margin: var(--spacing-6) 0;
+        }
+        .doc-content pre code {
+            background: none;
+            padding: 0;
+            color: white;
+        }
+        .doc-content ul, .doc-content ol {
+            margin: var(--spacing-4) 0;
+            padding-left: var(--spacing-8);
+        }
+        .doc-content li {
+            margin: var(--spacing-2) 0;
+            line-height: 1.8;
+        }
+        .alert {
+            padding: var(--spacing-4);
+            border-radius: var(--radius-lg);
+            margin: var(--spacing-6) 0;
+            border-left: 4px solid;
+        }
+        .alert-info {
+            background: #dbeafe;
+            border-color: #2563eb;
+            color: #1e40af;
+        }
+        .alert-warning {
+            background: #fef3c7;
+            border-color: #f59e0b;
+            color: #92400e;
+        }
+        .alert i {
+            margin-right: var(--spacing-2);
+        }
+    
+    /* In-page TOC, injected by toc.js. Sticky right column on lg+
+       viewports; collapsed to a top disclosure on smaller screens. */
+    .doc-toc {
+      display: none;
+    }
+    /* Shown only when it fits in the right margin: this page's content
+       column is 900px wide, the TOC 220px plus 24px of gap, so the viewport
+       must be at least 900 + 2 * 244 = 1388px. Below that the old rule
+       placed the TOC over the text (#588). */
+    @media (min-width: 1388px) {
+      .doc-toc {
+        display: block;
+        position: fixed;
+        top: 100px;
+        right: max(24px, calc((100vw - 900px) / 2 - 244px));
+        width: 220px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+      }
+    }
+    .doc-toc-inner {
+      border-left: 2px solid var(--gray-200);
+      padding-left: 16px;
+    }
+    .doc-toc-list { list-style: none; padding: 0; margin: 0; }
+    .doc-toc-item { margin: 4px 0; line-height: 1.4; }
+    .doc-toc-item-h3 { padding-left: 12px; }
+    .doc-toc-link {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: block;
+      padding: 2px 0;
+      transition: color 120ms ease;
+    }
+    .doc-toc-link:hover { color: var(--gray-900); }
+    .doc-toc-link.is-active {
+      color: var(--blue-600, #2563eb);
+      font-weight: 600;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="../../assets/certmate_logo.png" alt="Logo CertMate" class="brand-logo">
+                <a href="../../it/" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../../it/#features" class="nav-link">Funzionalità</a>
+                <a href="../../it/#providers" class="nav-link">Provider DNS</a>
+                <a href="../../docs/index.html" class="nav-link active">Documentazione</a>
+                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="docs-hero" style="padding: 100px 0 60px;">
+            <div class="container">
+                <h1 class="docs-title"><i class="fas fa-rocket"></i> Per iniziare</h1>
+                <p class="docs-subtitle">Installa CertMate con Docker o come servizio systemd ed emetti il primo certificato</p>
+            </div>
+        </section>
+
+        <section class="doc-content">
+            <h2>Avvio rapido con Docker</h2>
+            
+            <h3>Prerequisiti</h3>
+            <ul>
+                <li>Docker 20.10+</li>
+                <li>Docker Compose 2.0+</li>
+                <li>Un dominio con DNS gestito da un provider supportato</li>
+            </ul>
+
+            <h3>1. Clonare e preparare</h3>
+            <pre><code># Clone the repository
+git clone https://github.com/fabriziosalmi/certmate.git
+cd certmate
+
+# Copy environment template
+cp .env.example .env</code></pre>
+
+            <h3>2. Configurare l'ambiente</h3>
+            <p>Modifica il file <code>.env</code> con le tue credenziali:</p>
+            <pre><code># Recommended for any network-exposed deployment: API Security.
+# Auto-generated if unset, but an un-onboarded instance is UNAUTHENTICATED
+# until you create the first admin — set this (or bind to localhost) before
+# exposing CertMate. When set, the first-run screen asks you to paste this
+# same token once to authorize creating the initial admin.
+API_BEARER_TOKEN=your_super_secure_api_token_here_change_this
+
+# DNS provider. Cloudflare is the only provider read from the environment:
+# this token sets the default Cloudflare account. Route53, Azure and the
+# rest are configured in Settings -&gt; DNS Providers or through the API.
+CLOUDFLARE_TOKEN=your_cloudflare_api_token_here</code></pre>
+
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>Docker Hub:</strong> le immagini multipiattaforma precompilate sono disponibili su 
+                <a href="https://hub.docker.com/r/fabriziosalmi/certmate" target="_blank" rel="noopener noreferrer">fabriziosalmi/certmate</a>
+            </div>
+
+            <h3>3. Deploy</h3>
+            <pre><code># Start all services
+docker compose up -d
+
+# Check status
+docker compose ps
+
+# View logs
+docker compose logs -f certmate</code></pre>
+
+            <h3>4. Accedere a CertMate</h3>
+            <table style="width: 100%; border-collapse: collapse; margin: var(--spacing-6) 0;">
+                <thead>
+                    <tr style="background: var(--gray-100);">
+                        <th style="padding: var(--spacing-3); text-align: left; border: 1px solid var(--gray-300);">Servizio</th>
+                        <th style="padding: var(--spacing-3); text-align: left; border: 1px solid var(--gray-300);">URL</th>
+                        <th style="padding: var(--spacing-3); text-align: left; border: 1px solid var(--gray-300);">Descrizione</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: var(--spacing-3); border: 1px solid var(--gray-300);">Dashboard web</td>
+                        <td style="padding: var(--spacing-3); border: 1px solid var(--gray-300);"><code>http://localhost:8000</code></td>
+                        <td style="padding: var(--spacing-3); border: 1px solid var(--gray-300);">Interfaccia principale</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--spacing-3); border: 1px solid var(--gray-300);">Documentazione API</td>
+                        <td style="padding: var(--spacing-3); border: 1px solid var(--gray-300);"><code>http://localhost:8000/docs/</code></td>
+                        <td style="padding: var(--spacing-3); border: 1px solid var(--gray-300);">Swagger UI</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: var(--spacing-3); border: 1px solid var(--gray-300);">Health check</td>
+                        <td style="padding: var(--spacing-3); border: 1px solid var(--gray-300);"><code>http://localhost:8000/health</code></td>
+                        <td style="padding: var(--spacing-3); border: 1px solid var(--gray-300);">Stato di salute del servizio</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>5. Creare il primo certificato</h3>
+            
+            <h4>Con l'interfaccia web:</h4>
+            <ol>
+                <li>Apri <code>http://localhost:8000</code></li>
+                <li>Vai in Settings e configura il tuo provider DNS, e la CA se ne vuoi una diversa da Let's Encrypt: dalla v2.35.0 una richiesta per una CA non configurata viene rifiutata anziché essere emessa da Let's Encrypt</li>
+                <li>Aggiungi il tuo dominio (ad es. <code>example.com</code>)</li>
+                <li>Fai clic su "Create Certificate"</li>
+            </ol>
+
+            <h4>Con l'API:</h4>
+            <pre><code>curl -X POST "http://localhost:8000/api/certificates/create" \
+  -H "Authorization: Bearer your_api_token_here" \
+  -H "Content-Type: application/json" \
+  -d '{"domain": "example.com"}'</code></pre>
+
+            <h2>Metodi di installazione alternativi</h2>
+
+            <h3>Ambiente virtuale Python</h3>
+            <p>Ideale per sviluppo e test:</p>
+            <pre><code># Create and activate virtual environment
+python3 -m venv certmate-env
+source certmate-env/bin/activate
+
+# Install dependencies
+git clone https://github.com/fabriziosalmi/certmate.git
+cd certmate
+pip install -r requirements.txt
+
+# Run the application
+python app.py</code></pre>
+
+            <h3>Kubernetes</h3>
+            <p>Il repository include un chart Helm in <code>charts/certmate</code>:</p>
+            <pre><code>helm install certmate ./charts/certmate --namespace certmate --create-namespace</code></pre>
+
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Nota di sicurezza:</strong> imposta tu stesso <code>API_BEARER_TOKEN</code>, oppure mantieni la porta legata a localhost, prima che l'istanza sia raggiungibile dalla rete.
+            </div>
+
+            <h2>Esecuzione come servizio systemd (senza Docker)</h2>
+            <p>Docker è il modo in cui CertMate viene testato e rilasciato. Per un host Linux senza Docker, il repository include una unit systemd, <code>certmate.service</code>, che esegue l'applicazione con gunicorn da un virtualenv in <code>/opt/certmate</code>, con un utente dedicato <code>certmate</code>.</p>
+
+            <h3>Prerequisiti</h3>
+            <ul>
+                <li>Linux con systemd</li>
+                <li>Python 3.12: la versione su cui è costruita l'immagine del container e l'unica testata dalla CI. <code>requirements.txt</code> non si installa su Python 3.9.</li>
+                <li>Accesso root o sudo</li>
+            </ul>
+            <p>Pacchetti necessari per compilare le dipendenze Python:</p>
+            <pre><code># Ubuntu / Debian
+sudo apt update
+sudo apt install python3-dev python3-venv build-essential libssl-dev libffi-dev
+
+# CentOS / RHEL / Rocky
+sudo yum install python3-devel gcc openssl-devel libffi-devel</code></pre>
+
+            <h3>1. Directory dell'applicazione e utente</h3>
+            <p>Clona in <code>/opt/certmate</code>, poi crea un utente di sistema con quella directory come home e assegnagliene la proprietà:</p>
+            <pre><code>sudo git clone https://github.com/fabriziosalmi/certmate.git /opt/certmate
+
+sudo useradd --system --shell /bin/false --home-dir /opt/certmate certmate
+sudo chown -R certmate:certmate /opt/certmate</code></pre>
+
+            <h3>2. Virtualenv e directory di stato</h3>
+            <p>La unit si aspetta il virtualenv in <code>/opt/certmate/venv</code>. Crealo come utente <code>certmate</code> e installa dal file di requirements incluso:</p>
+            <pre><code>cd /opt/certmate
+sudo -u certmate python3 -m venv venv
+sudo -u certmate ./venv/bin/pip install -r requirements.txt</code></pre>
+            <p>CertMate conserva il proprio stato in quattro directory sotto la radice di installazione: <code>certificates</code>, <code>data</code>, <code>backups</code> e <code>logs</code>. All'avvio verifica che tutte e quattro siano scrivibili e si rifiuta di partire se una non lo è. La unit rende di sola lettura il resto del filesystem, quindi crea tutte e quattro le directory prima del primo avvio:</p>
+            <pre><code>sudo -u certmate mkdir -p certificates data backups logs</code></pre>
+
+            <h3>3. File d'ambiente</h3>
+            <p>La unit legge le impostazioni da <code>/etc/certmate/certmate.env</code> (<code>EnvironmentFile=-/etc/certmate/certmate.env</code>; il <code>-</code> iniziale rende il file opzionale). CertMate non legge un file <code>.env</code> dalla propria directory di installazione, quindi le impostazioni messe in <code>/opt/certmate/.env</code> non hanno effetto su questo servizio.</p>
+            <pre><code>sudo mkdir -p /etc/certmate
+sudo tee /etc/certmate/certmate.env &gt; /dev/null &lt;&lt;'EOF'
+API_BEARER_TOKEN=your_super_secure_api_token_here_change_this
+# Set when a reverse proxy sits in front of CertMate
+BEHIND_PROXY=true
+# Encrypts backups at rest; the same passphrase is needed to restore
+CERTMATE_BACKUP_PASSPHRASE=choose-a-long-random-passphrase
+# Optional: sets the default Cloudflare account
+CLOUDFLARE_TOKEN=your_cloudflare_token
+EOF
+sudo chmod 600 /etc/certmate/certmate.env</code></pre>
+            <p>La unit in sé non contiene alcuna credenziale. Se nel file non c'è un token, l'applicazione ne genera uno all'avvio. <code>API_BEARER_TOKEN_FILE</code> e <code>SECRET_KEY_FILE</code> accettano il percorso di un file che contiene il valore e hanno la precedenza su <code>API_BEARER_TOKEN</code> e <code>SECRET_KEY</code>. Cloudflare è l'unico provider DNS letto dall'ambiente; gli altri si configurano in Settings &rarr; DNS Providers o tramite l'API.</p>
+            <p>Il file d'ambiente non imposta l'indirizzo di ascolto: gunicorn viene avviato con <code>--bind 0.0.0.0:8000</code> in <code>ExecStart</code>, quindi una voce <code>PORT</code> qui non cambia nulla. Per ascoltare altrove, sovrascrivi <code>ExecStart</code> (vedi il passo 4).</p>
+
+            <h3>4. Il file della unit</h3>
+            <p>Questo è <code>certmate.service</code> come distribuito nella v2.35.0, senza i commenti:</p>
+            <pre><code>[Unit]
+Description=CertMate SSL Certificate Manager
+Documentation=https://github.com/fabriziosalmi/certmate
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=certmate
+Group=certmate
+WorkingDirectory=/opt/certmate
+Environment=PATH=/opt/certmate/venv/bin
+Environment=GUNICORN_TIMEOUT=300
+EnvironmentFile=-/etc/certmate/certmate.env
+ExecStart=/opt/certmate/venv/bin/gunicorn --bind 0.0.0.0:8000 --workers 1 --threads 8 --timeout ${GUNICORN_TIMEOUT} app:app
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=10
+KillMode=mixed
+TimeoutStopSec=5
+
+# Security settings
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/certmate/certificates /opt/certmate/data /opt/certmate/backups /opt/certmate/logs
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+            <ul>
+                <li><code>--timeout ${GUNICORN_TIMEOUT}</code> (300 secondi) coincide con l'immagine del container. L'emissione DNS-01 attende la propagazione e può durare minuti; il valore predefinito di gunicorn, 30 secondi, fermerebbe il worker a metà di un'emissione.</li>
+                <li><code>ProtectSystem=strict</code> lascia scrivibili solo i quattro <code>ReadWritePaths</code>, ed è per questo che devono esistere prima del primo avvio.</li>
+                <li><code>--workers 1 --threads 8</code> è uguale all'immagine del container. Vedi il vincolo di istanza singola più sotto.</li>
+            </ul>
+            <p>Installala, abilitala all'avvio e avviala:</p>
+            <pre><code>sudo cp /opt/certmate/certmate.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable certmate
+sudo systemctl start certmate</code></pre>
+            <p>Per cambiare una direttiva come l'indirizzo di bind, usa un drop-in anziché modificare il file copiato. <code>ExecStart</code> va svuotata prima di essere impostata di nuovo:</p>
+            <pre><code>sudo systemctl edit certmate
+
+# in the editor:
+[Service]
+ExecStart=
+ExecStart=/opt/certmate/venv/bin/gunicorn --bind 127.0.0.1:8000 --workers 1 --threads 8 --timeout ${GUNICORN_TIMEOUT} app:app</code></pre>
+
+            <h3>5. Stato e log</h3>
+            <pre><code>sudo systemctl status certmate
+sudo journalctl -u certmate --lines=50     # recent logs
+sudo journalctl -u certmate -f             # follow
+curl http://localhost:8000/health          # health check</code></pre>
+            <p>L'applicazione scrive i log su stdout, quindi le sue righe di log sono nel journal. Imposta <code>CERTMATE_LOG_FILE</code> nel file d'ambiente per scrivere anche un file di log ruotato.</p>
+            <p>Altri comandi di gestione:</p>
+            <pre><code>sudo systemctl stop certmate
+sudo systemctl restart certmate
+sudo systemctl reload certmate        # sends SIGHUP to the gunicorn master
+sudo systemctl is-enabled certmate
+sudo systemctl is-active certmate
+sudo systemctl disable certmate</code></pre>
+            <p>Dopo aver modificato <code>/etc/certmate/certmate.env</code>, usa <code>restart</code>: systemd legge il file d'ambiente quando avvia il servizio.</p>
+
+            <h3>6. Permessi dei file</h3>
+            <pre><code>sudo chown -R certmate:certmate /opt/certmate
+sudo chmod 755 /opt/certmate
+sudo chmod 750 /opt/certmate/certificates /opt/certmate/data /opt/certmate/backups /opt/certmate/logs
+sudo chmod 644 /opt/certmate/*.py /opt/certmate/*.md
+sudo chmod 755 /opt/certmate/venv/bin/*
+sudo chmod 600 /etc/certmate/certmate.env</code></pre>
+            <p>Il file d'ambiente contiene il token API e le eventuali credenziali dei provider; mantienilo leggibile solo da root. I certificati emessi e le relative chiavi private vengono scritti in <code>/opt/certmate/certificates</code>.</p>
+
+            <h3>Istanza singola</h3>
+            <p>CertMate gira come istanza singola. Il suo scheduler dei rinnovi gira dentro il processo web, quindi una seconda copia è un secondo scheduler che emette sugli stessi certificati: ordini ACME duplicati e il rate limit della CA sui certificati duplicati. La unit avvia un solo worker gunicorn per lo stesso motivo: le sessioni, la revoca delle sessioni e il rate limiter del login sono tenuti in memoria per processo, e ogni worker in più eseguirebbe il proprio job di rinnovo. Mantieni <code>--workers 1</code> in ogni override, esegui la unit su un solo host e non eseguirla accanto a un container CertMate che gestisce gli stessi certificati. Per gestire più certificati, dai all'host più CPU e memoria.</p>
+
+            <h3>Esposizione</h3>
+            <p>La unit distribuita si lega a <code>0.0.0.0:8000</code>. Prima che l'host sia raggiungibile dalla rete, imposta <code>API_BEARER_TOKEN</code> nel file d'ambiente oppure lega il servizio a <code>127.0.0.1</code> con un drop-in, e mettigli davanti un reverse proxy impostando <code>BEHIND_PROXY=true</code>. Senza questa impostazione ogni richiesta sembra provenire dall'indirizzo del proxy, e il rate limiting per client si riduce a un unico contatore.</p>
+
+            <h3>Risoluzione dei problemi</h3>
+            <ol>
+                <li><strong>Controlla lo stato del servizio:</strong> <code>sudo systemctl status certmate</code></li>
+                <li><strong>Leggi il log:</strong> <code>sudo journalctl -u certmate --lines=100</code></li>
+                <li><strong>"Required directories are not writable by the CertMate process."</strong> La riga di log indica ogni directory che ha fallito il controllo. Verifica che esista, che sia di proprietà di <code>certmate</code> e che sia elencata in <code>ReadWritePaths</code>.</li>
+                <li><strong>Controlla i permessi:</strong> l'utente <code>certmate</code> deve poter leggere tutto il contenuto di <code>/opt/certmate</code>.</li>
+                <li><strong>Avvialo a mano</strong> come utente del servizio, fuori da systemd: <code>sudo -u certmate /opt/certmate/venv/bin/python /opt/certmate/app.py</code>. Questo avvia il server di sviluppo sulla porta 8000 e non legge <code>/etc/certmate/certmate.env</code>.</li>
+                <li><strong>Controlla i plugin di certbot</strong> installati nel virtualenv: <code>sudo -u certmate /opt/certmate/venv/bin/certbot plugins --text</code></li>
+                <li><strong>Il plugin di un provider non si installa:</strong> installa prima <code>requirements-minimal.txt</code>, poi sopra il file specifico del provider (<code>requirements-aws.txt</code>, <code>requirements-gcp.txt</code>, <code>requirements-azure.txt</code>), anziché fissare i pacchetti a mano.</li>
+            </ol>
+
+            <h2>Opzioni di autenticazione</h2>
+            <p>CertMate offre tre modalità di autenticazione; coesistono e si configurano in modo indipendente.</p>
+            <ul>
+                <li><strong>Utenti locali</strong> &mdash; la schermata del primo avvio crea l'admin iniziale. Su un'istanza in cui hai impostato <code>API_BEARER_TOKEN</code>, incolla quel token una volta in quella schermata per autorizzare la creazione dell'admin. I ruoli RBAC (admin / operator / viewer) controllano l'accesso a ogni endpoint.</li>
+                <li><strong>Chiavi API</strong> &mdash; ruolo per chiave + ambito <code>allowed_domains</code> per un accesso programmatico granulare. Si ruotano indipendentemente dagli utenti locali.</li>
+                <li><strong>OIDC / SSO (v2.7.0+)</strong> &mdash; Authorization Code + PKCE verso qualsiasi IdP OIDC (Keycloak, Authentik, Okta, Auth0, &hellip;). Mappatura dei ruoli basata sui claim dell'IdP, con confronto non sensibile alle maiuscole. Provisioning JIT o collegamento tramite email, con un controllo su <code>email_verified</code> contro gli IdP con registrazione self-service. Vedi <a href="../../docs/security.html">Security &rarr; OIDC / SSO configuration</a> per la configurazione completa.</li>
+            </ul>
+
+            <h2>Prossimi passi</h2>
+            <ul>
+                <li><a href="dns-providers.html">Configurare i provider DNS</a> - Imposta i tuoi provider DNS</li>
+                <li><a href="../../docs/api-reference.html">Riferimento API</a> - Scopri la REST API</li>
+                <li><a href="../../docs/storage-backends.html">Backend di storage</a> - Dove sono conservati certificati e chiavi</li>
+                <li><a href="../../docs/backup-recovery.html">Backup e ripristino</a> - Imposta le procedure di backup</li>
+                <li><a href="../../docs/security.html">Sicurezza</a> - Autenticazione, esposizione in rete e gestione delle chiavi</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 CertMate. Realizzato con <i class="fas fa-heart" style="color: #ef4444;"></i> da <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> e dai <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributori</a></p>
+        </div>
+    </footer>
+    <script src="../../docs/toc.js" defer></script>
+</body>
+</html>

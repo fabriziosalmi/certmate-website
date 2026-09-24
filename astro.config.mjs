@@ -10,7 +10,7 @@ import icon from 'astro-icon';
 // table the endpoint builds them from, so the two cannot disagree -- the
 // previous version read the directory they used to live in, and emptying
 // that directory silently dropped ten URLs from the sitemap.
-import { DOC_PAGES, docUrl } from './src/data/docs.ts';
+import { DOC_PAGES, DOC_PAGES_IT, docUrl } from './src/data/docs.ts';
 // Dating each URL from the file it is built from, rather than from now().
 // See scripts/lib/page-sources.mjs for what "built from" means here.
 import { isShallowCheckout, lastModifiedFor } from './scripts/lib/page-sources.mjs';
@@ -39,7 +39,10 @@ export default defineConfig({
     // /docs/ rather than /docs/index.html, so the sitemap advertises one URL
     // for it instead of the second of two that both answer 200.
     sitemap({
-      customPages: DOC_PAGES.map((page) => docUrl(page.slug)),
+      customPages: [
+        ...DOC_PAGES.map((page) => docUrl(page.slug)),
+        ...DOC_PAGES_IT.map((page) => docUrl(page.slug, SITE, 'it')),
+      ],
       // lastmod comes from git, not from the clock: two builds of an unchanged
       // checkout produce the same sitemap, and a page's date moves only when
       // its own source moves. A URL whose source cannot be identified gets no
