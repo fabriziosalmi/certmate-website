@@ -14,12 +14,13 @@
  * Why the body is spliced rather than re-authored. These pages are indexed.
  * Re-authoring them as MDX would change the rendered markup -- class names,
  * heading structure, whitespace -- on pages whose ranking is the thing being
- * protected. The body here is byte-for-byte what it was under public/docs/;
- * only the head gains the tags it never had. scripts/check-seo.mjs asserts
- * that, comparing each built body against its source.
+ * protected. The content between header and footer is what src/docs holds;
+ * the head gains the tags it never had, and the page's own navbar and footer
+ * are replaced by the site's (src/lib/docs-shell.ts).
  */
 import type { APIRoute } from 'astro';
-import { DOC_PAGES, docAlternates, docUrl, type DocPage } from '../../data/docs';
+import { DOC_PAGES, DOC_PAGES_IT, docAlternates, docUrl, type DocPage } from '../../data/docs';
+import { applyShell } from '~/lib/docs-shell';
 import { ogImageFor } from '~/lib/og';
 import { buildHead } from '../../lib/seo';
 import { PROVIDER_COUNT } from '../../data/site';
@@ -87,7 +88,15 @@ export const GET: APIRoute = ({ props }) => {
   // place that number lives; the token is how these pages read it.
   const body = source.replace(/\{\{PROVIDER_COUNT\}\}/g, String(PROVIDER_COUNT));
 
-  const html = body.replace('</head>', `    ${head}\n</head>`);
+  // The site's header and footer replace the page's own; see docs-shell.ts.
+  const pathname = new URL(docUrl(page.slug)).pathname;
+  const hasItalian = DOC_PAGES_IT.some((p) => p.slug === page.slug);
+  const html = applyShell(body.replace('</head>', `    ${head}\n</head>`), {
+    locale: 'en',
+    pathname,
+    altHref: hasItalian ? new URL(docUrl(page.slug, undefined, 'it')).pathname : undefined,
+    source: `src/docs/${page.slug}.html`,
+  });
   return new Response(html, {
     headers: { 'content-type': 'text/html; charset=utf-8' },
   });

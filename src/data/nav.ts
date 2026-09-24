@@ -77,3 +77,65 @@ export function isCurrentSection(href: string, pathname: string): boolean {
   if (href.includes('#') || href === '/' || href === '/it/') return false;
   return pathname.startsWith(href);
 }
+
+// The footer's columns. Footer.astro renders them on the Astro pages and
+// src/lib/docs-shell.ts on the documentation pages. The footer is in English
+// in both languages, as it always was; the Italian pages link to it as-is.
+export interface FooterLink {
+  label: string;
+  href: string;
+  external?: boolean;
+  /** Set on the one link that names another language. */
+  hreflang?: string;
+}
+
+export const FOOTER_BLURB =
+  'Self-hosted TLS certificate management with a tamper-evident, verifiable audit trail. MIT-licensed.';
+
+export const FOOTER_SOCIAL = [
+  { label: 'CertMate on GitHub', href: 'https://github.com/fabriziosalmi/certmate', icon: 'fa6-brands:github' },
+  { label: 'CertMate on Docker Hub', href: 'https://hub.docker.com/r/fabriziosalmi/certmate', icon: 'fa6-brands:docker' },
+];
+
+export const FOOTER_COLUMNS: { title: string; links: FooterLink[] }[] = [
+  {
+    title: 'Product',
+    links: [
+      { label: 'Features', href: '/#features' },
+      { label: 'DNS Providers', href: '/#providers' },
+      { label: 'Installation', href: '/#installation' },
+      { label: 'API', href: '/#api' },
+      { label: 'Security & trust', href: '/security/' },
+      { label: 'Compare alternatives', href: '/cert-manager-alternative/' },
+      { label: 'Live demo', href: 'https://demo.certmate.org', external: true },
+      { label: 'CertMate Agent', href: 'https://agent.certmate.org', external: true },
+      { label: 'CertMate Tools', href: 'https://tools.certmate.org', external: true },
+    ],
+  },
+  {
+    title: 'Resources',
+    links: [
+      { label: 'Documentation', href: '/docs/' },
+      { label: 'Installation Guide', href: '/docs/getting-started.html' },
+      { label: 'SSL Error Reference', href: '/errors/' },
+      { label: 'Deploy Guides', href: '/deploy/' },
+      { label: 'Support', href: 'https://github.com/fabriziosalmi/certmate/issues', external: true },
+      { label: 'Contributing', href: '/docs/contributing.html' },
+      { label: 'Changelog', href: '/changelog/' },
+      { label: 'Italiano', href: '/it/', hreflang: 'it' },
+    ],
+  },
+  {
+    title: 'Legal',
+    links: [
+      { label: 'MIT License', href: 'https://github.com/fabriziosalmi/certmate/blob/main/LICENSE', external: true },
+      { label: 'Code of Conduct', href: 'https://github.com/fabriziosalmi/certmate/blob/main/CODE_OF_CONDUCT.md', external: true },
+      { label: 'Privacy & legal', href: '/privacy/' },
+    ],
+  },
+];
+
+export const FOOTER_CREDITS = {
+  author: { label: 'Fabrizio Salmi', href: 'https://github.com/fabriziosalmi' },
+  contributors: { label: 'contributors', href: 'https://github.com/fabriziosalmi/certmate/graphs/contributors' },
+};

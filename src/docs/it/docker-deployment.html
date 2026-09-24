@@ -112,25 +112,10 @@
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <img src="../../assets/certmate_logo.png" alt="Logo CertMate" class="brand-logo">
-                <a href="../../it/" style="text-decoration: none; color: inherit;"><span class="brand-text">CertMate</span></a>
-            </div>
-            <div class="nav-menu">
-                <a href="../../it/#features" class="nav-link">Funzionalità</a>
-                <a href="../../it/#providers" class="nav-link">Provider DNS</a>
-                <a href="../../docs/index.html" class="nav-link active">Documentazione</a>
-                <a href="https://github.com/fabriziosalmi/certmate" class="nav-link github-link" target="_blank" rel="noopener noreferrer">
-                    <i class="fab fa-github"></i> GitHub
-                </a>
-            </div>
-        </div>
-    </nav>
+    <!-- SITE_HEADER: the site header, rendered by src/lib/docs-shell.ts -->
 
     <main id="main-content">
-        <section class="docs-hero" style="padding: 100px 0 60px;">
+        <section class="docs-hero">
             <div class="container">
                 <h1 class="docs-title"><i class="fab fa-docker"></i> Deploy con Docker</h1>
                 <p class="docs-subtitle">Immagine, Compose, ambiente, volumi, aggiornamenti e health check</p>
@@ -276,11 +261,7 @@ docker rm -f certmate
         </section>
     </main>
 
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2026 CertMate. Realizzato con <i class="fas fa-heart" style="color: #ef4444;"></i> da <a href="https://github.com/fabriziosalmi" target="_blank" rel="noopener noreferrer">Fabrizio Salmi</a> e dai <a href="https://github.com/fabriziosalmi/certmate/graphs/contributors" target="_blank" rel="noopener noreferrer">contributori</a></p>
-        </div>
-    </footer>
+    <!-- SITE_FOOTER: the site footer, rendered by src/lib/docs-shell.ts -->
     <script src="../../docs/toc.js" defer></script>
 </body>
 </html>

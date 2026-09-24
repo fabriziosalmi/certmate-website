@@ -7,6 +7,7 @@ import type { APIRoute } from 'astro';
 import { DOC_PAGES_IT, docAlternates, docUrl, type DocPage } from '../../../data/docs';
 import { ogImageFor } from '~/lib/og';
 import { buildHead } from '../../../lib/seo';
+import { applyShell } from '~/lib/docs-shell';
 import { PROVIDER_COUNT } from '../../../data/site';
 
 // ?raw through Vite rather than readFileSync: the html becomes a build input,
@@ -72,7 +73,13 @@ export const GET: APIRoute = ({ props }) => {
   // place that number lives; the token is how these pages read it.
   const body = source.replace(/\{\{PROVIDER_COUNT\}\}/g, String(PROVIDER_COUNT));
 
-  const html = body.replace('</head>', `    ${head}\n</head>`);
+  // The site's header and footer replace the page's own; see docs-shell.ts.
+  const html = applyShell(body.replace('</head>', `    ${head}\n</head>`), {
+    locale: 'it',
+    pathname: new URL(docUrl(page.slug, undefined, 'it')).pathname,
+    altHref: new URL(docUrl(page.slug)).pathname,
+    source: `src/docs/it/${page.slug}.html`,
+  });
   return new Response(html, {
     headers: { 'content-type': 'text/html; charset=utf-8' },
   });

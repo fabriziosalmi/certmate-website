@@ -125,3 +125,21 @@
     @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium;
   }
 }
+
+/* Pagefind's search box on the 404. Its own stylesheet draws the placeholder
+   at 20% opacity, about 1.6:1 on white, and has no dark theme. Same rules as
+   the documentation pages' styles.css. */
+.pagefind-ui input.pagefind-ui__search-input::placeholder {
+  color: #6b7280;
+  opacity: 1;
+}
+.dark .pagefind-ui {
+  --pagefind-ui-primary: #60a5fa;
+  --pagefind-ui-text: #e5e7eb;
+  --pagefind-ui-background: #0b1220;
+  --pagefind-ui-border: #374151;
+  --pagefind-ui-tag: #1f2937;
+}
+.dark .pagefind-ui input.pagefind-ui__search-input::placeholder {
+  color: #9ca3af;
+}

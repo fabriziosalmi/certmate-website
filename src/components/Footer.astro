@@ -1,10 +1,10 @@
 ---
 import { Icon } from 'astro-icon/components';
-// Footer copy preserved verbatim from the static site. The "Made with"
-// line previously rendered with a heart emoji glyph; we use a Font
-// Awesome icon instead so the rendering is identical on every OS and
-// assistive tech does not announce a stray emoji name.
+import { FOOTER_BLURB, FOOTER_COLUMNS, FOOTER_CREDITS, FOOTER_SOCIAL } from '~/data/nav';
+// The columns live in src/data/nav.ts, which the documentation pages render
+// from too.
 const year = new Date().getFullYear();
+const linkClass = 'text-gray-600 hover:text-primary dark:text-gray-400';
 ---
 
 <footer class="border-t border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/40">
@@ -14,7 +14,7 @@ const year = new Date().getFullYear();
         <div class="flex items-center gap-2.5">
           <img
             src="/assets/certmate_logo.png"
-            alt="CertMate logo"
+            alt=""
             class="h-9 w-9"
             width="36"
             height="36"
@@ -23,122 +23,49 @@ const year = new Date().getFullYear();
           />
           <span class="text-lg font-bold tracking-tight">CertMate</span>
         </div>
-        <p class="mt-3 text-sm text-gray-600 dark:text-gray-300">
-          Self-hosted TLS certificate management with a tamper-evident, verifiable audit trail. MIT-licensed.
-        </p>
-        <div class="mt-4 flex items-center gap-3">
-          <a
-            href="https://github.com/fabriziosalmi/certmate"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="CertMate on GitHub"
-            class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-          >
-            <Icon name="fa6-brands:github" class="text-xl" aria-hidden="true" />
-          </a>
-          <a
-            href="https://hub.docker.com/r/fabriziosalmi/certmate"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="CertMate on Docker Hub"
-            class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-          >
-            <Icon name="fa6-brands:docker" class="text-xl" aria-hidden="true" />
-          </a>
+        <p class="mt-3 text-sm text-gray-600 dark:text-gray-300">{FOOTER_BLURB}</p>
+        <div class="mt-4 flex items-center gap-1">
+          {FOOTER_SOCIAL.map((s) => (
+            <a
+              href={s.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={s.label}
+              class="inline-flex h-11 w-11 items-center justify-center rounded-md text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+            >
+              <Icon name={s.icon} class="text-xl" aria-hidden="true" />
+            </a>
+          ))}
         </div>
       </div>
 
-      <div>
-        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Product</h4>
-        <ul class="mt-3 space-y-2 text-sm">
-          <li><a href="/#features"     class="text-gray-600 hover:text-primary dark:text-gray-400">Features</a></li>
-          <li><a href="/#providers"    class="text-gray-600 hover:text-primary dark:text-gray-400">DNS Providers</a></li>
-          <li><a href="/#installation" class="text-gray-600 hover:text-primary dark:text-gray-400">Installation</a></li>
-          <li><a href="/#api"          class="text-gray-600 hover:text-primary dark:text-gray-400">API</a></li>
-          <li><a href="/security/"     class="text-gray-600 hover:text-primary dark:text-gray-400">Security &amp; trust</a></li>
-          <li><a href="/cert-manager-alternative/" class="text-gray-600 hover:text-primary dark:text-gray-400">Compare alternatives</a></li>
-          <li><a href="https://demo.certmate.org" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-primary dark:text-gray-400">Live demo<span class="sr-only"> (opens in new tab)</span></a></li>
-          <li><a href="https://agent.certmate.org" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-primary dark:text-gray-400">CertMate Agent<span class="sr-only"> (opens in new tab)</span></a></li>
-          <li><a href="https://tools.certmate.org" target="_blank" rel="noopener noreferrer" class="text-gray-600 hover:text-primary dark:text-gray-400">CertMate Tools<span class="sr-only"> (opens in new tab)</span></a></li>
-        </ul>
-      </div>
-
-      <div>
-        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Resources</h4>
-        <ul class="mt-3 space-y-2 text-sm">
-          <li><a href="/docs/" class="text-gray-600 hover:text-primary dark:text-gray-400">Documentation</a></li>
-          <li>
-            <a href="/docs/getting-started.html" class="text-gray-600 hover:text-primary dark:text-gray-400">
-              Installation Guide
-            </a>
-          </li>
-          <li>
-            <a href="/errors/" class="text-gray-600 hover:text-primary dark:text-gray-400">
-              SSL Error Reference
-            </a>
-          </li>
-          <li>
-            <a href="/deploy/" class="text-gray-600 hover:text-primary dark:text-gray-400">
-              Deploy Guides
-            </a>
-          </li>
-          <li>
-            <a
-              href="https://github.com/fabriziosalmi/certmate/issues"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-gray-600 hover:text-primary dark:text-gray-400"
-            >Support</a>
-          </li>
-          <li><a href="/docs/contributing.html" class="text-gray-600 hover:text-primary dark:text-gray-400">Contributing</a></li>
-          <li><a href="/changelog/" class="text-gray-600 hover:text-primary dark:text-gray-400">Changelog</a></li>
-          <li><a href="/it/" hreflang="it" lang="it" class="text-gray-600 hover:text-primary dark:text-gray-400">Italiano</a></li>
-        </ul>
-      </div>
-
-      <div>
-        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Legal</h4>
-        <ul class="mt-3 space-y-2 text-sm">
-          <li>
-            <a
-              href="https://github.com/fabriziosalmi/certmate/blob/main/LICENSE"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-gray-600 hover:text-primary dark:text-gray-400"
-            >MIT License</a>
-          </li>
-          <li>
-            <a
-              href="https://github.com/fabriziosalmi/certmate/blob/main/CODE_OF_CONDUCT.md"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-gray-600 hover:text-primary dark:text-gray-400"
-            >Code of Conduct</a>
-          </li>
-          <li>
-            <a href="/privacy" class="text-gray-600 hover:text-primary dark:text-gray-400">Privacy &amp; legal</a>
-          </li>
-        </ul>
-      </div>
+      {FOOTER_COLUMNS.map((col) => (
+        <div>
+          <h2 class="text-sm font-semibold text-gray-900 dark:text-white">{col.title}</h2>
+          <ul class="mt-3 space-y-2 text-sm">
+            {col.links.map((l) => (
+              <li>
+                {l.external ? (
+                  <a href={l.href} target="_blank" rel="noopener noreferrer" class={linkClass}>
+                    {l.label}<span class="sr-only"> (opens in new tab)</span>
+                  </a>
+                ) : (
+                  <a href={l.href} hreflang={l.hreflang} lang={l.hreflang} class={linkClass}>{l.label}</a>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
     </div>
 
-    <div class="mt-10 flex flex-col items-center gap-2 border-t border-gray-200 pt-6 text-sm text-gray-500 dark:border-gray-800 dark:text-gray-400 sm:flex-row sm:justify-between">
+    <div class="mt-10 flex flex-col items-center gap-2 border-t border-gray-200 pt-6 text-sm text-gray-600 dark:border-gray-800 dark:text-gray-400 sm:flex-row sm:justify-between">
       <p>&copy; {year} CertMate. Licensed under MIT License.</p>
       <p>
         Built by
-        <a
-          href="https://github.com/fabriziosalmi"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="font-medium text-gray-700 hover:text-primary dark:text-gray-300"
-        >Fabrizio Salmi</a>
+        <a href={FOOTER_CREDITS.author.href} target="_blank" rel="noopener noreferrer" class="font-medium text-gray-700 underline decoration-gray-300 underline-offset-2 hover:text-primary dark:text-gray-300 dark:decoration-gray-600">{FOOTER_CREDITS.author.label}</a>
         and
-        <a
-          href="https://github.com/fabriziosalmi/certmate/graphs/contributors"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="font-medium text-gray-700 hover:text-primary dark:text-gray-300"
-        >contributors</a>.
+        <a href={FOOTER_CREDITS.contributors.href} target="_blank" rel="noopener noreferrer" class="font-medium text-gray-700 underline decoration-gray-300 underline-offset-2 hover:text-primary dark:text-gray-300 dark:decoration-gray-600">{FOOTER_CREDITS.contributors.label}</a>.
       </p>
     </div>
   </div>

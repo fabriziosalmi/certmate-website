@@ -1910,3 +1910,248 @@ section {
         font-size: var(--font-size-4xl);
     }
 }
+
+/* ------------------------------------------------------------------------
+   Site shell: the header and footer src/lib/docs-shell.ts renders into the
+   documentation pages. It reproduces src/components/Navbar.astro and
+   Footer.astro in plain CSS, because these pages do not load the Tailwind
+   bundle. Sizes and colours are Tailwind's, so the two render alike.
+   ------------------------------------------------------------------------ */
+:root {
+    --shell-bg: rgba(255, 255, 255, 0.8);
+    --shell-surface: #ffffff;
+    --shell-border: #e5e7eb;
+    --shell-text: #374151;
+    --shell-muted: #4b5563;
+    --shell-strong: #111827;
+    --shell-hover: #f3f4f6;
+    --shell-accent: #2563eb;
+    --shell-footer-bg: #f9fafb;
+}
+html.dark {
+    --shell-bg: rgba(3, 7, 18, 0.8);
+    --shell-surface: #030712;
+    --shell-border: #1f2937;
+    --shell-text: #d1d5db;
+    --shell-muted: #9ca3af;
+    --shell-strong: #ffffff;
+    --shell-hover: #1f2937;
+    --shell-accent: #3b82f6;
+    --shell-footer-bg: rgba(17, 24, 39, 0.4);
+}
+.site-icon { width: 1em; height: 1em; flex-shrink: 0; vertical-align: -0.125em; }
+.site-icon-ext { font-size: 0.65rem; opacity: 0.6; }
+html:not(.dark) .only-dark, html.dark .only-light { display: none; }
+.site-nav-burger .when-open, .site-nav-burger[aria-expanded="true"] .when-closed { display: none; }
+.site-nav-burger[aria-expanded="true"] .when-open { display: inline; }
+
+.site-nav {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: var(--shell-bg);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--shell-border);
+    font-family: var(--font-family);
+}
+.site-nav-bar {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    height: 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+.site-nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    flex-shrink: 0;
+    text-decoration: none;
+    color: var(--shell-strong);
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+}
+.site-nav-brand img { width: 40px; height: 40px; }
+.site-nav-links { display: none; list-style: none; align-items: center; margin: 0; padding: 0; }
+.site-nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    white-space: nowrap;
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--shell-text);
+    text-decoration: none;
+}
+.site-nav-link:hover { background: var(--shell-hover); color: var(--shell-strong); }
+.site-nav-link[aria-current="page"] { color: var(--shell-accent); }
+.site-nav-sep { width: 1px; height: 1.25rem; margin: 0 0.25rem; background: var(--shell-border); }
+.site-nav-controls { display: flex; align-items: center; gap: 0.25rem; }
+.site-nav-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    height: 2.75rem;
+    padding: 0 0.5rem;
+    border: 0;
+    border-radius: 0.375rem;
+    background: none;
+    color: var(--shell-muted);
+    font: 600 0.875rem var(--font-family);
+    text-decoration: none;
+    cursor: pointer;
+}
+.site-nav-control:hover { background: var(--shell-hover); color: var(--shell-strong); }
+.site-nav-control .site-icon { font-size: 1rem; }
+.site-nav-burger .site-icon { font-size: 1.125rem; }
+.site-nav-mobile { border-top: 1px solid var(--shell-border); background: var(--shell-surface); }
+.site-nav-mobile ul { list-style: none; margin: 0 auto; padding: 0.5rem 1rem; max-width: 1200px; }
+.site-nav-mobile .site-nav-link { display: flex; gap: 0.5rem; min-height: 2.75rem; padding: 0 0.75rem; font-size: 1rem; }
+.site-nav-mobile .site-icon-ext { font-size: 0.75rem; }
+.site-nav-rule { height: 1px; margin: 0.25rem 0.75rem; background: var(--shell-border); }
+@media (min-width: 640px) { .site-nav-bar { padding: 0 1.5rem; } }
+@media (min-width: 1024px) {
+    .site-nav-bar { padding: 0 2rem; }
+    .site-nav-links { display: flex; }
+    .site-nav-burger, .site-nav-mobile { display: none; }
+}
+@media (min-width: 1280px) {
+    .site-nav-links { gap: 0.25rem; }
+    .site-nav-link { padding: 0.5rem 0.75rem; }
+}
+
+.site-footer {
+    border-top: 1px solid var(--shell-border);
+    background: var(--shell-footer-bg);
+    font-family: var(--font-family);
+    text-align: left;
+}
+.site-footer-inner { max-width: 1200px; margin: 0 auto; padding: 3rem 1rem; }
+.site-footer-grid { display: grid; gap: 2.5rem; }
+.site-footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    color: var(--shell-strong);
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+}
+.site-footer-brand img { width: 36px; height: 36px; }
+.site-footer-blurb { margin-top: 0.75rem; font-size: 0.875rem; line-height: 1.5; color: var(--shell-muted); }
+.site-footer-socials { display: flex; gap: 0.25rem; margin-top: 1rem; }
+.site-footer-social {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.375rem;
+    color: var(--shell-muted);
+    font-size: 1.25rem;
+}
+.site-footer-social:hover { color: var(--shell-strong); }
+.site-footer h2 {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--shell-strong);
+}
+.site-footer ul { list-style: none; margin: 0.75rem 0 0; padding: 0; }
+.site-footer li { margin: 0 0 0.5rem; font-size: 0.875rem; line-height: 1.25rem; }
+.site-footer li a { color: var(--shell-muted); text-decoration: none; }
+.site-footer li a:hover { color: var(--shell-accent); }
+.site-footer-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--shell-border);
+    font-size: 0.875rem;
+    color: var(--shell-muted);
+}
+.site-footer-bottom p { margin: 0; }
+.site-footer-credit {
+    font-weight: 500;
+    color: var(--shell-text);
+    text-decoration: underline;
+    text-decoration-color: var(--shell-border);
+    text-underline-offset: 2px;
+}
+.site-footer-credit:hover { color: var(--shell-accent); }
+@media (min-width: 640px) {
+    .site-footer-inner { padding: 3rem 1.5rem; }
+    .site-footer-grid { grid-template-columns: repeat(2, 1fr); }
+    .site-footer-bottom { flex-direction: row; justify-content: space-between; }
+}
+@media (min-width: 1024px) {
+    .site-footer-inner { padding: 3rem 2rem; }
+    .site-footer-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* The header is sticky now, not fixed: it takes its own 64px, so the hero no
+   longer pads for it. */
+.docs-hero { padding: 3rem 0 2.5rem; }
+.doc-content h2, .doc-content h3 { scroll-margin-top: 5rem; }
+
+/* ------------------------------------------------------------------------
+   Dark theme for the documentation pages. html.dark is set before first
+   paint by the script docs-shell.ts puts in the head, from the same stored
+   choice the rest of the site uses. The grey ramp is inverted so every rule
+   written against var(--gray-*) follows; the rules below are the ones that
+   use a literal colour, or where inverting the ramp would be wrong (code
+   blocks stay dark in both themes).
+   ------------------------------------------------------------------------ */
+html.dark {
+    color-scheme: dark;
+    --gray-50: #0b1220;
+    --gray-100: #1f2937;
+    --gray-200: #374151;
+    --gray-300: #4b5563;
+    --gray-400: #9ca3af;
+    --gray-500: #9ca3af;
+    --gray-600: #d1d5db;
+    --gray-700: #d1d5db;
+    --gray-800: #e5e7eb;
+    --gray-900: #f9fafb;
+    --primary-color: #3b82f6;
+}
+html.dark body { background-color: #030712; color: #e5e7eb; }
+html.dark .docs-hero { background: linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, #030712 100%); }
+html.dark .docs-card,
+html.dark .quick-link,
+html.dark .api-endpoint { background: #0b1220; }
+html.dark .docs-card-icon { color: #ffffff; }
+html.dark .doc-content pre { background: #0b1220; border: 1px solid #1f2937; color: #f9fafb; }
+html.dark .doc-content pre code { color: #f9fafb; }
+html.dark .alert-info { background: rgba(37, 99, 235, 0.15); border-color: #3b82f6; color: #bfdbfe; }
+html.dark .alert-warning { background: rgba(245, 158, 11, 0.12); border-color: #f59e0b; color: #fde68a; }
+html.dark .method-get { background: rgba(37, 99, 235, 0.2); color: #bfdbfe; }
+html.dark .method-post { background: rgba(16, 185, 129, 0.2); color: #a7f3d0; }
+html.dark .method-put { background: rgba(245, 158, 11, 0.2); color: #fde68a; }
+html.dark .method-delete { background: rgba(239, 68, 68, 0.2); color: #fecaca; }
+html.dark .doc-content a { color: #60a5fa; }
+
+/* Pagefind's search box on the docs index. Its own stylesheet draws the
+   placeholder at 20% opacity, about 1.6:1 on white; and it has no dark
+   theme, so in dark mode the box stayed white. Same rules as global.css. */
+.pagefind-ui input.pagefind-ui__search-input::placeholder { color: #6b7280; opacity: 1; }
+html.dark .pagefind-ui {
+    --pagefind-ui-primary: #60a5fa;
+    --pagefind-ui-text: #e5e7eb;
+    --pagefind-ui-background: #0b1220;
+    --pagefind-ui-border: #374151;
+    --pagefind-ui-tag: #1f2937;
+}
+html.dark .pagefind-ui input.pagefind-ui__search-input::placeholder { color: #9ca3af; }
