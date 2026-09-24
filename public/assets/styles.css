@@ -1887,11 +1887,22 @@ section {
     max-width: 100%;
     overflow-x: auto;
 }
-.doc-content,
+/* Environment variables and error strings also appear in plain prose, e.g.
+   CERTMATE_ALLOW_INTERNAL_WEBHOOKS=true inside a quoted message. break-word
+   breaks such a token only where it would overflow, and unlike anywhere it
+   leaves the minimum width of a table cell alone: with anywhere on the whole
+   of .doc-content, tables on six pages broke "operator", "gauge", "Required"
+   in half at 1440px. Inline code outside tables may still break anywhere;
+   inside a table a long token widens the table, which scrolls. */
+.doc-content {
+    overflow-wrap: break-word;
+}
 .doc-content code {
-    /* Environment variables and error strings also appear in plain prose,
-       e.g. CERTMATE_ALLOW_INTERNAL_WEBHOOKS=true inside a quoted message. */
     overflow-wrap: anywhere;
+}
+.doc-content td code,
+.doc-content th code {
+    overflow-wrap: normal;
 }
 .doc-content pre {
     max-width: 100%;
