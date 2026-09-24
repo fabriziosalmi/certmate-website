@@ -1,0 +1,113 @@
+---
+title: "ERR_SSL_CLIENT_AUTH_CERT_NEEDED"
+errorCode: "ERR_SSL_CLIENT_AUTH_CERT_NEEDED"
+description: "Risolvi ERR_SSL_CLIENT_AUTH_CERT_NEEDED di Chromium: il server ha chiesto un certificato client e il browser non ha potuto chiederti quale inviare."
+summary: "Il server ha chiesto un certificato client e Chromium non aveva dove chiederti quale inviare: nessuna scheda in cui mostrare il selettore, o un programma basato sullo stack di rete di Chromium che non gestisce la richiesta."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 15
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+Chromium definisce `ERR_SSL_CLIENT_AUTH_CERT_NEEDED` (errore -110) come *"il
+server ha richiesto un certificato client per l'autenticazione SSL del
+client."* È una richiesta, non un rifiuto. Non è ancora stato respinto nulla.
+
+Dentro Chromium questo codice è una domanda passata verso l'alto. Quando
+arriva la `CertificateRequest` del server e il browser non ha ancora scelto un
+certificato per quell'host e quella porta, il livello TLS mette in pausa
+l'handshake e restituisce questo codice, così che il browser decida cosa
+inviare. Di solito la risposta arriva subito: un certificato viene scelto in
+automatico da una policy aziendale, lo scegli tu nel selettore dei
+certificati, oppure, se non ce n'è nessuno, l'handshake prosegue senza.
+
+Il codice lo vedi solo quando a quella domanda non è stato possibile
+rispondere. La richiesta viene allora annullata con questo codice. Non è tra
+gli errori per cui la pagina di errore di Chromium ha un testo specifico,
+quindi la pagina mostra il titolo generico *"Impossibile raggiungere il sito"*
+con il codice sotto.
+
+<Handshake
+  caption="Dove viene sollevato ERR_SSL_CLIENT_AUTH_CERT_NEEDED"
+  steps={[
+    { from: 'Chromium', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Chromium', label: 'ServerHello, Certificate, CertificateRequest (nomi delle CA accettate)' },
+    { from: 'Chromium', label: "Nessun certificato ancora scelto per questo host: handshake in pausa, al browser viene chiesto di sceglierne uno" },
+    { from: 'Chromium', label: 'Nessuno può mostrare il selettore o rispondere al suo posto: richiesta annullata (ERR_SSL_CLIENT_AUTH_CERT_NEEDED)', fails: true },
+  ]}
+/>
+
+## Cause comuni
+
+- **La richiesta non ha una scheda.** Un service worker o un altro contesto in
+  background contatta un server che chiede un certificato. Se il certificato
+  non può essere scelto in automatico e non c'è una scheda in cui mostrare il
+  selettore, Chrome annulla la richiesta. Per le richieste in background di
+  un'estensione c'è un'eccezione: se non esiste alcun certificato client, la
+  richiesta prosegue senza.
+- **La scheda non può mostrare il selettore.** Non tutte le schede possono
+  ospitare la finestra di dialogo. Chrome rinuncia alla richiesta piuttosto
+  che mostrare un selettore non legato a nessuna pagina.
+- **Il client è costruito sullo stack di rete di Chromium e non risponde mai
+  alla domanda.** Nella libreria di rete di Chromium, un programma che non
+  gestisce le richieste di certificato le annulla proprio con questo codice.
+  Un browser incorporato, o uno strumento basato su quella libreria senza la
+  scelta del certificato, fallisce su ogni server che lo chiede.
+
+## Come risolverlo
+
+**1. Verifica che il server lo chieda, e per quale CA.** Collegati con il
+certificato client che ti aspetti di usare:
+
+```bash
+openssl s_client -connect app.example.com:443 -servername app.example.com \
+  -cert client.crt -key client.key </dev/null
+```
+
+Sotto *"Acceptable client certificate CA names"* l'output elenca le CA che il
+server accetta. Chromium propone solo certificati che risalgono a uno di quei
+nomi, e solo certificati non scaduti.
+
+**2. Rispondi alla domanda una volta, in una scheda.** Apri lo stesso host e
+la stessa porta come pagina normale in una scheda e scegli il certificato nel
+selettore. Chromium ricorda la scelta per host e porta, e le richieste
+successive verso lo stesso server, comprese quelle in background, la usano
+senza chiedere di nuovo.
+
+**3. Se il selettore non compare, controlla l'archivio dei certificati.** Se
+nessun certificato corrisponde ai nomi delle CA e supera il controllo delle
+date, Chromium non ne invia nessuno e a quel punto il server rifiuta
+l'handshake. Quello si presenta come `ERR_BAD_SSL_CLIENT_AUTH_CERT`, che ha
+una pagina sua.
+
+**4. In un client incorporato, gestisci la richiesta.** Un'applicazione
+costruita sullo stack di rete di Chromium deve rispondere da sé alle
+richieste di certificato. Si fa nel codice dell'applicazione. Nessuna
+impostazione del server lo cambia.
+
+## Evitare che si ripresenti
+
+Questo errore riguarda il browser che non riesce a chiedere quale certificato
+inviare. Da dove venga il certificato è un'altra questione. La parte di
+CertMate è il certificato stesso. Emette certificati client dalla sua
+autorità di certificazione integrata, con l'extended key usage `clientAuth`
+che Chromium richiede su macOS e Windows, e fornisce ciascuno come bundle `.pfx` cifrato
+(certificato, chiave privata e certificato della CA). Quando il file delle CA client del
+server è il certificato della CA di CertMate, il certificato nel browser viene
+dalla stessa fonte, ed è uno che il server elenca come accettabile.
+
+Le richieste in background smettono di fallire quando il certificato è
+nell'archivio del browser ed è stato scelto in una scheda per quell'host.
+Come emettere, scaricare, rinnovare e revocare questi certificati è spiegato
+in [Client Certificates](/docs/client-certificates.html).
+
+## Errori correlati
+
+- `ERR_BAD_SSL_CLIENT_AUTH_CERT`: l'handshake è andato avanti e il server ha
+  rifiutato il certificato, o la sua assenza.
+- `SSL_ERROR_BAD_CERT_ALERT`: come Firefox segnala un certificato client che
+  il server non è riuscito a verificare.
+- `ERR_SSL_PROTOCOL_ERROR`: l'handshake è fallito per un motivo diverso dal
+  certificato client.

@@ -1,0 +1,136 @@
+---
+title: "ERR_BAD_SSL_CLIENT_AUTH_CERT"
+errorCode: "ERR_BAD_SSL_CLIENT_AUTH_CERT"
+description: "Risolvi ERR_BAD_SSL_CLIENT_AUTH_CERT di Chromium: il server ha rifiutato il certificato client, o non ne ha ricevuto. Come capire quale dei due."
+summary: "Il server ha chiuso l'handshake per il certificato client: non ne ha ricevuto nessuno, o non è riuscito a verificare quello ricevuto. Chromium segnala ogni rifiuto di questo tipo con questo unico codice."
+browsers: ["Chrome", "Edge", "Brave", "Chromium"]
+order: 16
+updated: "2026-09-24"
+---
+import Handshake from '~/components/Handshake.astro';
+
+## Cosa significa
+
+Chromium definisce `ERR_BAD_SSL_CLIENT_AUTH_CERT` (errore -117) come
+*"l'handshake SSL è fallito a causa di un certificato client errato o
+mancante."* La pagina dice *"Accesso a example.com negato"* e *"example.com
+non ha accettato il tuo certificato di accesso, oppure potrebbe non esserne
+stato fornito uno."*
+
+Quell'*"oppure"* va preso alla lettera. Chromium riconduce a questo unico
+codice un'intera famiglia di alert TLS inviati dal server: `bad_certificate`,
+`unsupported_certificate`, `certificate_revoked`, `certificate_expired`,
+`certificate_unknown`, `unknown_ca`, `access_denied` e
+`certificate_required`. Segnala con questo codice anche un generico
+`handshake_failure`, quando il server aveva chiesto un certificato e Chromium
+non ne ha inviato nessuno. Firefox mostra ciascuno di questi alert con un
+codice suo. Chromium no, quindi il primo lavoro è capire quale sia stato.
+
+<Handshake
+  caption="Dove viene sollevato ERR_BAD_SSL_CLIENT_AUTH_CERT"
+  steps={[
+    { from: 'Chromium', to: 'Server', label: 'ClientHello' },
+    { from: 'Server', to: 'Chromium', label: 'ServerHello, Certificate, CertificateRequest (nomi delle CA accettate)' },
+    { from: 'Chromium', to: 'Server', label: 'Certificate (quello scelto, o un messaggio vuoto)' },
+    { from: 'Server', label: 'Controlla il certificato rispetto alla sua CA client: nessun certificato, o non verificabile' },
+    { from: 'Server', to: 'Chromium', label: 'Alert (bad_certificate, unknown_ca, certificate_required, ...): ERR_BAD_SSL_CLIENT_AUTH_CERT', fails: true },
+  ]}
+/>
+
+## Cause comuni
+
+- **Non è stato inviato alcun certificato.** Non ce n'è nessuno installato, o
+  nessuno è idoneo. Chromium propone solo certificati non scaduti che
+  risalgono a uno dei nomi di CA elencati dal server nella sua richiesta. Se
+  nessuno è idoneo, prosegue senza certificato e non mostra alcun selettore.
+  Chiudere il selettore senza scegliere ha lo stesso effetto.
+- **Il certificato è stato emesso da una CA di cui il server non si fida.**
+  Il file delle CA client del server contiene un'altra CA, o una copia più
+  vecchia di quella giusta. È l'alert `unknown_ca`.
+- **Il certificato è scaduto o è stato revocato.** È scaduto mentre restava
+  nell'archivio del browser, oppure il server ha caricato una CRL che lo
+  elenca.
+- **Il certificato non è per l'autenticazione client.** Un certificato senza
+  l'extended key usage `clientAuth` viene rifiutato dai server che lo
+  controllano.
+- **Una regola di accesso ha detto no.** Il certificato è valido, ma
+  l'applicazione o il proxy dietro rifiuta quell'identità.
+
+Un caso che sembra questo e non lo è: il server HTTP di nginx non chiude
+l'handshake per un certificato client. Completa l'handshake e risponde
+`400 No required SSL certificate was sent` oppure `400 The SSL certificate
+error`. Se ricevi questo codice da un sito servito da nginx, l'handshake è
+stato rifiutato da qualcos'altro, per esempio un load balancer o un proxy
+davanti.
+
+## Come risolverlo
+
+**1. Riproduci fuori dal browser, con il certificato che dovrebbe funzionare:**
+
+```bash
+openssl s_client -connect app.example.com:443 -servername app.example.com \
+  -cert client.crt -key client.key </dev/null
+```
+
+Se si connette, il server accetta quel certificato e il problema è nel
+browser: il certificato non è installato, è stato filtrato, o ne è stato
+inviato un altro. Se fallisce, OpenSSL stampa il nome dell'alert, per esempio
+`alert unknown ca` o `alert bad certificate`, che la pagina di Chromium non
+mostra. Nello stesso output, *"Acceptable client certificate CA names"*
+elenca le CA che il server ha chiesto.
+
+**2. Controlla il certificato:**
+
+```bash
+openssl x509 -in client.crt -noout -issuer -dates -ext extendedKeyUsage
+```
+
+L'emittente deve essere uno dei nomi di CA accettati, le date devono essere
+correnti e l'uso deve includere `TLS Web Client Authentication`.
+
+**3. Verificalo con il file di CA che il server usa davvero:**
+
+```bash
+openssl verify -CAfile /path/the/server/uses/client-ca.crt -purpose sslclient client.crt
+```
+
+Qualunque risposta diversa da `client.crt: OK` è il motivo del server, detto a
+parole.
+
+**4. Ricarica.** Quando il server rifiuta un certificato client, Chromium
+dimentica la scelta che aveva memorizzato per quell'host e quella porta. Il
+tentativo successivo chiede di nuovo, quindi puoi scegliere un certificato
+importato nel frattempo.
+
+## Evitare che si ripresenti
+
+Quasi tutti questi errori nascono da due cose che si allontanano: il file
+delle CA sul server e il certificato nel browser. CertMate li emette entrambi
+dalla stessa autorità di certificazione integrata. Ogni certificato client che
+firma è un certificato foglia, firmato direttamente da quella CA, con key
+usage `digitalSignature` ed extended key usage `clientAuth`. È disponibile
+come `.pfx` cifrato che contiene insieme certificato, chiave e certificato
+della CA.
+
+La scadenza è gestita da un job giornaliero che rinnova i certificati client
+30 giorni prima che scadano. Il rinnovo produce una chiave nuova e un
+certificato nuovo, e il nuovo `.pfx` deve comunque arrivare al browser;
+finché non arriva, viene presentato il certificato vecchio. La revoca è
+pubblicata come CRL su `/api/crl/download/pem`, che un server può scaricare
+senza credenziali. Ricostruire la CA è un'azione deliberata di un admin, mai
+l'effetto collaterale di una modifica alle impostazioni. Invalida ogni
+certificato firmato dalla vecchia CA, quindi i file delle CA client sui
+server vanno aggiornati nello stesso momento.
+
+Il flusso completo è in [Client Certificates](/docs/client-certificates.html).
+
+## Errori correlati
+
+- `ERR_SSL_CLIENT_AUTH_CERT_NEEDED`: il server ha chiesto un certificato e il
+  browser non ha potuto chiederti quale inviare.
+- `SSL_ERROR_BAD_CERT_ALERT`: Firefox, il server non è riuscito a verificare
+  il certificato ricevuto.
+- `SSL_ERROR_UNKNOWN_CA_ALERT`: Firefox, il server non si fida della CA che ha
+  emesso il certificato.
+- `ERR_SSL_PROTOCOL_ERROR`: ciò che Chromium segnala invece quando un server
+  invia `access_denied` senza aver mai chiesto un certificato.
