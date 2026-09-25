@@ -88,3 +88,6 @@ build/
 
 # Astro
 .astro/
+
+# Local SEO working notes (not tracked)
+seo/
