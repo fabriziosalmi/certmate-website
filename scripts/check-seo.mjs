@@ -1,9 +1,8 @@
 /**
  * The head gate, read from dist/ after the build.
  *
- * Every defect asserted here was present on 0540ca2 and is recorded in
- * seo/findings.md with the command that measured it. The point of the gate is
- * that each one can only come back through a failing build.
+ * Every defect asserted here was present on 0540ca2. The point of the gate
+ * is that each one can only come back through a failing build.
  *
  * It reads the built output rather than the sources. A test that reads
  * src/layouts/BaseLayout.astro proves the layout intends to emit a canonical;
@@ -300,7 +299,7 @@ if (!existsSync(join(DIST, 'favicon.ico'))) {
 if (problems.length) {
   console.error('\nSEO gate failed:\n');
   for (const problem of problems) console.error('  ' + problem);
-  console.error(`\n${problems.length} problem(s). See seo/findings.md for what each one costs.\n`);
+  console.error(`\n${problems.length} problem(s).\n`);
   process.exit(1);
 }
 
