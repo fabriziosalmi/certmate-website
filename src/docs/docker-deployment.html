@@ -104,7 +104,7 @@
   -v certmate_backups:/app/backups \
   fabriziosalmi/certmate:latest</code></pre>
             <p>Keep the <code>.env</code> file on the host. <code>.dockerignore</code> excludes every <code>.env</code> file from the build context, so configuration is supplied at run time and never baked into the image.</p>
-            <p>The web UI is then at <code>http://localhost:8000</code>, and the API documentation at <code>/docs/</code> and <code>/redoc/</code>.</p>
+            <p>The web UI is then at <code>http://localhost:8000</code>, and the API documentation at <code>/docs/</code> and <code>/redoc</code>.</p>
 
             <h2>Run with Docker Compose</h2>
             <p>The repository's <code>docker-compose.yml</code> builds the image from source; to use the published image instead, uncomment its <code>image:</code> line.</p>

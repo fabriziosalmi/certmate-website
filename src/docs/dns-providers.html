@@ -247,9 +247,15 @@
                 
                 <div class="provider-box">
                     <span class="badge badge-single">Single Account</span>
-                    <h4>Hetzner</h4>
+                    <h4>Hetzner (legacy DNS)</h4>
                     <p><strong>Credentials:</strong> API Token</p>
-                    <p>European cloud hosting.</p>
+                    <p>European cloud hosting. Hetzner's older DNS product; provider key <code>hetzner</code>.</p>
+                </div>
+                
+                <div class="provider-box">
+                    <h4>Hetzner Cloud</h4>
+                    <p><strong>Credentials:</strong> API Token</p>
+                    <p>Hetzner Cloud DNS (hcloud). A separate provider from the one above; provider key <code>hetzner-cloud</code>.</p>
                 </div>
                 
                 <div class="provider-box">
@@ -334,6 +340,12 @@
                     <h4>EfficientIP SOLIDserver</h4>
                     <p><strong>Credentials:</strong> Host, Username, Password, DNS Name</p>
                     <p>Enterprise DDI appliance, on-premises.</p>
+                </div>
+
+                <div class="provider-box">
+                    <h4>Custom Script</h4>
+                    <p><strong>Credentials:</strong> your own hook scripts</p>
+                    <p>Any provider not listed here. You supply an authentication hook (and optionally a cleanup hook) that creates and removes the DNS-01 TXT record; CertMate runs them around the ACME challenge. See <a href="custom-dns-script.html">Custom DNS Script</a>.</p>
                 </div>
             </div>
 

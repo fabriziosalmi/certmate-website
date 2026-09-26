@@ -137,7 +137,7 @@
         <section class="doc-content doc-content-wide">
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i>
-                Interactive Documentation: Visit <code>http://your-server:8000/docs/</code> for Swagger UI or <code>/redoc/</code> for ReDoc interface.
+                Interactive Documentation: Visit <code>http://your-server:8000/docs/</code> for Swagger UI or <code>/redoc</code> for ReDoc interface.
             </div>
 
             <h2>Authentication</h2>
@@ -150,7 +150,7 @@
             </div>
 
             <h3>API contract version</h3>
-            <p>Every response carries the <code>X-CertMate-API-Version</code> header, and <code>/health</code> reports the same value as <code>api_contract_version</code>. It changes only when the API surface does, so it is the value to check compatibility against; the release number, in <code>version</code>, moves on every patch. CertMate v2.35.0 serves contract <code>2.14</code>.</p>
+            <p>Every response carries the <code>X-CertMate-API-Version</code> header, and <code>/health</code> reports the same value as <code>api_contract_version</code>. It changes only when the API surface does, so it is the value to check compatibility against; the release number, in <code>version</code>, moves on every patch. CertMate v2.37.0 serves contract <code>2.20</code>.</p>
 
             <h2>Core Endpoints</h2>
 
@@ -516,10 +516,10 @@ echo "Certificate updated for ${DOMAIN}"</code></pre>
             <h2>OIDC / SSO endpoints (v2.7.0+)</h2>
             <p>Five dedicated routes carry the OIDC flow. They sit outside the bulk <code>/api/web/settings</code> POST so a scoped or operator-level caller cannot mutate identity-provider configuration through the general settings surface.</p>
             <ul>
-                <li><code>GET /api/auth/oidc/config</code> &mdash; current masked configuration (operator+).</li>
+                <li><code>GET /api/auth/oidc/config</code> &mdash; public, and deliberately so: it returns only <code>enabled</code>, <code>provider_name</code>, <code>login_url</code> and <code>post_logout_redirect_uri</code>, which is what the login page needs to decide whether to render an SSO button. It carries none of the configuration.</li>
                 <li><code>GET /api/auth/oidc/login</code> &mdash; start the Authorization Code + PKCE flow; redirects to the IdP.</li>
                 <li><code>GET /api/auth/oidc/callback</code> &mdash; IdP redirect target. Handles JIT vs. link-by-email provisioning, enforces <code>require_verified_email</code> on the email-match seam, and emits <code>oidc_user_link_refused</code> when refusing.</li>
-                <li><code>GET /api/auth/oidc/settings</code> &mdash; admin-only read of the unmasked configuration.</li>
+                <li><code>GET /api/auth/oidc/settings</code> &mdash; admin-only read of the configuration, with <code>client_secret</code> masked so a read-then-write round-trip preserves the stored value.</li>
                 <li><code>POST /api/auth/oidc/settings</code> &mdash; admin-only update. Audit log records the changed key names; <code>client_secret</code> rotation is detected from the raw payload (not the masked sentinel) so a SIEM keying on <code>sensitive_changed</code> sees real rotations and nothing else.</li>
             </ul>
 

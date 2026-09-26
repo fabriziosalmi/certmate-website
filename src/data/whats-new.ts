@@ -39,6 +39,38 @@ export interface UpdateCard {
 
 export const updates: UpdateCard[] = [
   {
+    badge: 'fix',
+    badgeLabel: 'v2.37.0',
+    icon: 'fa6-solid:magnifying-glass',
+    title: 'v2.37.0 - what a walk through it turned up',
+    description:
+      'No new capability, and a good deal corrected. Six of its seven changes came from walking through a running instance and from three issues opened by a user: a failed renewal can no longer be filtered out of your notifications, Renew and Reissue return immediately instead of holding the connection open for the whole issuance, a saved webhook shows the origin of its URL beside the masked field, inventory counters are neutral at zero, dates are written one way everywhere, and "0 days left" no longer means both hours-to-go and already-expired. API contract 2.20.',
+    date: 'September 2026',
+    released: '2026-09-26',
+    beforeUpgrading: [
+      'certificate_failed now bypasses the notification event filter and has no checkbox. If you had ticked any event, you will start receiving renewal-failure notifications you were not receiving before.',
+      'GET /api/notifications/config carries a new url_hint field per webhook: the origin of the saved URL. It is derived on read and ignored on write.',
+      'Known and not yet fixed: renaming a webhook deletes its saved URL and the save answers 200. Re-enter the URL in the same save.',
+    ],
+    href: releaseTag('v2.37.0'),
+  },
+  {
+    badge: 'feature',
+    badgeLabel: 'v2.36.0',
+    icon: 'fa6-solid:clipboard-check',
+    title: 'v2.36.0 - the reasons, checked',
+    description:
+      'Largely what happened when the written reasons behind the defensive code were read back against the code itself: several were not true, and two of the untrue ones were defects. Alongside that, renewal timing the CA can move (RFC 9773 ARI, which can only bring a renewal forward), probes that work from behind an HTTP proxy, Google Chat notifications contributed from outside, webhooks that can carry the certificate itself, and the dashboard header folded into the topbar. API contract 2.19.',
+    date: 'September 2026',
+    released: '2026-09-25',
+    beforeUpgrading: [
+      'A renewal can now start earlier than your threshold when the CA says so. The configured threshold remains the backstop: ARI is consulted after it declines, never before.',
+      'modules/core/factory.py moved to modules/factory.py.',
+      'The login no longer reveals whether a username exists.',
+    ],
+    href: releaseTag('v2.36.0'),
+  },
+  {
     badge: 'feature',
     badgeLabel: 'v2.35.0',
     icon: 'fa6-solid:scale-balanced',
