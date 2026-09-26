@@ -135,14 +135,14 @@
 
         <section class="doc-content doc-content-wide">
             <h2>Supported DNS Providers</h2>
-            <p>CertMate supports {{PROVIDER_COUNT}} DNS providers for the ACME DNS-01 challenge. Most of them can hold more than one account.</p>
+            <p>CertMate supports {{PROVIDER_COUNT}} DNS providers for the ACME DNS-01 challenge. Every one of them can hold more than one account.</p>
 
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i>
-                <strong>Multi-Account Support:</strong> Providers without a <em>Single Account</em> badge support multiple accounts for environment separation (prod/staging/dev), multi-region deployments, and permission scoping.
+                <strong>Multi-Account Support:</strong> Every provider on this page supports multiple accounts &mdash; for environment separation (prod/staging/dev), multi-region deployments, and permission scoping. There is no per-provider limit.
             </div>
 
-            <h3>🏢 Enterprise Multi-Account Providers</h3>
+            <h3>🏢 Widely used providers</h3>
             <div class="provider-grid">
                 <div class="provider-box">
                     <h4><i class="fas fa-cloud" style="color: #f6821f;"></i> Cloudflare</h4>
@@ -197,56 +197,48 @@
             <h3>Additional Providers</h3>
             <div class="provider-grid">
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
                     <h4>Linode</h4>
                     <p><strong>Credentials:</strong> API Key</p>
                     <p>Cloud hosting with DNS management.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
                     <h4>Gandi</h4>
                     <p><strong>Credentials:</strong> API Token</p>
                     <p>European domain registrar and hosting.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
                     <h4>OVH</h4>
                     <p><strong>Credentials:</strong> API Credentials</p>
                     <p>Major European hosting provider.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
                     <h4>Namecheap</h4>
                     <p><strong>Credentials:</strong> Username, API Key</p>
                     <p>Popular domain registrar.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
                     <h4>Vultr</h4>
                     <p><strong>Credentials:</strong> API Key</p>
                     <p>Global cloud infrastructure.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
                     <h4>DNS Made Easy</h4>
                     <p><strong>Credentials:</strong> API Key, Secret</p>
                     <p>Enterprise DNS management.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
                     <h4>NS1</h4>
                     <p><strong>Credentials:</strong> API Key</p>
                     <p>Intelligent DNS platform.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
                     <h4>Hetzner (legacy DNS)</h4>
                     <p><strong>Credentials:</strong> API Token</p>
                     <p>European cloud hosting. Hetzner's older DNS product; provider key <code>hetzner</code>.</p>
@@ -259,84 +251,72 @@
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
                     <h4>Porkbun</h4>
                     <p><strong>Credentials:</strong> API Key, Secret</p>
                     <p>Domain registrar with DNS.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
                     <h4>GoDaddy</h4>
                     <p><strong>Credentials:</strong> API Key, Secret</p>
                     <p>Popular domain registrar.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
                     <h4>Hurricane Electric</h4>
                     <p><strong>Credentials:</strong> Username, Password</p>
                     <p>Free DNS hosting service.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
                     <h4>Dynu</h4>
                     <p><strong>Credentials:</strong> API Token</p>
                     <p>Dynamic DNS service.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
                     <h4>ArvanCloud</h4>
                     <p><strong>Credentials:</strong> API Key</p>
                     <p>Iranian cloud provider.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
                     <h4>Infomaniak</h4>
                     <p><strong>Credentials:</strong> API Token</p>
                     <p>Swiss ISP and cloud provider.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
                     <h4>ACME-DNS</h4>
                     <p><strong>Credentials:</strong> JSON Config</p>
                     <p>Generic ACME-DNS server support.</p>
                 </div>
 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
                     <h4>DuckDNS</h4>
                     <p><strong>Credentials:</strong> API Token</p>
                     <p>Free dynamic DNS.</p>
                 </div>
 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
                     <h4>deSEC</h4>
                     <p><strong>Credentials:</strong> API Token</p>
                     <p>Free, non-profit DNS hosting in the EU, DNSSEC by default.</p>
                 </div>
 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
                     <h4>Scaleway</h4>
                     <p><strong>Credentials:</strong> Application Token</p>
                     <p>European cloud provider.</p>
                 </div>
 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
                     <h4>Akamai EdgeDNS</h4>
                     <p><strong>Credentials:</strong> Client Token, Client Secret, Access Token, Host</p>
                     <p>Enterprise CDN and authoritative DNS.</p>
                 </div>
 
                 <div class="provider-box">
-                    <span class="badge badge-single">Single Account</span>
                     <h4>EfficientIP SOLIDserver</h4>
                     <p><strong>Credentials:</strong> Host, Username, Password, DNS Name</p>
                     <p>Enterprise DDI appliance, on-premises.</p>
