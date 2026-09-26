@@ -247,9 +247,15 @@
                 
                 <div class="provider-box">
                     <span class="badge badge-single">Account singolo</span>
-                    <h4>Hetzner</h4>
+                    <h4>Hetzner (DNS legacy)</h4>
                     <p><strong>Credenziali:</strong> API Token</p>
-                    <p>Hosting cloud europeo.</p>
+                    <p>Hosting cloud europeo. Il prodotto DNS più vecchio di Hetzner; chiave del provider <code>hetzner</code>.</p>
+                </div>
+                
+                <div class="provider-box">
+                    <h4>Hetzner Cloud</h4>
+                    <p><strong>Credenziali:</strong> API Token</p>
+                    <p>Hetzner Cloud DNS (hcloud). È un provider distinto dal precedente; chiave del provider <code>hetzner-cloud</code>.</p>
                 </div>
                 
                 <div class="provider-box">
@@ -334,6 +340,12 @@
                     <h4>EfficientIP SOLIDserver</h4>
                     <p><strong>Credenziali:</strong> Host, Username, Password, DNS Name</p>
                     <p>Appliance DDI enterprise, on-premises.</p>
+                </div>
+
+                <div class="provider-box">
+                    <h4>Custom Script</h4>
+                    <p><strong>Credenziali:</strong> i tuoi script di hook</p>
+                    <p>Qualsiasi provider non elencato qui. Fornisci uno script di autenticazione (e, se vuoi, uno di pulizia) che crea e rimuove il record TXT per DNS-01; CertMate li esegue attorno alla challenge ACME.</p>
                 </div>
             </div>
 

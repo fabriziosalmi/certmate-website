@@ -114,7 +114,7 @@
 
             <h3>Filtering</h3>
             <p>There are two filters, and an event must pass both. <strong>Notify on Events</strong> at the top of the page applies to every channel; <strong>Events (leave empty for all)</strong> on each webhook applies to that webhook. An empty list means all events.</p>
-            <p>Both filters offer the same seven events: <code>certificate_created</code>, <code>certificate_renewed</code>, <code>certificate_deployed</code>, <code>certificate_expiring</code>, <code>certificate_revoked</code>, <code>certificate_failed</code> and <code>domain_expiring</code>. <code>deploy_hook_failed</code> and <code>certificate_deploy_incomplete</code> have no checkbox because they are delivered whatever either filter says, so a filter cannot silence a failed deployment.</p>
+            <p>Both filters offer the same six events: <code>certificate_created</code>, <code>certificate_renewed</code>, <code>certificate_deployed</code>, <code>certificate_expiring</code>, <code>certificate_revoked</code> and <code>domain_expiring</code>. <code>certificate_failed</code>, <code>deploy_hook_failed</code> and <code>certificate_deploy_incomplete</code> have no checkbox because they are delivered whatever either filter says, so a filter cannot silence a renewal that did not happen or a deployment that did not arrive.</p>
 
             <h3>Expiry warnings</h3>
             <ul>
