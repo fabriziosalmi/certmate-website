@@ -135,14 +135,14 @@
 
         <section class="doc-content doc-content-wide">
             <h2>Provider DNS supportati</h2>
-            <p>CertMate supporta {{PROVIDER_COUNT}} provider DNS per la challenge DNS-01 di ACME. La maggior parte può avere più di un account.</p>
+            <p>CertMate supporta {{PROVIDER_COUNT}} provider DNS per la challenge DNS-01 di ACME. Ognuno di essi può avere più di un account.</p>
 
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i>
-                <strong>Supporto multi-account:</strong> i provider senza il badge <em>Single Account</em> supportano più account per separare gli ambienti (prod/staging/dev), per deployment multi-regione e per limitare i permessi.
+                <strong>Supporto multi-account:</strong> ogni provider di questa pagina supporta pi&ugrave; account &mdash; per separare gli ambienti (prod/staging/dev), per deployment multi-regione e per limitare i permessi. Non c&rsquo;&egrave; alcun limite per provider.
             </div>
 
-            <h3>🏢 Provider enterprise multi-account</h3>
+            <h3>🏢 Provider più usati</h3>
             <div class="provider-grid">
                 <div class="provider-box">
                     <h4><i class="fas fa-cloud" style="color: #f6821f;"></i> Cloudflare</h4>
@@ -197,56 +197,48 @@
             <h3>Altri provider</h3>
             <div class="provider-grid">
                 <div class="provider-box">
-                    <span class="badge badge-single">Account singolo</span>
                     <h4>Linode</h4>
                     <p><strong>Credenziali:</strong> API Key</p>
                     <p>Hosting cloud con gestione DNS.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Account singolo</span>
                     <h4>Gandi</h4>
                     <p><strong>Credenziali:</strong> API Token</p>
                     <p>Registrar di domini e hosting europeo.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Account singolo</span>
                     <h4>OVH</h4>
                     <p><strong>Credenziali:</strong> Credenziali API</p>
                     <p>Grande provider di hosting europeo.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Account singolo</span>
                     <h4>Namecheap</h4>
                     <p><strong>Credenziali:</strong> Username, API Key</p>
                     <p>Registrar di domini molto diffuso.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Account singolo</span>
                     <h4>Vultr</h4>
                     <p><strong>Credenziali:</strong> API Key</p>
                     <p>Infrastruttura cloud globale.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Account singolo</span>
                     <h4>DNS Made Easy</h4>
                     <p><strong>Credenziali:</strong> API Key, Secret</p>
                     <p>Gestione DNS enterprise.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Account singolo</span>
                     <h4>NS1</h4>
                     <p><strong>Credenziali:</strong> API Key</p>
                     <p>Piattaforma DNS intelligente.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Account singolo</span>
                     <h4>Hetzner (DNS legacy)</h4>
                     <p><strong>Credenziali:</strong> API Token</p>
                     <p>Hosting cloud europeo. Il prodotto DNS più vecchio di Hetzner; chiave del provider <code>hetzner</code>.</p>
@@ -259,84 +251,72 @@
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Account singolo</span>
                     <h4>Porkbun</h4>
                     <p><strong>Credenziali:</strong> API Key, Secret</p>
                     <p>Registrar di domini con DNS.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Account singolo</span>
                     <h4>GoDaddy</h4>
                     <p><strong>Credenziali:</strong> API Key, Secret</p>
                     <p>Registrar di domini molto diffuso.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Account singolo</span>
                     <h4>Hurricane Electric</h4>
                     <p><strong>Credenziali:</strong> Username, Password</p>
                     <p>Servizio gratuito di hosting DNS.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Account singolo</span>
                     <h4>Dynu</h4>
                     <p><strong>Credenziali:</strong> API Token</p>
                     <p>Servizio di DNS dinamico.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Account singolo</span>
                     <h4>ArvanCloud</h4>
                     <p><strong>Credenziali:</strong> API Key</p>
                     <p>Provider cloud iraniano.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Account singolo</span>
                     <h4>Infomaniak</h4>
                     <p><strong>Credenziali:</strong> API Token</p>
                     <p>ISP e provider cloud svizzero.</p>
                 </div>
                 
                 <div class="provider-box">
-                    <span class="badge badge-single">Account singolo</span>
                     <h4>ACME-DNS</h4>
                     <p><strong>Credenziali:</strong> Configurazione JSON</p>
                     <p>Supporto generico per server ACME-DNS.</p>
                 </div>
 
                 <div class="provider-box">
-                    <span class="badge badge-single">Account singolo</span>
                     <h4>DuckDNS</h4>
                     <p><strong>Credenziali:</strong> API Token</p>
                     <p>DNS dinamico gratuito.</p>
                 </div>
 
                 <div class="provider-box">
-                    <span class="badge badge-single">Account singolo</span>
                     <h4>deSEC</h4>
                     <p><strong>Credenziali:</strong> API Token</p>
                     <p>Hosting DNS gratuito e senza scopo di lucro nell'UE, con DNSSEC attivo per impostazione predefinita.</p>
                 </div>
 
                 <div class="provider-box">
-                    <span class="badge badge-single">Account singolo</span>
                     <h4>Scaleway</h4>
                     <p><strong>Credenziali:</strong> Application Token</p>
                     <p>Provider cloud europeo.</p>
                 </div>
 
                 <div class="provider-box">
-                    <span class="badge badge-single">Account singolo</span>
                     <h4>Akamai EdgeDNS</h4>
                     <p><strong>Credenziali:</strong> Client Token, Client Secret, Access Token, Host</p>
                     <p>CDN enterprise e DNS autoritativo.</p>
                 </div>
 
                 <div class="provider-box">
-                    <span class="badge badge-single">Account singolo</span>
                     <h4>EfficientIP SOLIDserver</h4>
                     <p><strong>Credenziali:</strong> Host, Username, Password, DNS Name</p>
                     <p>Appliance DDI enterprise, on-premises.</p>
