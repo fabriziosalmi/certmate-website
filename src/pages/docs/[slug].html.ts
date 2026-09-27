@@ -32,12 +32,24 @@ import {
 import { applyShell, renderDocsIndex } from '~/lib/docs-shell';
 import { ogImageFor } from '~/lib/og';
 import { buildHead } from '../../lib/seo';
+import { renderDocPage } from '~/lib/docs-markdown';
 import { PROVIDER_COUNT } from '../../data/site';
 
 // ?raw through Vite rather than readFileSync: the html becomes a build input,
 // so editing one in `astro dev` reloads the page instead of serving a stale
 // copy from the first request.
 const SOURCES = import.meta.glob('../../docs/*.html', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+
+// The same treatment for the Markdown a page is migrated to. A page is
+// migrated when `src/data/docs.ts` gives it a `hero` and this directory has its
+// file; until then it is served from the hand-written HTML above, at the same
+// URL, with the same shell. That is what makes this a page at a time rather
+// than one change to twenty-six indexed pages at once.
+const MARKDOWN = import.meta.glob('../../docs-md/*.md', {
   query: '?raw',
   import: 'default',
   eager: true,
@@ -76,9 +88,30 @@ function neighbours(slug: string) {
   return { prev: link(DOC_READING_ORDER_SLUGS[i - 1]), next: link(DOC_READING_ORDER_SLUGS[i + 1]) };
 }
 
-export const GET: APIRoute = ({ props }) => {
+export const GET: APIRoute = async ({ props }) => {
   const page = props.page as DocPage;
-  const source = SOURCES[`../../docs/${page.slug}.html`];
+  const markdown = MARKDOWN[`../../docs-md/${page.slug}.md`];
+
+  // A `hero` without Markdown, or Markdown without a `hero`, is half a
+  // migration: the page would either lose its title or silently keep serving
+  // the copy it was migrated away from. Both are a broken build rather than
+  // something to find in production.
+  if ((page.hero === undefined) !== (markdown === undefined)) {
+    throw new Error(
+      `${page.slug}: src/docs-md/${page.slug}.md and the hero in ` +
+      'src/data/docs.ts have to arrive together',
+    );
+  }
+
+  const source = markdown !== undefined
+    ? await renderDocPage(markdown, {
+        title: page.title,
+        hero: page.hero!,
+        // Which cross-references can stay on this site, and which have to
+        // go to GitHub. DOC_PAGES is the list of what gets published.
+        published: new Set(DOC_PAGES.map((entry) => entry.slug)),
+      })
+    : SOURCES[`../../docs/${page.slug}.html`];
   if (source === undefined) {
     // A page listed in DOC_PAGES with no file is a broken build, not a 404 to
     // discover in production.
