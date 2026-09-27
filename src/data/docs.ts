@@ -26,6 +26,25 @@
  * description. When a page's body is rewritten, its description is rewritten
  * with it.
  */
+/**
+ * What a Markdown page needs and `src/data/docs.ts` is the only place to put it.
+ *
+ * The hand-written pages carry their hero inside the HTML. A page built from
+ * synced Markdown cannot: that file is a byte-identical copy of the one in the
+ * application repository, and anything site-specific added to it would turn the
+ * sync check from a hash comparison into a merge. So the hero lives here.
+ *
+ * Its absence is what tells the endpoint a page has not been migrated yet.
+ */
+export type DocHero = {
+  /** The `<h1>` in the hero. Not `title`, which carries the site suffix. */
+  heading: string;
+  /** The line under it. Not `description`, which is written for search. */
+  subtitle: string;
+  /** Font Awesome class, as the hand-written pages use. */
+  icon: string;
+};
+
 export type DocPage = {
   /** File name without the extension, and the published URL: /docs/<slug>.html */
   slug: string;
@@ -33,6 +52,8 @@ export type DocPage = {
   title: string;
   /** Hand written. What this page actually contains. */
   description: string;
+  /** Set once the page is built from `src/docs-md/<slug>.md`. */
+  hero?: DocHero;
 };
 
 export const DOC_PAGES: DocPage[] = [
@@ -185,6 +206,14 @@ export const DOC_PAGES: DocPage[] = [
     title: 'Custom Script DNS Provider - CertMate Documentation',
     description:
       'Use a DNS service CertMate has no provider for: the hook script contract, path rules, propagation wait, apex plus wildcard, and a curl example.',
+    // First page built from synced Markdown. The heading and subtitle are the
+    // ones the hand-written page carried, so the rendered page opens the same.
+    hero: {
+      heading: 'Custom Script DNS Provider',
+      subtitle:
+        'Issue DNS-01 certificates through a DNS service CertMate has no provider for, by giving it a script that creates and removes the TXT record.',
+      icon: 'fas fa-code',
+    },
   },
   {
     slug: 'notifications',
