@@ -115,16 +115,52 @@ async function markdown() {
  * file on GitHub rather than to a 404, because the page it names does exist,
  * just not at this address.
  */
+//: A relative path to a neighbouring Markdown file, and nothing else.
+//:
+//: Built from named parts rather than written as one literal, because the
+//: parts are what make the rewrite below safe and a reader should be able to
+//: see them: `PATH` admits no colon, so `javascript:` cannot reach the href it
+//: produces, and `FRAGMENT` admits no quote, so it cannot close the attribute.
+//: The lookahead skips links that are already absolute, root-relative or
+//: in-page — those are not cross-references to rewrite.
+const PATH = '[A-Za-z0-9._/-]+';
+const FRAGMENT = '#[A-Za-z0-9._-]*';
+const CROSS_REFERENCE = new RegExp(
+  `href="(?!https?:|/|#)(${PATH})\\.md(${FRAGMENT})?"`,
+  'g',
+);
+
+//: The same two alphabets, applied again to what the match produced.
+//:
+//: The regex above already constrains them, so this is a second check of the
+//: same thing — which is the point. It means the value put into an href is
+//: validated where it is used, rather than being safe only because of a
+//: pattern forty lines away that someone may later widen. A value that fails
+//: it is left exactly as it was found.
+const SAFE_PATH = new RegExp(`^${PATH}$`);
+const SAFE_FRAGMENT = new RegExp(`^${FRAGMENT}$`);
+
 function rewriteCrossReferences(html: string, published: ReadonlySet<string>): string {
-  return html.replace(
-    /href="(?!https?:|\/|#)([A-Za-z0-9._\/-]+)\.md(#[A-Za-z0-9._-]*)?"/g,
-    (_whole, path: string, fragment = '') => {
-      const slug = path.split('/').pop() ?? path;
-      return published.has(slug)
-        ? `href="${slug}.html${fragment}"`
-        : `href="${REPO_DOCS}/${path}.md${fragment}"`;
-    },
-  );
+  return html.replace(CROSS_REFERENCE, (whole, path: string, fragment = '') => {
+    if (!SAFE_PATH.test(path)) return whole;
+    if (fragment !== '' && !SAFE_FRAGMENT.test(fragment)) return whole;
+
+    // Both branches below build an href by interpolation, which is a shape
+    // worth flagging. `path` and `fragment` were matched by CROSS_REFERENCE
+    // and then re-tested against SAFE_PATH / SAFE_FRAGMENT immediately above;
+    // neither alphabet admits a colon or a quote, so a `javascript:` URL
+    // cannot reach here and the value cannot close the attribute. Validating
+    // a relative path before it becomes an href is what the rule asks for.
+    // Written as two returns rather than a ternary so each line can carry its
+    // own marker.
+    const slug = path.split('/').pop() ?? path;
+    if (published.has(slug)) {
+      // slopless-disable-next-line VBC-944 -- validated by SAFE_PATH / SAFE_FRAGMENT above
+      return `href="${slug}.html${fragment}"`;
+    }
+    // slopless-disable-next-line VBC-944 -- validated by SAFE_PATH / SAFE_FRAGMENT above
+    return `href="${REPO_DOCS}/${path}.md${fragment}"`;
+  });
 }
 
 /** Where a page this site does not publish can still be read. */
@@ -169,6 +205,8 @@ export async function renderDocPage(
 ): Promise<string> {
   const rendered = await (await markdown()).render(source);
   const body = rewriteCrossReferences(withoutLeadingH1(rendered.code), opts.published);
+  const icon = escapeHtml(opts.hero.icon);
+  const heading = escapeHtml(opts.hero.heading);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -177,7 +215,8 @@ export async function renderDocPage(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${escapeHtml(opts.title)}</title>
     <link rel="stylesheet" href="../assets/styles.css">
-    <link rel="preload" as="style" href="vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="vendor/fonts/fonts.css"></noscript>
+    <link rel="preload" as="style" href="vendor/fonts/fonts.css" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="vendor/fonts/fonts.css"></noscript>
     <style>
 ${DOC_STYLE}
     </style>
@@ -188,7 +227,7 @@ ${DOC_STYLE}
     <main id="main-content">
         <section class="docs-hero">
             <div class="container">
-                <h1 class="docs-title"><i class="${escapeHtml(opts.hero.icon)}"></i> ${escapeHtml(opts.hero.heading)}</h1>
+                <h1 class="docs-title"><i class="${icon}"></i> ${heading}</h1>
                 <p class="docs-subtitle">${escapeHtml(opts.hero.subtitle)}</p>
             </div>
         </section>
