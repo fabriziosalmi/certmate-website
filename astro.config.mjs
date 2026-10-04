@@ -1,8 +1,8 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-import tailwind from '@astrojs/tailwind';
 import sitemap from '@astrojs/sitemap';
 import mdx from '@astrojs/mdx';
+import { unified } from '@astrojs/markdown-remark';
 import icon from 'astro-icon';
 import rehypeErrorLinks from './src/lib/rehype-error-links.mjs';
 // The documentation pages are published by src/pages/docs/[slug].html.ts,
@@ -34,7 +34,6 @@ if (isShallowCheckout()) {
 export default defineConfig({
   site: 'https://www.certmate.org',
   integrations: [
-    tailwind({ applyBaseStyles: false }),
     // customPages: the shipped documentation is built by an endpoint, which
     // the integration does not discover. docUrl() gives the index page as
     // /docs/ rather than /docs/index.html, so the sitemap advertises one URL
@@ -56,9 +55,8 @@ export default defineConfig({
         return item;
       },
     }),
-    // Inline error codes in the error and deploy pages link to their page.
-    // See src/lib/rehype-error-links.mjs.
-    mdx({ rehypePlugins: [rehypeErrorLinks] }),
+    // MDX inherits the Markdown processor below, rehype plugin included.
+    mdx(),
     // astro-icon inlines an SVG for every <Icon name="fa6-solid:X" />
     // call at build time. Only the icons we use end up in the output
     // — drops the entire Font Awesome CDN dependency (76 KB of
@@ -72,10 +70,24 @@ export default defineConfig({
       },
     }),
   ],
-  // Code in the error and deploy pages. github-dark drew comments #6A737D on
-  // #24292E, 3.0:1, which Lighthouse flagged on every page with a commented
-  // command; github-dark-default draws them #8B949E on #0D1117.
+  // Astro 5's whitespace handling. Astro 7 changed the default to 'jsx', React's
+  // rules, which drop a line break beside an element or an expression: the
+  // footer of every page read "Built byFabrizio Salmiandcontributors." and
+  // ninety pages changed text with nothing failing. true is the lossless
+  // compression this site was built with. scripts/check-facts.mjs refuses a
+  // config without it.
+  compressHTML: true,
   markdown: {
+    // Inline error codes in the error and deploy pages link to their page
+    // (src/lib/rehype-error-links.mjs). Astro 7's default processor, satteri,
+    // runs no remark or rehype plugins: left at the default, the 262 links the
+    // plugin adds disappeared with nothing in the build log. unified is also
+    // the processor Astro 5 used, so the pages render through the same
+    // pipeline as before. scripts/check-facts.mjs refuses a config without it.
+    processor: unified({ rehypePlugins: [rehypeErrorLinks] }),
+    // Code in the error and deploy pages. github-dark drew comments #6A737D on
+    // #24292E, 3.0:1, which Lighthouse flagged on every page with a commented
+    // command; github-dark-default draws them #8B949E on #0D1117.
     shikiConfig: { theme: 'github-dark-default' },
   },
   build: {
