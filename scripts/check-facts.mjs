@@ -239,6 +239,38 @@ for (const relativePath of PLAIN_TEXT_PROSE) {
   });
 }
 
+// Astro's whitespace handling.
+//
+// Astro 7 changed the default of compressHTML from lossless compression to
+// 'jsx', React's whitespace rules, which drop a line break beside an element
+// or an expression. Built that way, ninety pages changed text and nothing
+// failed: the footer of every page read "Built byFabrizio Salmiandcontributors.",
+// the Italian pages "ne supporta29". Only comparing the rendered text of every
+// page with the Astro 5 build showed it, and with compressHTML: true that
+// comparison is identical on all 121 pages. So the setting is pinned here
+// rather than left to the next default.
+{
+  const config = readFileSync(join(ROOT, 'astro.config.mjs'), 'utf8');
+  if (!/^\s*compressHTML:\s*true,?\s*$/m.test(config)) {
+    problems.push(
+      'astro.config.mjs  compressHTML must be true. The default since Astro 7 ' +
+        "('jsx') drops line breaks beside elements and expressions, and words " +
+        'run together across the site.'
+    );
+  }
+  // The same upgrade, the same silence: Astro 7's default Markdown processor
+  // runs no rehype plugins. Built without this line, the links from an error
+  // code to its page fell from 829 to 567 (the 262 that rehype-error-links
+  // adds) and the build log said nothing at all.
+  if (!/processor:\s*unified\(\{\s*rehypePlugins:\s*\[[^\]]*rehypeErrorLinks/.test(config)) {
+    problems.push(
+      'astro.config.mjs  markdown.processor must be unified({ rehypePlugins: ' +
+        "[rehypeErrorLinks, ...] }). Astro 7's default processor ignores rehype " +
+        'plugins, and the links from error codes to their pages vanish.'
+    );
+  }
+}
+
 if (problems.length) {
   console.error('\nFact check failed:\n');
   for (const p of problems) console.error('  ' + p);
