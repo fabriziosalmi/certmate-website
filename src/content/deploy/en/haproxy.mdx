@@ -79,8 +79,8 @@ last reload, or `-servername` matched a different file in the directory.
 
 ## 4. Get each renewal onto the HAProxy host
 
-CertMate renews a certificate when 30 days or fewer remain (the default
-threshold), on a nightly sweep. The new file then has to reach HAProxy, and a
+CertMate renews a certificate on a nightly sweep: 30 days before expiry by
+default, earlier in the life of a certificate that lives under 60 days. The new file then has to reach HAProxy, and a
 deploy hook cannot do that by itself: a hook runs inside the CertMate
 container, which has `sh`, `bash`, `curl` and `openssl` and has no `haproxy`,
 `systemctl`, `ssh` or `scp`. A hook that runs `systemctl reload haproxy` exits
