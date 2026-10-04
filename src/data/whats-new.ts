@@ -39,6 +39,179 @@ export interface UpdateCard {
 
 export const updates: UpdateCard[] = [
   {
+    badge: 'feature',
+    badgeLabel: 'v2.48.0',
+    icon: 'fa6-solid:calendar-check',
+    title: 'v2.48.0 - when a certificate renews, which kind it is, and one form for every date',
+    description:
+      'One rule now decides when a certificate renews: CertMate makes the decision, certbot carries it out, and the API says when it will happen, as renews_at. A certificate can ask Let\'s Encrypt for a profile, tlsserver (45 days) or shortlived (160 hours), from the API or the dashboard. The profile is required at issuance and preferred at renewal, so a CA that withdraws a profile cannot leave a certificate to expire. Every date-time in an API answer is ISO 8601 UTC with a Z, which also fixes a dashboard that showed every time shifted by the viewer\'s UTC offset. Audit records made through the API or the dashboard say who acted instead of "system". The API reference is now compared, field by field, with the answers the routes give. API contract 2.42.',
+    date: 'October 2026',
+    released: '2026-10-03',
+    beforeUpgrading: [
+      'For a 90-day certificate with the default 30-day threshold, renewals happen when they did. A threshold above half a certificate\'s lifetime no longer counts for that certificate, and the CA\'s renewal window (ARI) can now postpone a renewal as well as bring it forward, never past the window\'s end.',
+      'Every renewal CertMate decides by time is run with --force-renewal, so certbot\'s own timing no longer takes part.',
+      'Date-times in API answers end in Z. If your code appended one itself, stop; on Python 3.9 and 3.10, replace it with +00:00 before fromisoformat(). A certificate\'s expiry_date keeps its old form and is deprecated: read expires_at.',
+      'A SIEM rule that keys on an actor of kind "system" will see far fewer records: records made through the API or the dashboard now carry the identity that acted.',
+    ],
+    href: releaseTag('v2.48.0'),
+  },
+  {
+    badge: 'feature',
+    badgeLabel: 'v2.47.0 - v2.47.1',
+    icon: 'fa6-solid:list-check',
+    title: 'v2.47.0-2.47.1 - Route 53 with an IAM role, a quieter inventory, and the API\'s answers under test',
+    description:
+      'A Route 53 account can authenticate with the identity of the machine CertMate runs on (environment, instance profile, task role or web-identity role, optionally assuming another role through STS) instead of stored keys, contributed by Quentin Bertrand. The inventory page hides the certificates a renewal replaced until you ask for them. The SMTP deployment probe no longer loses a mail server\'s greeting behind an outbound proxy. And every route of the API is now called on a real instance in CI and its answer compared with the contract version, which found six defects that no comparison of declarations could see; all are fixed. v2.47.1 changes no CertMate code: the image is rebuilt on the current Debian base, with 54 fewer Trivy findings and no new one, and a release now refuses to ship a base image that has fallen behind. API contract 2.39.',
+    date: 'October 2026',
+    released: '2026-10-02',
+    beforeUpgrading: [
+      'Some status codes change for existing conditions: deleting a DNS account that does not exist is 404, not 500; testing a deploy hook that ran is 200, not 404; renewing or revoking a client certificate that does not exist is 404, not 400. The release notes list every change.',
+      'CertMate no longer hands certbot an AWS_SESSION_TOKEN inherited from its own environment together with stored Route 53 keys. Use the iam_role mode or long-lived keys.',
+      'If you used PUT on the deprecated provider-less DNS account route, look for an account whose provider is null: it holds the credentials that were sent.',
+      'Six certificate history fields that were always null are deprecated and will be removed in 3.0.',
+    ],
+    href: releaseTag('v2.47.1'),
+  },
+  {
+    badge: 'milestone',
+    badgeLabel: 'v2.46.0',
+    icon: 'fa6-solid:layer-group',
+    title: 'v2.46.0 - certbot 5.8, and Azure DNS without a plugin',
+    description:
+      'The ACME stack moves from certbot 2.10.0 to 5.8.0, and cryptography from 46.0.7 to 50.0.2, which closes the four advisories that could not be fixed on the old stack. Existing certificates renew with nothing to do, and going back to v2.45.2 is possible: both directions were measured with real certbot against Let\'s Encrypt staging. Azure DNS challenges are answered by CertMate\'s own hook through the Azure SDK, with the same service principal and zone configuration, because the certbot-dns-azure plugin has no release for certbot 4 or later. On Python 3.13 and later the probe reports the chain a server sends, where it reported none. API contract 2.34.',
+    date: 'October 2026',
+    released: '2026-10-01',
+    beforeUpgrading: [
+      'certbot 5 needs Python 3.10 or later. If you install CertMate yourself, install from requirements.lock. Docker and Helm users have nothing to do.',
+      'The Azure hook was run against the real Azure SDK and through real certbot, not against a live Azure zone. If you issue through Azure DNS and anything looks wrong after upgrading, open an issue.',
+    ],
+    highlight: true,
+    href: releaseTag('v2.46.0'),
+  },
+  {
+    badge: 'feature',
+    badgeLabel: 'v2.45.0 - v2.45.2',
+    icon: 'fa6-solid:cloud-arrow-up',
+    title: 'v2.45.0-2.45.2 - webhook deploy targets, tags and notes, an Infisical backend that runs, and Azure DNS back',
+    description:
+      'A new deploy target hands a renewed certificate to an HTTPS endpoint you name, with a JSON payload you write. The private key is sent only if the payload names it and you confirm the destination host; the server is always verified, and loopback, link-local and cloud-metadata addresses are never a destination. Certificates get tags and a free-text note, which the dashboard filters and searches. The Infisical storage backend, which could not run in any earlier release, now does. v2.45.1 stops refusing API tokens generated the way the documentation says, which could keep the service from starting, and records a failed deploy batch as failed. v2.45.2 fixes Azure DNS, which from v2.26.1 to v2.45.1 could neither issue nor renew, and Deploy Now no longer runs the same deploy again when the maintenance window opens. API contract 2.34.',
+    date: 'October 2026',
+    released: '2026-10-01',
+    beforeUpgrading: [
+      'If you use Azure DNS and ran any release from v2.26.1 to v2.45.1, check the certificates closest to expiry first: their renewals failed.',
+      'The Kubernetes Secret target no longer follows redirects, and the Vault backend refuses a redirect to another host.',
+      'From v2.45.1 a token that repeats a long part of itself, such as a 16-character unit written twice, is refused, and a refused API_BEARER_TOKEN stops the service from starting. The release notes give a one-line check to run before upgrading.',
+    ],
+    href: releaseTag('v2.45.2'),
+  },
+  {
+    badge: 'feature',
+    badgeLabel: 'v2.44.0',
+    icon: 'fa6-solid:users-gear',
+    title: 'v2.44.0 - CA accounts you can manage, and the email the CA is told',
+    description:
+      'CA accounts get a real place in Settings: add, edit and delete them, choose a default for each CA and a global default, with secrets masked and kept when you edit an account without retyping them. Thanks to Quentin Bertrand for the feature this release is built around. The issuance form offers only the CAs and accounts that can issue. The email typed into a CA account is now the email the CA is given; before, certbot always received the global one. PyJWT is locked at 2.15.1 for GHSA-42vr-xj54-vc7v. API contract 2.32.',
+    date: 'September 2026',
+    released: '2026-09-30',
+    beforeUpgrading: [
+      'New certificates register with the selected CA account\'s email, and with the global email only when the account has none. An ACME account certbot already registered is not changed.',
+      'On the first start, unused flat copies of CA credentials kept beside an accounts block are removed from settings.json, after a backup. What CertMate uses does not change.',
+      'New CA account names are limited to letters, digits, dot, underscore and hyphen. Existing accounts keep their names.',
+    ],
+    href: releaseTag('v2.44.0'),
+  },
+  {
+    badge: 'feature',
+    badgeLabel: 'v2.43.0',
+    icon: 'fa6-solid:box-open',
+    title: 'v2.43.0 - install it where you already are',
+    description:
+      'A packaging release, with no change to the application code. CertMate can be installed with a production Docker Compose bundle, a systemd installer for Debian, Ubuntu and RHEL-family servers, a Podman Quadlet unit, a Portainer stack, cloud-init user data, Helm with Argo CD or Flux, and an Ansible role. Every path was run end to end on its real platform before it was documented. The image is also published to GHCR, and the Helm chart is listed on Artifact Hub. API contract 2.32.',
+    date: 'September 2026',
+    released: '2026-09-30',
+    beforeUpgrading: [
+      'If you installed on bare metal with the repository\'s systemd unit, replace it: it could not issue with file-based DNS providers such as Cloudflare. The new unit listens on 127.0.0.1:8000 by default; set CERTMATE_BIND to listen on every interface as before.',
+    ],
+    href: releaseTag('v2.43.0'),
+  },
+  {
+    badge: 'fix',
+    badgeLabel: 'v2.42.0',
+    icon: 'fa6-solid:rotate',
+    title: 'v2.42.0 - a renewal that uses today\'s settings',
+    description:
+      'A renewal now answers its challenge with the settings of today, not those of the day the certificate was issued: the DNS propagation wait, the HTTP-01 webroot and the custom-script hook paths. Also fixed: an HTTP-01 certificate with an alias that could never renew, a CSR-only certificate whose renewal was recorded as a new certificate, a certbot plugin check that an unrelated AWS profile could fail, and an audit chain that two processes starting together could fork. API contract 2.32.',
+    date: 'September 2026',
+    released: '2026-09-30',
+    beforeUpgrading: [
+      'Raising a provider\'s wait in Settings now reaches existing certificates from their next renewal, including the Akamai Edge DNS move from 90 to 180 seconds.',
+      'Moving a custom-script hook needs only its new path in Settings; reissuing is no longer necessary.',
+    ],
+    href: releaseTag('v2.42.0'),
+  },
+  {
+    badge: 'security',
+    badgeLabel: 'v2.41.0',
+    icon: 'fa6-solid:shield-halved',
+    title: 'v2.41.0 - setup that closes, tests that need the right role',
+    description:
+      'A security release. Reports sent to the project in private were re-verified against the current code: four were already fixed, and the rest are fixed here, together with a regression in the login redirect check that v2.36.0 introduced. The advisories are published on the repository\'s Security page, crediting their reporters. Setup mode now ends with the first admin and, until then, refuses what would outlive it; the connection tests for storage backends and CA providers require admin. Akamai Edge DNS waits 180 seconds by default, and the wait can be edited in Settings. API contract 2.32.',
+    date: 'September 2026',
+    released: '2026-09-29',
+    beforeUpgrading: [
+      'Creating the first admin also enables local login and closes setup mode. A script that calls POST /api/auth/config afterwards gets 401.',
+      'Until setup closes, deploy-hook changes, downloads and backup creation answer 409.',
+      'If an instance of yours was reachable while still in setup mode, look at its deploy hooks and API keys.',
+      'The Test connection buttons for storage backends and CA providers require admin; an operator gets 403.',
+    ],
+    href: releaseTag('v2.41.0'),
+  },
+  {
+    badge: 'feature',
+    badgeLabel: 'v2.40.0',
+    icon: 'fa6-solid:key',
+    title: 'v2.40.0 - what the settings say, and the certificate that lost its key',
+    description:
+      'Settings and actions that did less than they said: a renewal threshold above 30 days now renews when it says, Edit & Reissue keeps the deployment configuration and the CA account the certificate was issued under, dashboard actions no longer announce every event twice, a backup restored into another directory renews, and batch create uses the DNS account it names. A certificate with no private key anywhere, which is what restoring a share-safe backup leaves, now has a name, a place on the dashboard and one action, Reissue all, that repairs them at a measured pace. Also new, all contributed by Quentin Bertrand: Sectigo prevalidated authorizations, AWS IAM roles for the S3 and Secrets Manager storage backends, and extra volumes in the Helm chart. API contract 2.29.',
+    date: 'September 2026',
+    released: '2026-09-29',
+    beforeUpgrading: [
+      'If your renewal threshold is above 30 days, expect renewals to start earlier after the upgrade: at most early_renewals_per_sweep a night (default 10), and never for a certificate issued less than 7 days ago.',
+      'From v2.36.0 to v2.39.0, actions started from the dashboard published each event twice, so deploy hooks, webhooks and notifications ran twice.',
+    ],
+    href: releaseTag('v2.40.0'),
+  },
+  {
+    badge: 'fix',
+    badgeLabel: 'v2.39.0',
+    icon: 'fa6-solid:clock-rotate-left',
+    title: 'v2.39.0 - the renewal the CA asked for',
+    description:
+      'v2.36.0 taught the renewal sweep to ask the CA when to renew, through ACME Renewal Information (RFC 9773), and then handed the answer to certbot without forcing it, so a CA asking for an early replacement was answered "not yet due" until 30 days were left. A renewal the CA asks for is now forced through. The certificate panel shows the CA\'s renewal window and the instant CertMate will act, and the API returns the same as renewal_info. The whole path is checked against Let\'s Encrypt staging in every release. API contract 2.23.',
+    date: 'September 2026',
+    released: '2026-09-27',
+    beforeUpgrading: [
+      'If a CA announced an early replacement while you ran v2.36.0 to v2.38.0, those certificates were renewed on the ordinary threshold. Nothing needs doing: the next sweep asks again.',
+      'step-ca does not publish a renewal window yet; on a private step-ca the threshold decides alone.',
+    ],
+    href: releaseTag('v2.39.0'),
+  },
+  {
+    badge: 'fix',
+    badgeLabel: 'v2.38.0',
+    icon: 'fa6-solid:link-slash',
+    title: 'v2.38.0 - things that were true somewhere else',
+    description:
+      'Four changes of one shape: a true statement existed, and something else was doing the opposite. Renaming a notification webhook deleted its saved URL while the save answered 200; webhooks now carry an id, and that is what their secrets are matched by. The activity feed documented newest first and showed the oldest first; it now opens on the newest. The README stated the number of DNS providers three different ways, and Google\'s AI summary repeated the worst; it is written once now. And custom-script, the way to use a DNS provider that has no plugin, has a guide instead of an issue comment. API contract 2.22.',
+    date: 'September 2026',
+    released: '2026-09-27',
+    beforeUpgrading: [
+      'GET /api/activity and GET /api/web/audit-logs answer newest first. A script that assumes the oldest row comes first needs reversing.',
+      'Each webhook in GET /api/notifications/config has an id. Echo it back unchanged when you save.',
+    ],
+    href: releaseTag('v2.38.0'),
+  },
+  {
     badge: 'fix',
     badgeLabel: 'v2.37.0',
     icon: 'fa6-solid:magnifying-glass',
@@ -195,7 +368,7 @@ export const updates: UpdateCard[] = [
     icon: 'fa6-solid:key',
     title: 'v2.26.0 — the renewal path held to the standard of the issuance path, and two features',
     description:
-      'Read this first if you have ever shared a backup. Every archive CertMate made before this release with the default setting (`include_secrets=false`, which is every automatic backup) contains the private key of every certificate, although its manifest said `secrets_masked: true` and the interface called it share-safe; archives made by v2.22.0 or later also contain the private CA key and every client-certificate key. Encrypted `.zip.enc` archives are the exception. If you shared one believing it harmless, list what it holds (`unzip -l`) and treat every key you find as exposed. From this release a share-safe backup carries no key material, says so in its manifest, and the restore refuses to lay a key-less archive over an instance that already holds certificates; disaster recovery is a deliberate `include_secrets=true` archive with a passphrase. The rest of the release is a set of defects with one shape: the renewal, restore and logout paths had each been checked by analogy with the path beside them. Certificates from a private ACME CA could not renew (issuance passed the trust bundle, renewal never did); a corrupt metadata file was overwritten with an empty one; the settings lock protected a snapshot rather than the file, so concurrent writes were rolled back during a long issuance; the automatic restore installed masked archives as credentials; unchecking SSO on an SSO-only instance reopened setup mode; the four PEM files could be published half-new, half-old, and never repaired. All fixed, each with a test that failed before. Two features: generic webhooks gain a payload template with placeholders, a method, first-class authentication, a timeout and a preview; and the OIDC logout now reaches the identity provider. The 2026-08-18 audit confirmed 43 findings; this release closes 16, and the 27 that remain are listed with their verified severities in certmate#591.',
+      'Read this first if you have ever shared a backup. Every archive CertMate made before this release with the default setting (include_secrets=false, which is every automatic backup) contains the private key of every certificate, although its manifest said secrets_masked: true and the interface called it share-safe; archives made by v2.22.0 or later also contain the private CA key and every client-certificate key. Encrypted .zip.enc archives are the exception. If you shared one believing it harmless, list what it holds (unzip -l) and treat every key you find as exposed. From this release a share-safe backup carries no key material, says so in its manifest, and the restore refuses to lay a key-less archive over an instance that already holds certificates; disaster recovery is a deliberate include_secrets=true archive with a passphrase. The rest of the release is a set of defects with one shape: the renewal, restore and logout paths had each been checked by analogy with the path beside them. Certificates from a private ACME CA could not renew (issuance passed the trust bundle, renewal never did); a corrupt metadata file was overwritten with an empty one; the settings lock protected a snapshot rather than the file, so concurrent writes were rolled back during a long issuance; the automatic restore installed masked archives as credentials; unchecking SSO on an SSO-only instance reopened setup mode; the four PEM files could be published half-new, half-old, and never repaired. All fixed, each with a test that failed before. Two features: generic webhooks gain a payload template with placeholders, a method, first-class authentication, a timeout and a preview; and the OIDC logout now reaches the identity provider. The 2026-08-18 audit confirmed 43 findings; this release closes 16, and the 27 that remain are listed with their verified severities in certmate#591.',
     date: 'August 2026',
     released: '2026-08-21',
     highlight: true,
@@ -207,7 +380,7 @@ export const updates: UpdateCard[] = [
     icon: 'fa6-solid:download',
     title: 'v2.25.0–2.25.4 — certificates a host can pull, and a Helm chart',
     description:
-      'Deploying a certificate to another machine has usually meant the certificate manager reaching out to it, which means it holds credentials for every host it deploys to. Two users asked for the inverse from opposite directions, and it is now a supported path: `certmate cert download` fetches one file at a time, so a deploy script puts each file exactly where it belongs instead of unpacking an archive. Files are created with owner-only permissions at the moment of creation, never adjusted afterwards, so a private key is never briefly readable by other users on the machine. Paired with an API key scoped to a single domain, a target host holds one narrow credential for itself and pulls on a timer: no inbound access to the host, and no credentials for that host on the CertMate server. The certificate, chain and fullchain are readable by a viewer key; anything carrying key material requires operator. The download API also gained the legacy PKCS#1 key inline, so an automation that needs both the bundle and the traditional key makes one call instead of staging a key through a file on disk. v2.25.1 added a Helm chart, published to GHCR on every release, that encodes what CertMate is rather than emitting generic templates: it renders exactly one replica and refuses to render more, because the scheduler runs in the web process and a second replica would renew the same certificates twice against the same volume. Two patch releases followed. v2.25.3 is a security fix: CertMate moved to bcrypt several releases ago but never rewrote the hashes it already had, so an account created before that change kept a salted SHA-256 for ever \u2014 fast, and brute-forceable at GPU speed from a leaked settings.json. The hash is now re-derived on the next successful login, once, with nothing for an operator to do, and the write is a compare-and-set so an administrator resetting a password still wins. v2.25.2 fixed things that were never tested and therefore never worked: an image built with the advertised minimal requirements crash-looped on boot and had for months, four calls to Akamai EdgeDNS had no timeout inside the certbot hook, a dependency pin was not pinning anything because a plugin pulled a fork of the same package, and a quadratic blowup in the routine that redacts secrets from logs burned 21.6 seconds of CPU on 480 KB of hostile input \u2014 now 36 milliseconds. v2.25.4 repaired two certificate authorities that could not issue at all: the DigiCert endpoint CertMate used stopped existing in February, when DigiCert retired the legacy CertCentral ACME service, and the Google Trust Services staging endpoint served a certificate issued for another name, so no ACME client would complete the handshake. It also shipped the Infomaniak plugin, which had been advertised as supported since the provider was added and was never actually installed in any published image. Alongside those, the documented build recipe for the AWS and GCP dependency sets was moving certbot off the version the whole stack is pinned to, in a build that reported success, and the Python version the README told you to install could not install the project at all.',
+      'Deploying a certificate to another machine has usually meant the certificate manager reaching out to it, which means it holds credentials for every host it deploys to. Two users asked for the inverse from opposite directions, and it is now a supported path: certmate cert download fetches one file at a time, so a deploy script puts each file exactly where it belongs instead of unpacking an archive. Files are created with owner-only permissions at the moment of creation, never adjusted afterwards, so a private key is never briefly readable by other users on the machine. Paired with an API key scoped to a single domain, a target host holds one narrow credential for itself and pulls on a timer: no inbound access to the host, and no credentials for that host on the CertMate server. The certificate, chain and fullchain are readable by a viewer key; anything carrying key material requires operator. The download API also gained the legacy PKCS#1 key inline, so an automation that needs both the bundle and the traditional key makes one call instead of staging a key through a file on disk. v2.25.1 added a Helm chart, published to GHCR on every release, that encodes what CertMate is rather than emitting generic templates: it renders exactly one replica and refuses to render more, because the scheduler runs in the web process and a second replica would renew the same certificates twice against the same volume. Two patch releases followed. v2.25.3 is a security fix: CertMate moved to bcrypt several releases ago but never rewrote the hashes it already had, so an account created before that change kept a salted SHA-256 for ever \u2014 fast, and brute-forceable at GPU speed from a leaked settings.json. The hash is now re-derived on the next successful login, once, with nothing for an operator to do, and the write is a compare-and-set so an administrator resetting a password still wins. v2.25.2 fixed things that were never tested and therefore never worked: an image built with the advertised minimal requirements crash-looped on boot and had for months, four calls to Akamai EdgeDNS had no timeout inside the certbot hook, a dependency pin was not pinning anything because a plugin pulled a fork of the same package, and a quadratic blowup in the routine that redacts secrets from logs burned 21.6 seconds of CPU on 480 KB of hostile input \u2014 now 36 milliseconds. v2.25.4 repaired two certificate authorities that could not issue at all: the DigiCert endpoint CertMate used stopped existing in February, when DigiCert retired the legacy CertCentral ACME service, and the Google Trust Services staging endpoint served a certificate issued for another name, so no ACME client would complete the handshake. It also shipped the Infomaniak plugin, which had been advertised as supported since the provider was added and was never actually installed in any published image. Alongside those, the documented build recipe for the AWS and GCP dependency sets was moving certbot off the version the whole stack is pinned to, in a build that reported success, and the Python version the README told you to install could not install the project at all.',
     date: 'August 2026',
     released: '2026-08-11',
     highlight: true,
@@ -242,7 +415,7 @@ export const updates: UpdateCard[] = [
     icon: 'fa6-solid:box-archive',
     title: 'v2.23.0 — audit retention: archiving and pruning the tamper-evident chain, on the record',
     description:
-      'The last open half of the audit design: an operator can archive and remove an old prefix of the tamper-evident audit chain. Retention on a tamper-evident record is a policy question, not a disk one — you cannot make deletion impossible on a file the operator owns, but you can make it non-deniable. `python -m modules.core.audit_prune` removes a prefix that has already been exported and independently verified; without --yes it is a dry run, and it refuses more than it accepts (the archive must verify, be signed by this instance, start exactly where the chain starts, and agree with it hash-for-hash, and it will not empty the chain). The deletion is recorded in the chain that survives it — an archive entry naming the sequence range, the entry count, the head hash and the archive\'s SHA-256 — and the remainder verifies from a signed anchor, so a chain that was merely truncated cannot be passed off as a pruned one. Deliberately CLI-only, with CertMate stopped: an authenticated endpoint that deletes audit history is exactly what someone who has just compromised an administrator account would want.',
+      'The last open half of the audit design: an operator can archive and remove an old prefix of the tamper-evident audit chain. Retention on a tamper-evident record is a policy question, not a disk one — you cannot make deletion impossible on a file the operator owns, but you can make it non-deniable. python -m modules.core.audit_prune removes a prefix that has already been exported and independently verified; without --yes it is a dry run, and it refuses more than it accepts (the archive must verify, be signed by this instance, start exactly where the chain starts, and agree with it hash-for-hash, and it will not empty the chain). The deletion is recorded in the chain that survives it — an archive entry naming the sequence range, the entry count, the head hash and the archive\'s SHA-256 — and the remainder verifies from a signed anchor, so a chain that was merely truncated cannot be passed off as a pruned one. Deliberately CLI-only, with CertMate stopped: an authenticated endpoint that deletes audit history is exactly what someone who has just compromised an administrator account would want.',
     date: 'July 2026',
     released: '2026-07-22',
     href: releaseTag('v2.23.0'),
@@ -439,7 +612,7 @@ export const updates: UpdateCard[] = [
     icon: 'fa6-solid:file-shield',
     title: 'v2.8.0 — certificate formats, SSO user management & faster listing',
     description:
-      'Encrypted Windows .pfx (PKCS#12) export written on every issuance/renewal with a stable fingerprint for polling; PKCS#1/SEC1 private-key download for legacy stacks (`?key_format=pkcs1`); `CERTMATE_CHAIN_PATH` (intermediates only) exposed to deploy hooks. SSO user-management hardening: IdP-linked accounts are badged, can\'t take a local password, and the sole remaining admin can no longer be deleted or disabled. Certificate listing replaces the per-row openssl subprocess with in-process parsing plus a cached info read, and routine backups now skip certbot scratch while keeping renewal lineage.',
+      'Encrypted Windows .pfx (PKCS#12) export written on every issuance/renewal with a stable fingerprint for polling; PKCS#1/SEC1 private-key download for legacy stacks (?key_format=pkcs1); CERTMATE_CHAIN_PATH (intermediates only) exposed to deploy hooks. SSO user-management hardening: IdP-linked accounts are badged, can\'t take a local password, and the sole remaining admin can no longer be deleted or disabled. Certificate listing replaces the per-row openssl subprocess with in-process parsing plus a cached info read, and routine backups now skip certbot scratch while keeping renewal lineage.',
     date: 'May 2026',
     released: '2026-05-21',
     highlight: true,
@@ -451,7 +624,7 @@ export const updates: UpdateCard[] = [
     icon: 'fa6-solid:id-badge',
     title: 'v2.7.0 — OIDC / SSO authentication',
     description:
-      'Authorization Code + PKCE via Authlib, IdP-claim-based role mapping (case-insensitive, first-match-wins), JIT or link-by-email provisioning with mandatory `email_verified` gate against account-takeover via self-service-signup IdPs. Dedicated audit-logged settings endpoint kept separate from the bulk settings POST so a scoped key cannot mutate OIDC config. Concurrency-safe JIT path routed through the settings RLock.',
+      'Authorization Code + PKCE via Authlib, IdP-claim-based role mapping (case-insensitive, first-match-wins), JIT or link-by-email provisioning with mandatory email_verified gate against account-takeover via self-service-signup IdPs. Dedicated audit-logged settings endpoint kept separate from the bulk settings POST so a scoped key cannot mutate OIDC config. Concurrency-safe JIT path routed through the settings RLock.',
     date: 'May 2026',
     released: '2026-05-21',
     highlight: true,
@@ -463,7 +636,7 @@ export const updates: UpdateCard[] = [
     icon: 'fa6-solid:shield-halved',
     title: 'Internal security audit — 11 findings closed in one day',
     description:
-      'Four-angle audit on authz/scope coverage, secrets handling, path traversal completeness and shell injection. Closed: backup ZIP plaintext credentials (mask-by-default + admin opt-in for full DR, chmod 0600), settings-mutating routes that destroyed credentials on round-trip POST, path traversal at the WRITE boundary on `/api/certificates/create`, client-cert API role + private-key gating, certbot stderr leak on credential-file parse errors, acme-dns shared-secret masking, settings GET cross-tenant domain disclosure. ~115 regression tests added.',
+      'Four-angle audit on authz/scope coverage, secrets handling, path traversal completeness and shell injection. Closed: backup ZIP plaintext credentials (mask-by-default + admin opt-in for full DR, chmod 0600), settings-mutating routes that destroyed credentials on round-trip POST, path traversal at the WRITE boundary on /api/certificates/create, client-cert API role + private-key gating, certbot stderr leak on credential-file parse errors, acme-dns shared-secret masking, settings GET cross-tenant domain disclosure. ~115 regression tests added.',
     date: 'May 2026',
     highlight: true,
     href: 'https://github.com/fabriziosalmi/certmate/pulls?q=is%3Apr+is%3Amerged+label%3Aaudit',
@@ -474,7 +647,7 @@ export const updates: UpdateCard[] = [
     icon: 'fa6-solid:network-wired',
     title: 'v2.6.x — Azure Key Vault + nested-subdomain wildcards + storage hot-reload',
     description:
-      'Native Azure Key Vault Certificate-object storage mode (AKS / App Service / Front Door consume it directly). Wildcard cert issuance for nested subdomains against the parent hosted zone, with per-provider zone discovery (Azure today, registry-keyed for future providers). Storage backend hot-reloads when `certificate_storage` changes — no restart required. Configurable cert key shape (RSA 2048/3072/4096 or ECDSA P-256/P-384).',
+      'Native Azure Key Vault Certificate-object storage mode (AKS / App Service / Front Door consume it directly). Wildcard cert issuance for nested subdomains against the parent hosted zone, with per-provider zone discovery (Azure today, registry-keyed for future providers). Storage backend hot-reloads when certificate_storage changes — no restart required. Configurable cert key shape (RSA 2048/3072/4096 or ECDSA P-256/P-384).',
     date: 'May 2026',
     href: 'https://github.com/fabriziosalmi/certmate/releases',
   },
@@ -484,7 +657,7 @@ export const updates: UpdateCard[] = [
     icon: 'fa6-solid:wrench',
     title: 'v2.6.9 — Azure DNS sp_* keys + zoneN mapping',
     description:
-      '`certbot-dns-azure` 2.x expects `dns_azure_sp_client_id` / `dns_azure_sp_client_secret` and parses subscription + resource group out of `dns_azure_zoneN` lines. The previous bare-key format was silently ignored by the plugin and aborted with "No authentication methods have been configured for Azure DNS" before any DNS challenge could run.',
+      'certbot-dns-azure 2.x expects dns_azure_sp_client_id / dns_azure_sp_client_secret and parses subscription + resource group out of dns_azure_zoneN lines. The previous bare-key format was silently ignored by the plugin and aborted with "No authentication methods have been configured for Azure DNS" before any DNS challenge could run.',
     date: 'May 2026',
     released: '2026-05-18',
     href: 'https://github.com/fabriziosalmi/certmate/releases/tag/v2.6.9',
