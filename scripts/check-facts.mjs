@@ -217,6 +217,18 @@ const PLAIN_TEXT_PROSE = ['src/data/whats-new.ts'];
 for (const relativePath of PLAIN_TEXT_PROSE) {
   const text = readFileSync(join(ROOT, relativePath), 'utf8');
   text.split('\n').forEach((line, index) => {
+    // Backticks are the same defect as the asterisks: the changelog showed 32
+    // of them, in eight cards, before this was checked. Comment lines are
+    // TypeScript, not prose, and keep theirs.
+    const trimmed = line.trim();
+    const isComment = trimmed.startsWith('*') || trimmed.startsWith('/*') || trimmed.startsWith('//');
+    if (!isComment && line.includes('`')) {
+      problems.push(
+        `${relativePath}:${index + 1}  a backtick in a field rendered as plain ` +
+          `text. UpdateRow.astro prints it with {u.description}, so the reader ` +
+          `sees the backtick. Write the name without it.`
+      );
+    }
     if (/\*\*[^*]+\*\*/.test(line)) {
       problems.push(
         `${relativePath}:${index + 1}  markdown emphasis in a field rendered as ` +

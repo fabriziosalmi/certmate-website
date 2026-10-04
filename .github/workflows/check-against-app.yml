@@ -6,14 +6,20 @@
 # whether the site agrees with itself, and nothing asked whether it agreed with
 # the app.
 #
-# Weekly and separate from deploy on purpose: GitHub being unreachable must
-# never stop the site shipping, and an upstream release lands on its own
-# schedule rather than on ours. A finding here is news.
+# Separate from deploy on purpose: GitHub being unreachable must never stop the
+# site shipping, and an upstream release lands on its own schedule rather than
+# on ours. A finding here is news, and news has to reach someone: each job
+# turns its result into an issue (scripts/report-drift.sh). Until it did, this
+# workflow reported the site eleven releases behind, correctly, as red runs
+# that nobody read.
+#
+# Daily, because the application releases most days: a weekly check let a
+# release go unannounced on the site for up to a week even when it was read.
 name: Check against the app
 
 on:
   schedule:
-    - cron: '17 7 * * 1'
+    - cron: '17 7 * * *'
   workflow_dispatch:
 
 permissions: read-all
@@ -21,12 +27,34 @@ permissions: read-all
 jobs:
   facts:
     runs-on: ubuntu-latest
+    # A job-level block replaces read-all for this job, so contents: read is
+    # restated for the checkout.
+    permissions:
+      contents: read
+      issues: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v4
         with:
           node-version: '20'
-      - run: node scripts/check-against-app.mjs
+      - id: check
+        shell: bash
+        env:
+          # For api.github.com only: anonymous calls from a shared runner
+          # were answered 403, and the version went unchecked.
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/check-against-app.mjs 2>&1 | tee "$RUNNER_TEMP/facts.txt"
+      - name: Report it where someone reads it
+        if: always() && steps.check.outcome != 'skipped'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OUTCOME: ${{ steps.check.outcome }}
+        run: >-
+          bash scripts/report-drift.sh
+          "The site's facts have drifted from the app"
+          "$RUNNER_TEMP/facts.txt"
+          "checked the site against the app"
+          "$OUTCOME"
 
   # The documentation pages the site renders from the application's own
   # Markdown. Same schedule and the same reason: a copy that drifts is the
@@ -35,9 +63,25 @@ jobs:
   # about the facts and a finding about the pages are told apart.
   docs:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v4
         with:
           node-version: '20'
-      - run: node scripts/check-docs-sync.mjs
+      - id: check
+        shell: bash
+        run: node scripts/check-docs-sync.mjs 2>&1 | tee "$RUNNER_TEMP/docs.txt"
+      - name: Report it where someone reads it
+        if: always() && steps.check.outcome != 'skipped'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OUTCOME: ${{ steps.check.outcome }}
+        run: >-
+          bash scripts/report-drift.sh
+          "A synced documentation page has drifted from the app"
+          "$RUNNER_TEMP/docs.txt"
+          "synced page(s) against the application"
+          "$OUTCOME"

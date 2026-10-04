@@ -13,11 +13,18 @@
  * directions. It fails when the application moved on AND when somebody edited
  * the copy, because those look the same from here and are both wrong.
  *
- * Like check-against-app.mjs, it needs the network, runs weekly rather than on
+ * Like check-against-app.mjs, it needs the network, runs daily rather than on
  * every build, and is deliberately not part of the deploy gate: GitHub being
- * unreachable must never stop the site shipping. Drift is normally impossible
- * anyway — the copy arrives by pull request from the application's own CI —
- * and this is the backstop for the hand edit that bypasses it.
+ * unreachable must never stop the site shipping.
+ *
+ * This comment used to say that drift was normally impossible because the
+ * copy "arrives by pull request from the application's own CI". Nothing in
+ * the application opens such a pull request, and nothing ever did: the copy is
+ * made by hand, so this check is the only thing that notices when the
+ * application's page moves. It noticed custom-dns-script.md still saying
+ * "Verified against certbot 2.10.0" after the application moved to 5.8.0, and
+ * its result now becomes an issue (scripts/report-drift.sh) instead of a red
+ * run that nobody reads.
  *
  *   node scripts/check-docs-sync.mjs
  */
