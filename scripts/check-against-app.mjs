@@ -42,10 +42,19 @@ function fromSiteTs(name) {
   return match[1].trim();
 }
 
+// The releases API allows an anonymous caller 60 requests an hour per IP, and
+// a GitHub-hosted runner shares its IP with everyone else's jobs: run in CI,
+// the version check was answered 403 and the script printed "no drift". The
+// workflow passes its token, which has a limit of its own. Only the API gets
+// it; raw.githubusercontent.com serves the public files without one.
+const API_TOKEN = process.env.GITHUB_TOKEN;
+
 async function fetchText(url) {
-  const response = await fetch(url, {
-    headers: { 'user-agent': 'certmate-website-fact-check' },
-  });
+  const headers = { 'user-agent': 'certmate-website-fact-check' };
+  if (API_TOKEN && url.startsWith('https://api.github.com/')) {
+    headers.authorization = `Bearer ${API_TOKEN}`;
+  }
+  const response = await fetch(url, { headers });
   if (!response.ok) {
     throw new Error(`${url} returned HTTP ${response.status}`);
   }
@@ -112,9 +121,11 @@ try {
     findings.push(`VERSION is ${shown}; the latest published release is ${latest}.`);
   }
 } catch (error) {
-  // The releases API is rate-limited for anonymous callers. A version we
-  // cannot read is not a version we know to be wrong.
-  console.log(`note: could not read the latest release (${error.message})`);
+  // This used to be a note followed by "no drift": a version we cannot read
+  // is not a version we know to be wrong. It is not one we know to be right
+  // either, and on a shared runner the anonymous API answered 403 often
+  // enough that the check was silent through releases. Say it was not checked.
+  findings.push(`the version was not checked: could not read the latest release (${error.message}).`);
 }
 
 console.log(`checked the site against the app (${appProviders.length} providers, ${appBackends.length} storage backends upstream)`);

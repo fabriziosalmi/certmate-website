@@ -39,6 +39,10 @@ jobs:
           node-version: '20'
       - id: check
         shell: bash
+        env:
+          # For api.github.com only: anonymous calls from a shared runner
+          # were answered 403, and the version went unchecked.
+          GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/check-against-app.mjs 2>&1 | tee "$RUNNER_TEMP/facts.txt"
       - name: Report it where someone reads it
         if: always() && steps.check.outcome != 'skipped'
