@@ -20,7 +20,8 @@ const entries = (await getCollection('deploy'))
     Emissione e consegna sono due passaggi distinti. CertMate ottiene il
     certificato dalla CA via ACME, di norma dimostrando il controllo del dominio
     con una challenge DNS-01 tramite l'API del tuo provider DNS (ne supporta
-    {PROVIDER_COUNT}), e lo rinnova 30 giorni prima della scadenza. Portare i
+    {PROVIDER_COUNT}), e lo rinnova prima della scadenza: 30 giorni prima di norma,
+    prima ancora per un certificato che vive meno di 60 giorni. Portare i
     file sulla macchina o sul cluster che li usa si fa poi in uno di tre modi.
   </p>
   <ul>

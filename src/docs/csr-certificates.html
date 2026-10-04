@@ -156,7 +156,7 @@
                 <li><code>private_key_state</code>: <code>external</code>. The other values are <code>present</code>, <code>missing</code>, <code>mismatched</code> and <code>unknown</code>.</li>
                 <li><code>private_key_present</code>: <code>false</code>.</li>
                 <li><code>usable</code>: <code>null</code>, not <code>false</code>. The certificate can be used on the device that holds the key, and CertMate cannot answer for a key it does not have.</li>
-                <li><code>needs_renewal</code>: driven by expiry only. <code>missing</code> and <code>mismatched</code> force <code>needs_renewal</code>; <code>external</code> does not, so a CSR-only certificate is not reissued on every renewal sweep.</li>
+                <li><code>needs_renewal</code>: true from the certificate's <code>renews_at</code>. <code>missing</code> and <code>mismatched</code> force <code>needs_renewal</code>; <code>external</code> does not, so a CSR-only certificate is not reissued on every renewal sweep.</li>
             </ul>
             <p>If a <code>privkey.pem</code> does turn up beside a CSR-only certificate, it is compared with the certificate like any other key rather than reported as <code>external</code>.</p>
 

@@ -80,8 +80,8 @@ reload, oppure `-servername` ha selezionato un altro file della directory.
 
 ## 4. Porta ogni rinnovo sull'host HAProxy
 
-CertMate rinnova un certificato quando mancano 30 giorni o meno alla scadenza
-(la soglia predefinita), con un controllo notturno. Il nuovo file deve poi
+CertMate rinnova un certificato con un controllo notturno: 30 giorni prima
+della scadenza di norma, prima per un certificato che vive meno di 60 giorni. Il nuovo file deve poi
 arrivare a HAProxy, e un deploy hook da solo non può farlo: un hook gira dentro
 il container di CertMate, che ha `sh`, `bash`, `curl` e `openssl` e non ha
 `haproxy`, `systemctl`, `ssh` né `scp`. Un hook che esegue

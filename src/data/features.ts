@@ -20,7 +20,7 @@ export const features: Feature[] = [
     icon: 'fa6-solid:arrows-rotate',
     title: 'Zero-Downtime Automation',
     body:
-      'Certificates renew automatically 30 days before expiry with intelligent scheduling.',
+      'Certificates renew automatically: 30 days before expiry by default, earlier for those that live under 60 days, and when the CA asks.',
   },
   {
     icon: 'fa6-solid:cloud',
