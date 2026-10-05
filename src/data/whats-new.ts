@@ -40,20 +40,27 @@ export interface UpdateCard {
 export const updates: UpdateCard[] = [
   {
     badge: 'feature',
-    badgeLabel: 'v2.48.0',
+    badgeLabel: 'v2.48.0 - v2.48.3',
     icon: 'fa6-solid:calendar-check',
-    title: 'v2.48.0 - when a certificate renews, which kind it is, and one form for every date',
+    title: 'v2.48.0-2.48.3 - when a certificate renews, which kind it is, one form for every date, and what a restricted API key can reach',
     description:
-      'One rule now decides when a certificate renews: CertMate makes the decision, certbot carries it out, and the API says when it will happen, as renews_at. A certificate can ask Let\'s Encrypt for a profile, tlsserver (45 days) or shortlived (160 hours), from the API or the dashboard. The profile is required at issuance and preferred at renewal, so a CA that withdraws a profile cannot leave a certificate to expire. Every date-time in an API answer is ISO 8601 UTC with a Z, which also fixes a dashboard that showed every time shifted by the viewer\'s UTC offset. Audit records made through the API or the dashboard say who acted instead of "system". The API reference is now compared, field by field, with the answers the routes give. API contract 2.42.',
+      'One rule now decides when a certificate renews: CertMate makes the decision, certbot carries it out, and the API says when it will happen, as renews_at. A certificate can ask Let\'s Encrypt for a profile, tlsserver (45 days) or shortlived (160 hours), from the API or the dashboard. The profile is required at issuance and preferred at renewal, so a CA that withdraws a profile cannot leave a certificate to expire. Every date-time in an API answer is ISO 8601 UTC with a Z, which also fixes a dashboard that showed every time shifted by the viewer\'s UTC offset. Audit records made through the API or the dashboard say who acted instead of "system". The API reference is now compared, field by field, with the answers the routes give. v2.48.1 makes a DNS alias on Akamai Edge DNS issue at all, keeps each record of the plain log format on one line, and gives the reason for a failed health check only to a caller with credentials. v2.48.2 applies the allowed_domains of an API key to every name an existing certificate covers, lets one DNS-01 validation at a time run on a challenge record, and installs the image\'s dependencies by hash. v2.48.3 is about the same keys: one restricted to domains no longer reaches client certificates, backups or the inventory configuration, gets only the series about its own domains from /metrics, and an admin key that was restricted acts as an operator. A request is refused for who sent it before it is answered about its body, the Sectigo prevalidated challenge is offered when Sectigo is the default CA (contributed by Quentin Bertrand), and the create panel is out of reach of the keyboard while it is closed. API contract 2.42 in v2.48.0, 2.43 from v2.48.3.',
     date: 'October 2026',
-    released: '2026-10-03',
+    released: '2026-10-05',
     beforeUpgrading: [
       'For a 90-day certificate with the default 30-day threshold, renewals happen when they did. A threshold above half a certificate\'s lifetime no longer counts for that certificate, and the CA\'s renewal window (ARI) can now postpone a renewal as well as bring it forward, never past the window\'s end.',
       'Every renewal CertMate decides by time is run with --force-renewal, so certbot\'s own timing no longer takes part.',
       'Date-times in API answers end in Z. If your code appended one itself, stop; on Python 3.9 and 3.10, replace it with +00:00 before fromisoformat(). A certificate\'s expiry_date keeps its old form and is deprecated: read expires_at.',
       'A SIEM rule that keys on an actor of kind "system" will see far fewer records: records made through the API or the dashboard now carry the identity that acted.',
+      'From v2.48.1, /health and /health/ready still say that a check failed, and give the reason only to a request with credentials. A monitor that wants the reason sends its token.',
+      'From v2.48.2, an API key with allowed_domains acts on an existing certificate only when its scope covers every name the certificate covers. Otherwise it gets 403 DOMAIN_OUT_OF_SCOPE and the certificate is no longer in its list.',
+      'From v2.48.2, two certificates that validate at the same DNS-01 record, such as a wildcard and its apex issued separately, do not run together: the second gets 409 DOMAIN_OPERATION_IN_PROGRESS. Issue them one after the other, or retry.',
+      'From v2.48.2, requirements.lock carries a hash for every file. If you build on top of it, constrain your extras with requirements.constraints, not with -c requirements.lock.',
+      'From v2.48.3, a key with allowed_domains gets 403 on client certificates, backups and the inventory configuration, and only the series about its own domains from /metrics. The Grafana dashboard and the alert rules read the instance totals: scrape with a viewer key that has no allowed_domains.',
+      'From v2.48.3, an admin key stored with allowed_domains acts as an operator within its domains. Replace it with an operator key (restricted) or an admin key (unrestricted), whichever you meant.',
+      'From v2.48.3, a request with no credentials is answered 401, and one below the role a route needs 403, before its body is validated. Seven routes used to answer such a request 400 about the body.',
     ],
-    href: releaseTag('v2.48.0'),
+    href: releaseTag('v2.48.3'),
   },
   {
     badge: 'feature',
