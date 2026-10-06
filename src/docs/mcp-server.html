@@ -152,7 +152,7 @@ npm install</code></pre>
                 <li><code>operator</code> for an agent that creates, renews, reissues or downloads certificates.</li>
                 <li><code>admin</code> only if it must run deploy hooks, list DNS accounts, read diagnostics or delete certificates.</li>
             </ul>
-            <p>A viewer or operator key can be limited to specific domains with <code>allowed_domains</code>. A domain-scoped key cannot read, change or poll jobs for domains outside its scope. Admin keys cannot be domain-scoped: CertMate rejects the request with <code>Admin keys cannot be domain-scoped; use the operator role for scoped access</code>. A key can never be created with a higher role than the key or user creating it.</p>
+            <p>A viewer or operator key can be limited to specific domains with <code>allowed_domains</code>. A domain-scoped key cannot read, change or poll jobs for domains outside its scope. From v2.48.4 it is also refused what belongs to the whole instance: <code>certmate_get_settings</code> and <code>certmate_list_dns_providers</code> answer such a key with <code>403 DOMAIN_OUT_OF_SCOPE</code>. Admin keys cannot be domain-scoped: CertMate rejects the request with <code>Admin keys cannot be domain-scoped; use the operator role for scoped access</code>. A key can never be created with a higher role than the key or user creating it.</p>
 
             <h2>What an Agent Can and Cannot Change</h2>
             <ul>

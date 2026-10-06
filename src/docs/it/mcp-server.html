@@ -152,7 +152,7 @@ npm install</code></pre>
                 <li><code>operator</code> per un agente che crea, rinnova, riemette o scarica certificati.</li>
                 <li><code>admin</code> solo se deve eseguire deploy hook, elencare account DNS, leggere la diagnostica o eliminare certificati.</li>
             </ul>
-            <p>Una chiave viewer o operator può essere limitata a domini specifici con <code>allowed_domains</code>. Una chiave con ambito di domini non può leggere, modificare né interrogare i job di domini al di fuori del suo ambito. Le chiavi admin non possono avere un ambito di domini: CertMate rifiuta la richiesta con <code>Admin keys cannot be domain-scoped; use the operator role for scoped access</code>. Una chiave non può mai essere creata con un ruolo più alto di quello della chiave o dell'utente che la crea.</p>
+            <p>Una chiave viewer o operator può essere limitata a domini specifici con <code>allowed_domains</code>. Una chiave con ambito di domini non può leggere, modificare né interrogare i job di domini al di fuori del suo ambito. Dalla v2.48.4 le è rifiutato anche ciò che appartiene all'intera istanza: <code>certmate_get_settings</code> e <code>certmate_list_dns_providers</code> rispondono a una chiave così con <code>403 DOMAIN_OUT_OF_SCOPE</code>. Le chiavi admin non possono avere un ambito di domini: CertMate rifiuta la richiesta con <code>Admin keys cannot be domain-scoped; use the operator role for scoped access</code>. Una chiave non può mai essere creata con un ruolo più alto di quello della chiave o dell'utente che la crea.</p>
 
             <h2>Cosa un agente può e non può modificare</h2>
             <ul>
