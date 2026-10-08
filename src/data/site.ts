@@ -17,7 +17,7 @@
  */
 
 /** Latest published CertMate release. Bump on every release. */
-export const VERSION = '2.48.4';
+export const VERSION = '2.48.5';
 
 /** Provider cards rendered in DnsProviders.astro (keep in sync with that grid). */
 export const PROVIDER_COUNT = 29;
