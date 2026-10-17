@@ -40,19 +40,20 @@ export interface UpdateCard {
 export const updates: UpdateCard[] = [
   {
     badge: 'feature',
-    badgeLabel: 'v2.50.0 - v2.50.1',
+    badgeLabel: 'v2.50.0 - v2.50.2',
     icon: 'fa6-solid:list-check',
-    title: 'v2.50.0-2.50.1 - paginated certificate lists, a palette that finds any name a certificate covers, a client CA named by its deployment, and client certificates that renew with their own country',
+    title: 'v2.50.0-2.50.2 - paginated certificate lists, a palette that finds any name a certificate covers, a client CA named by its deployment, client certificates that renew with their own country, and an image without pip',
     description:
-      'The server and client certificate lists show 25, 50 or 100 rows a page, and the command palette finds a certificate by any of its names, not only the first. The inventory table sorts by its columns and lists every endpoint of a certificate on hover. A deployment can name its client CA, and the country and state of the client certificates it issues, from the environment, with the CERTMATE_CLIENT_CA_ and CERTMATE_CLIENT_CERT_DEFAULT_ variables. From v2.50.1 a client certificate renews with the country and state it was issued with; it used to take the default. Every translated documentation page outside the API reference now matches its English page, and a check keeps it so.',
+      'The server and client certificate lists show 25, 50 or 100 rows a page, and the command palette finds a certificate by any of its names, not only the first. The inventory table sorts by its columns and lists every endpoint of a certificate on hover. A deployment can name its client CA, and the country and state of the client certificates it issues, from the environment, with the CERTMATE_CLIENT_CA_ and CERTMATE_CLIENT_CERT_DEFAULT_ variables. From v2.50.1 a client certificate renews with the country and state it was issued with; it used to take the default. Every translated documentation page outside the API reference now matches its English page, and a check keeps it so. v2.50.2 removes pip from the Docker image, which takes 14 vulnerability findings out of it and leaves 2 of the 16 that had a fix; makes the plain log format redact secrets as the JSON one does; and rewrites most of the documentation from the code, with a README that is now a front page.',
     date: 'October 2026',
     released: '2026-10-17',
     beforeUpgrading: [
       'If you run CertMate with the Quick Start docker run command, mount /app/backups as well, for example with -v certmate_backups:/app/backups: a backup written there goes with the container when the container is removed.',
       'From v2.50.1, a client certificate renewed before the upgrade carries the default country and state, and keeps them at its next renewal. Issue a new certificate to give it back the country and state it should have.',
       'From v2.50.1 the API contract is 2.49: a client certificate record (create, renew, list, get) gains country and state.',
+      'From v2.50.2 the image has no pip, so docker exec certmate pip install no longer works. Add a DNS plugin or a storage SDK by building an image of your own, as the DNS providers and storage pages of the documentation describe.',
     ],
-    href: releaseTag('v2.50.1'),
+    href: releaseTag('v2.50.2'),
   },
   {
     badge: 'milestone',

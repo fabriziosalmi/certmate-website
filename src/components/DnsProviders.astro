@@ -3,7 +3,9 @@ import { Icon } from 'astro-icon/components';
 import { PROVIDER_COUNT } from '~/data/site';
 // Canonical provider list pulled from modules/core/utils.py
 // (_DNS_PROVIDER_CREDENTIALS) — every name on this grid corresponds to
-// a provider CertMate can issue against today. Listed in roughly the
+// a provider CertMate can be configured for today (docs/dns-providers.md in
+// the app says which need another image, and that Namecheap has no working
+// plugin). Listed in roughly the
 // order they ship in the codebase so a contributor reading the source
 // recognises the layout.
 //
@@ -51,7 +53,13 @@ const providers = [
     <div class="mx-auto max-w-2xl text-center">
       <h2 class="section-title">Supported DNS Providers</h2>
       <p class="section-description">
-        {PROVIDER_COUNT} DNS providers in the box today, plus multi-account support per provider for staging / production / multi-region isolation.
+        {PROVIDER_COUNT} DNS providers, each with as many accounts as you need. Most are in the default
+        image; a few need an extended or a derived one, and Namecheap has no working plugin, so its
+        domains go through ACME-DNS.
+        <a
+          class="underline"
+          href="https://github.com/fabriziosalmi/certmate/blob/main/docs/dns-providers.md#availability"
+        >Which ones</a>.
       </p>
     </div>
 
