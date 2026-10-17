@@ -40,13 +40,45 @@ export interface UpdateCard {
 export const updates: UpdateCard[] = [
   {
     badge: 'feature',
-    badgeLabel: 'v2.48.0 - v2.48.5',
+    badgeLabel: 'v2.50.0 - v2.50.1',
+    icon: 'fa6-solid:list-check',
+    title: 'v2.50.0-2.50.1 - paginated certificate lists, a palette that finds any name a certificate covers, a client CA named by its deployment, and client certificates that renew with their own country',
+    description:
+      'The server and client certificate lists show 25, 50 or 100 rows a page, and the command palette finds a certificate by any of its names, not only the first. The inventory table sorts by its columns and lists every endpoint of a certificate on hover. A deployment can name its client CA, and the country and state of the client certificates it issues, from the environment, with the CERTMATE_CLIENT_CA_ and CERTMATE_CLIENT_CERT_DEFAULT_ variables. From v2.50.1 a client certificate renews with the country and state it was issued with; it used to take the default. Every translated documentation page outside the API reference now matches its English page, and a check keeps it so.',
+    date: 'October 2026',
+    released: '2026-10-17',
+    beforeUpgrading: [
+      'If you run CertMate with the Quick Start docker run command, mount /app/backups as well, for example with -v certmate_backups:/app/backups: a backup written there goes with the container when the container is removed.',
+      'From v2.50.1, a client certificate renewed before the upgrade carries the default country and state, and keeps them at its next renewal. Issue a new certificate to give it back the country and state it should have.',
+      'From v2.50.1 the API contract is 2.49: a client certificate record (create, renew, list, get) gains country and state.',
+    ],
+    href: releaseTag('v2.50.1'),
+  },
+  {
+    badge: 'milestone',
+    badgeLabel: 'v2.49.0',
+    icon: 'fa6-solid:file-import',
+    title: 'v2.49.0 - certificates CertMate did not issue: imported with a CA for their next renewal, or external and replaced by their owner',
+    description:
+      'A certificate issued elsewhere can be imported without asking any CA: either with a CA configured here for its next renewal, or as an external certificate that no CA here renews. CertMate stores, deploys and watches an external certificate, and its owner replaces it by upload. A name belongs to one certificate: an external certificate and one CertMate renews cannot cover the same name. The API contract moves to 2.48.',
+    date: 'October 2026',
+    released: '2026-10-15',
+    beforeUpgrading: [
+      'A create or a reissue naming a CA other than Let\'s Encrypt that is not configured on this instance now answers 400 with the reason, and no job is queued. It used to be accepted and fail later.',
+      'The checks before issuance resolve the email the way issuance does: the CA account\'s email, then the global one.',
+    ],
+    highlight: true,
+    href: releaseTag('v2.49.0'),
+  },
+  {
+    badge: 'feature',
+    badgeLabel: 'v2.48.0 - v2.48.6',
     icon: 'fa6-solid:calendar-check',
-    title: 'v2.48.0-2.48.5 - when a certificate renews, which kind it is, one form for every date, what a restricted API key can reach, and scripts that run only with the page\'s nonce',
+    title: 'v2.48.0-2.48.6 - when a certificate renews, which kind it is, one form for every date, what a restricted API key can reach, and scripts that run only with the page\'s nonce',
     description:
       'One rule now decides when a certificate renews: CertMate makes the decision, certbot carries it out, and the API says when it will happen, as renews_at. A certificate can ask Let\'s Encrypt for a profile, tlsserver (45 days) or shortlived (160 hours), from the API or the dashboard. The profile is required at issuance and preferred at renewal, so a CA that withdraws a profile cannot leave a certificate to expire. Every date-time in an API answer is ISO 8601 UTC with a Z, which also fixes a dashboard that showed every time shifted by the viewer\'s UTC offset. Audit records made through the API or the dashboard say who acted instead of "system". The API reference is now compared, field by field, with the answers the routes give. v2.48.1 makes a DNS alias on Akamai Edge DNS issue at all, keeps each record of the plain log format on one line, and gives the reason for a failed health check only to a caller with credentials. v2.48.2 applies the allowed_domains of an API key to every name an existing certificate covers, lets one DNS-01 validation at a time run on a challenge record, and installs the image\'s dependencies by hash. v2.48.3 is about the same keys: one restricted to domains no longer reaches client certificates, backups or the inventory configuration, gets only the series about its own domains from /metrics, and an admin key that was restricted acts as an operator. A request is refused for who sent it before it is answered about its body, the Sectigo prevalidated challenge is offered when Sectigo is the default CA (contributed by Quentin Bertrand), and the create panel is out of reach of the keyboard while it is closed. v2.48.4 takes eval and inline script out of the Content-Security-Policy: script-src is the page itself and a nonce made for each response. A key restricted to domains is also refused the settings, the DNS provider accounts and the storage configuration, and the inventory gives it a certificate only when its scope covers every name of it. The certificate dialog and the loading indicator no longer disappear when they are reopened at once. v2.48.5 lets a second recipient be typed into the SMTP To Addresses field, where the comma and the space used to vanish as they were typed, and makes the methods that turn a certificate name into a path or a key ask about the name themselves, as the rest of the application already did. API contract 2.42 in v2.48.0, 2.43 from v2.48.3, 2.44 from v2.48.4.',
     date: 'October 2026',
-    released: '2026-10-08',
+    released: '2026-10-14',
     beforeUpgrading: [
       'For a 90-day certificate with the default 30-day threshold, renewals happen when they did. A threshold above half a certificate\'s lifetime no longer counts for that certificate, and the CA\'s renewal window (ARI) can now postpone a renewal as well as bring it forward, never past the window\'s end.',
       'Every renewal CertMate decides by time is run with --force-renewal, so certbot\'s own timing no longer takes part.',
@@ -62,7 +94,7 @@ export const updates: UpdateCard[] = [
       'From v2.48.4, a key with allowed_domains gets 403 on GET /api/settings, GET /api/settings/dns-providers and GET /api/storage/info. The inventory lists a certificate for it only when its scope covers every name of it, and the cache statistics count its own entries.',
       'From v2.48.4, the pages send script-src \'self\' with a nonce made for each response. A proxy that injects a script into the pages has to give it that nonce or serve it as a file. A changed copy of the templates needs nonce="{{ csp_nonce }}" on its inline scripts, and an onclick attribute no longer runs.',
     ],
-    href: releaseTag('v2.48.5'),
+    href: releaseTag('v2.48.6'),
   },
   {
     badge: 'feature',
