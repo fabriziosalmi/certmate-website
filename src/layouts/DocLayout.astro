@@ -6,6 +6,7 @@ import Navbar from '~/components/Navbar.astro';
 import { SITE, DEFAULT_LOCALE, localizedPath, alternatesFor, ui, type Locale } from '~/i18n';
 import Media from '~/components/Media.astro';
 import { mediaJsonLd, type MediaItem } from '~/lib/media';
+import { TOOLS, toolUrl, type ToolSlug } from '~/data/tools';
 
 interface Crumb {
   label: string;
@@ -25,9 +26,13 @@ interface Props {
   breadcrumbs?: Crumb[];
   /** True only where the page describes CertMate itself; see BaseLayout. */
   product?: boolean;
+  /** Tools at tools.certmate.org that check what the page is about. */
+  tools?: ToolSlug[];
 }
 
-const { lang, path, title, headTitle, description, breadcrumbs = [], media = [], product = false } = Astro.props;
+const {
+  lang, path, title, headTitle, description, breadcrumbs = [], media = [], product = false, tools = [],
+} = Astro.props;
 const t = ui[lang];
 const canonical = SITE + localizedPath(lang, path);
 const alternates = alternatesFor(path);
@@ -109,6 +114,26 @@ const crumbLd = {
       <slot />
       <Media items={media} />
     </article>
+
+    {tools.length > 0 && (
+      <aside class="not-prose mt-12 rounded-xl border border-gray-200 p-6 dark:border-gray-700">
+        <h2 class="mb-1 text-lg font-semibold text-gray-900 dark:text-white">{t.toolsCta}</h2>
+        <p class="mb-4 text-sm text-gray-600 dark:text-gray-300">{t.toolsBody}</p>
+        <ul class="flex flex-wrap gap-3">
+          {tools.map((slug) => (
+            <li>
+              <a
+                href={toolUrl(lang, slug)}
+                class="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold
+                  text-gray-700 hover:border-primary hover:text-primary dark:border-gray-600 dark:text-gray-200"
+              >
+                {TOOLS[slug][lang]}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </aside>
+    )}
 
     <aside class="not-prose mt-12 rounded-xl border border-primary-100 bg-primary-50 p-6 dark:border-primary-900/40 dark:bg-primary-900/10">
       <h2 class="mb-1 text-lg font-semibold text-gray-900 dark:text-white">{t.automateCta}</h2>

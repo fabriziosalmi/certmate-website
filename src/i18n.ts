@@ -85,6 +85,9 @@ export const ui = {
     // English error pages sat at positions 3 to 7 with a click-through rate
     // near 1% (Search Console, 2026-09-02 to 2026-10-14).
     errorTitleTail: ': how to fix it',
+    toolsCta: 'Check it in your browser',
+    toolsBody:
+      'Paste the certificate, the chain or the key: these free tools run on your machine and upload nothing.',
   },
   it: {
     locale: 'it',
@@ -120,5 +123,9 @@ export const ui = {
     // The code alone is the same string in both languages, so an Italian
     // result whose <title> was only the code carried no Italian word.
     errorTitleTail: ': come risolverlo',
+    toolsCta: 'Controllalo nel browser',
+    toolsBody:
+      'Incolla il certificato, la catena o la chiave: ' +
+      'questi strumenti gratuiti girano sulla tua macchina e non caricano nulla.',
   },
 } as const;
