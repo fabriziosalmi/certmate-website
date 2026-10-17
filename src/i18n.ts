@@ -80,6 +80,11 @@ export const ui = {
     // string in every language; this is the part that says, in the reader's
     // language, what the page will do for them.
     errorHeadingTail: ': what it means and how to fix it',
+    // The <title> says what the page does for the searcher, after the exact
+    // code they typed. It was the code alone until 2026-10-17: with it, the
+    // English error pages sat at positions 3 to 7 with a click-through rate
+    // near 1% (Search Console, 2026-09-02 to 2026-10-14).
+    errorTitleTail: ': how to fix it',
   },
   it: {
     locale: 'it',
@@ -112,9 +117,8 @@ export const ui = {
     // the rest is in English.
     docsHref: '/it/#documentazione',
     errorHeadingTail: ': cosa significa e come risolverlo',
-    // Only the Italian pages extend the <title>. The code alone is the same
-    // string in both languages, so the Italian result carried no Italian
-    // word; the English one already matches what an English searcher types.
+    // The code alone is the same string in both languages, so an Italian
+    // result whose <title> was only the code carried no Italian word.
     errorTitleTail: ': come risolverlo',
   },
 } as const;
