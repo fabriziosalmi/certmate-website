@@ -40,6 +40,21 @@ export interface UpdateCard {
 export const updates: UpdateCard[] = [
   {
     badge: 'feature',
+    badgeLabel: 'v2.51.0',
+    icon: 'fa6-solid:stopwatch',
+    title: 'v2.51.0 - a setup wizard that says what credential to create and which DNS providers this instance can use, and a Cloudflare wait of 20 seconds instead of 60',
+    description:
+      'The setup wizard says, for each DNS provider, what credential to create, from the plugin\'s own documentation or the CertMate documentation, and links to its guide. It asks the instance which providers it can issue with and dims the others, saying why: no working plugin, the extended build, or a derived image. The same answer is in the API, at GET /api/dns/providers. Cloudflare waits 20 seconds for its record instead of 60: on Let\'s Encrypt staging a 10-second wait never failed in 13 issuances, and the old wait was 60 of the 98 seconds a fresh install took to its first certificate. A create refused for a missing email now says where to set the email, instead of pointing at DNS.',
+    date: 'October 2026',
+    released: '2026-10-18',
+    beforeUpgrading: [
+      'New Cloudflare certificates wait 20 seconds for the challenge record. A 60 stored by 2.50.2 or earlier becomes 20; any other value stays. If your zone propagates more slowly, raise the Cloudflare propagation wait in Settings > DNS. Certificates issued before keep the wait stored with them until they are issued again.',
+      'The API contract is 2.50: GET /api/dns/providers is new.',
+    ],
+    href: releaseTag('v2.51.0'),
+  },
+  {
+    badge: 'feature',
     badgeLabel: 'v2.50.0 - v2.50.2',
     icon: 'fa6-solid:list-check',
     title: 'v2.50.0-2.50.2 - paginated certificate lists, a palette that finds any name a certificate covers, a client CA named by its deployment, client certificates that renew with their own country, and an image without pip',
