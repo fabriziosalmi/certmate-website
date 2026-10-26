@@ -47,7 +47,7 @@ const {
   // `node scripts/build-og.mjs` from this page's <title> after the build,
   // and scripts/check-seo.mjs fails if the file a page asks for is missing.
   title = 'CertMate - SSL Certificate Management System',
-  description = `Self-hosted TLS certificate management with a tamper-evident, verifiable audit trail. ${PROVIDER_COUNT} DNS providers, OIDC/SSO, REST API + CLI. MIT licensed. v${VERSION}.`,
+  description = `The self-hosted control plane for your TLS certificates, ready for 47-day certificates: issue, renew, discover, deploy. ${PROVIDER_COUNT} DNS providers, MIT. v${VERSION}.`,
   canonical = 'https://www.certmate.org/',
   ogImage = ogImageFor(Astro.url.pathname),
 } = Astro.props;
@@ -75,7 +75,7 @@ const ldJson = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
   name: 'CertMate',
-  description: `CertMate issues and renews TLS certificates across ${PROVIDER_COUNT} DNS providers and records every action in a tamper-evident, independently verifiable audit trail. Self-hosted and MIT-licensed, with OIDC/SSO, a REST API and a terminal CLI.`,
+  description: `CertMate issues and renews TLS certificates across ${PROVIDER_COUNT} DNS providers, finds the ones you did not issue, keeps one inventory of what is served where, and deploys each renewed certificate where it is served, with every action in a tamper-evident audit trail. Self-hosted and MIT-licensed, with a web interface, a REST API, a CLI and an MCP server.`,
   url: 'https://www.certmate.org/',
   applicationCategory: 'DeveloperApplication',
   operatingSystem: 'Linux, Windows, macOS',

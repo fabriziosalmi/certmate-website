@@ -17,6 +17,12 @@ export interface Feature {
 
 export const features: Feature[] = [
   {
+    icon: 'fa6-solid:hourglass-half',
+    title: 'Ready for 47-Day Certificates',
+    body:
+      "Each certificate says when it renews, and the CA can move that date through ARI. Ask Let's Encrypt for its 45-day or 160-hour profile today, and for a certificate for a public IPv4 address, which it issues only in the 160-hour one.",
+  },
+  {
     icon: 'fa6-solid:arrows-rotate',
     title: 'Zero-Downtime Automation',
     body:
@@ -62,6 +68,18 @@ export const features: Feature[] = [
     title: 'Multiple CA Support',
     body:
       "Let's Encrypt and ZeroSSL (free), Google Trust Services, DigiCert, SSL.com and Sectigo (ACME with EAB), Actalis (EU CA), any ACME-compatible private CA you run, such as step-ca, and a built-in CA for client certificates. A request for a CA that is not configured is refused, never issued by another CA.",
+  },
+  {
+    icon: 'fa6-solid:server',
+    title: 'ACME Server',
+    body:
+      "Be the ACME CA for your internal names and IPv4 addresses: certbot, lego, acme.sh and cert-manager get 45-day certificates from a root of CertMate's own, over http-01, dns-01 or tls-alpn-01, with renewal suggested through ARI. EAB keys say which names and networks each client may order. Off by default.",
+  },
+  {
+    icon: 'fa6-solid:clone',
+    title: 'Two Certificates for One Domain',
+    body:
+      'A public certificate and one from your private CA for the same domain, each under a name of its own. Every action takes the name, and deploy hooks are told where each one is served.',
   },
   {
     icon: 'fa6-solid:gears',
