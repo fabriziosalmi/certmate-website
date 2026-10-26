@@ -40,6 +40,63 @@ export interface UpdateCard {
 export const updates: UpdateCard[] = [
   {
     badge: 'feature',
+    badgeLabel: 'v2.55.0',
+    icon: 'fa6-solid:clock',
+    title: 'v2.55.0 - CertMate starts again after the night the clocks go back, and one domain can hold two certificates',
+    description:
+      'An instance in a time zone that repeats 02:00 to 03:00 when the clocks go back, such as Europe/Rome or Europe/Zagreb, stopped on 25 October 2026 and would not start again: the renewal check\'s next run never left that hour, an APScheduler bug, and the scheduler read the stored job before replacing it. The renewal checks are scheduled in UTC now, and an affected instance starts again on upgrade with its data as it is. A certificate can be named apart from its domain, so one domain can hold two, a public one and one from a private CA: Name in the create form\'s advanced options, name in the API, --name in the CLI, name= in the SDK and name in the MCP server. It is issued for its domain, its host, and every later action takes the name. Every certificate answer, event, deploy hook and webhook target says where the certificate is served, and a key restricted to domains is judged on a certificate\'s name too. Discovery decides by fingerprint whether a served certificate is one CertMate issued, and an IP certificate is looked for at its address. certmate-sdk and certmate-cli 0.1.6 are on PyPI and Homebrew.',
+    date: 'October 2026',
+    released: '2026-10-26',
+    beforeUpgrading: [
+      'The renewal checks run in UTC: server certificates between 02:00 and 03:00 UTC, client certificates between 03:00 and 04:00 UTC, whatever the instance\'s time zone. The other daily jobs keep it.',
+      'A backup that holds a certificate named apart from its domain must not be restored into an older version.',
+      'The API contract is 2.61: host in every certificate answer (2.59), in events, deploy hooks and webhook targets (2.60), and name on create (2.61).',
+    ],
+    href: releaseTag('v2.55.0'),
+  },
+  {
+    badge: 'feature',
+    badgeLabel: 'v2.53.0 - v2.54.0',
+    icon: 'fa6-solid:network-wired',
+    title: 'v2.53.0-2.54.0 - certificates for IPv4 addresses, and an ACME server that certifies addresses and checks tls-alpn-01',
+    description:
+      'Let\'s Encrypt issues a certificate for a public IPv4 address: type the address in the create form\'s domain field, or send it as domain to the API. It is issued over HTTP-01 in the 160-hour shortlived profile, so port 80 of that address must reach CertMate, and it is renewed like any other. The ACME server certifies IPv4 addresses for internal hosts reached by address, with EAB keys that take addresses and networks, and proves names and addresses over tls-alpn-01 as well as http-01 and dns-01, for a client that can answer only on port 443. lego and acme.sh prove both in the interoperability job. Also in these releases: an ACME order that gives an address as a DNS name is refused, the renewal sweep reports a re-registration only when it was saved, and filelock, setuptools and the MCP server\'s lockfile were updated for published advisories.',
+    date: 'October 2026',
+    released: '2026-10-24',
+    beforeUpgrading: [
+      'The API contract is 2.58: an IPv4 address on POST /api/certificates/create and ip_address in the answers (2.57), and addresses and networks in the ACME server\'s allowed_identifiers (2.58).',
+    ],
+    href: releaseTag('v2.54.0'),
+  },
+  {
+    badge: 'security',
+    badgeLabel: 'v2.52.0 - v2.52.1',
+    icon: 'fa6-solid:shield-halved',
+    title: 'v2.52.0-2.52.1 - a trust store without compromised roots, storage credentials kept out of settings.json, the MCP server on npm, and the ACME server announced',
+    description:
+      'Upgrade for the first: CertMate\'s outbound TLS, ACME to the certificate authority included, trusted a certifi that shipped emSign roots whose intermediate keys were compromised (GHSA-6q48-6c7w-9gw2, critical). certifi moves to 2026.10.19, which removes them. The credential a storage backend needs can be a secret reference, <field>_file or <field>_env, instead of a literal in settings.json. npx certmate-mcp-server runs the MCP server with no checkout, and a new client certificate takes the deployment\'s organisation and unit. v2.52.1 announces the ACME server, in the image since v2.51.1 and off by default: certbot, lego, acme.sh and cert-manager get certificates for internal names from a root of CertMate\'s own, each client held to its names by an EAB key, with 45-day certificates and renewal suggested through ARI. It also updates opentelemetry-api (GHSA-xcq7-p3pf-p88h), authlib, SQLAlchemy and boto3.',
+    date: 'October 2026',
+    released: '2026-10-23',
+    href: releaseTag('v2.52.1'),
+  },
+  {
+    badge: 'security',
+    badgeLabel: 'v2.51.1 - v2.51.2',
+    icon: 'fa6-solid:lock',
+    title: 'v2.51.1-2.51.2 - a security release for an instance not yet set up and for read-only keys, and a pass over the web interface',
+    description:
+      'From a security review of the ACME server work. While an instance has no first admin and no API_BEARER_TOKEN, it now accepts only the first admin: before, an anonymous caller could restore a backup, migrate storage to a place it named, or have a secret sent to a server it named. Every documented install sets API_BEARER_TOKEN and is never in that state. A viewer no longer sees the dns_providers.multi token or the acme-dns credentials in the settings, a certificate directory inside /static/ is refused, a password reset ends the account\'s other sessions, and the rate limiters are thread-safe. v2.51.2 is a pass over the web interface: controls that did nothing or the wrong thing, a creation drawer and an inventory within reach, a CA dialog that no longer fights the settings form, DNS credentials refilled for every provider, and a first-run screen that stands alone.',
+    date: 'October 2026',
+    released: '2026-10-19',
+    beforeUpgrading: [
+      'Restoring or uploading a backup is refused while an instance has no first admin and no API_BEARER_TOKEN: create the first admin, sign in, then restore.',
+      'If you handed out read-only keys, rotate the dns_providers.multi credential and the acme-dns username and subdomain: a viewer could read them before.',
+      'The API contract is 2.56: a client certificate\'s record gains subject_alt_names.',
+    ],
+    href: releaseTag('v2.51.2'),
+  },
+  {
+    badge: 'feature',
     badgeLabel: 'v2.51.0',
     icon: 'fa6-solid:stopwatch',
     title: 'v2.51.0 - a setup wizard that says what credential to create and which DNS providers this instance can use, and a Cloudflare wait of 20 seconds instead of 60',
