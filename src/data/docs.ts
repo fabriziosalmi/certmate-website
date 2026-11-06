@@ -221,6 +221,20 @@ export const DOC_PAGES: DocPage[] = [
     description:
       'Configure CertMate notifications: email, Slack, Discord, Telegram, ntfy, Gotify and generic webhooks, event filters, expiry warnings, weekly digest.',
   },
+  {
+    slug: 'acme-server',
+    title: 'ACME Server - CertMate Documentation',
+    description:
+      'Use CertMate as the ACME CA for internal names and IPv4 addresses: ' +
+      'certbot, lego, acme.sh and cert-manager enroll with EAB keys that limit what they order.',
+    hero: {
+      heading: 'ACME Server',
+      subtitle:
+        'Issue certificates for internal names and IPv4 addresses to certbot, lego, acme.sh and cert-manager, ' +
+        'from a root of CertMate\'s own.',
+      icon: 'fas fa-server',
+    },
+  },
 ];
 
 /**
@@ -438,6 +452,12 @@ export const DOC_CARDS: Record<string, DocCard> = {
     icon: 'fa6-solid:code',
     tone: 'dns-providers',
   },
+  'acme-server': {
+    name: 'ACME Server',
+    blurb: 'Be the ACME CA for internal names and addresses, with an EAB key per client',
+    icon: 'fa6-solid:server',
+    tone: 'security',
+  },
   'notifications': {
     name: 'Notifications',
     blurb: 'Email, Slack, Discord, Telegram, ntfy, Gotify and webhook alerts; weekly digest',
@@ -466,6 +486,7 @@ export const DOC_GROUPS: { title: string; slugs: string[] }[] = [
       'dns-01-delegation',
       'custom-dns-script',
       'ca-providers',
+      'acme-server',
     ],
   },
   {

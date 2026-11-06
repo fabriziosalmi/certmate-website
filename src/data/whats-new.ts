@@ -40,19 +40,21 @@ export interface UpdateCard {
 export const updates: UpdateCard[] = [
   {
     badge: 'feature',
-    badgeLabel: 'v2.55.0',
+    badgeLabel: 'v2.55.0 - v2.55.2',
     icon: 'fa6-solid:clock',
-    title: 'v2.55.0 - CertMate starts again after the night the clocks go back, and one domain can hold two certificates',
+    title: 'v2.55.0-2.55.2 - CertMate starts again after the night the clocks go back, one domain can hold two certificates, and four fixes to what CertMate writes when something goes wrong halfway',
     description:
-      'An instance in a time zone that repeats 02:00 to 03:00 when the clocks go back, such as Europe/Rome or Europe/Zagreb, stopped on 25 October 2026 and would not start again: the renewal check\'s next run never left that hour, an APScheduler bug, and the scheduler read the stored job before replacing it. The renewal checks are scheduled in UTC now, and an affected instance starts again on upgrade with its data as it is. A certificate can be named apart from its domain, so one domain can hold two, a public one and one from a private CA: Name in the create form\'s advanced options, name in the API, --name in the CLI, name= in the SDK and name in the MCP server. It is issued for its domain, its host, and every later action takes the name. Every certificate answer, event, deploy hook and webhook target says where the certificate is served, and a key restricted to domains is judged on a certificate\'s name too. Discovery decides by fingerprint whether a served certificate is one CertMate issued, and an IP certificate is looked for at its address. certmate-sdk and certmate-cli 0.1.6 are on PyPI and Homebrew.',
-    date: 'October 2026',
-    released: '2026-10-26',
+      'An instance in a time zone that repeats 02:00 to 03:00 when the clocks go back, such as Europe/Rome or Europe/Zagreb, stopped on 25 October 2026 and would not start again: the renewal check\'s next run never left that hour, an APScheduler bug, and the scheduler read the stored job before replacing it. The renewal checks are scheduled in UTC now, and an affected instance starts again on upgrade with its data as it is. A certificate can be named apart from its domain, so one domain can hold two, a public one and one from a private CA: Name in the create form\'s advanced options, name in the API, --name in the CLI, name= in the SDK and name in the MCP server. It is issued for its domain, its host, and every later action takes the name. Every certificate answer, event, deploy hook and webhook target says where the certificate is served, and a key restricted to domains is judged on a certificate\'s name too. Discovery decides by fingerprint whether a served certificate is one CertMate issued, and an IP certificate is looked for at its address. certmate-sdk and certmate-cli 0.1.6 are on PyPI and Homebrew. v2.55.1 updates libbrotli1, pyasn1 and joserfc in the image, keeps the email given when a local user is created, and records the CA of a certificate that never had one. v2.55.2 keeps the EAB key of a CA account out of the log, stops a restore after 2 GiB in all, replaces a client certificate\'s record whole or not at all, and keeps the audit chain whole after a crash.',
+    date: 'November 2026',
+    released: '2026-11-06',
     beforeUpgrading: [
       'The renewal checks run in UTC: server certificates between 02:00 and 03:00 UTC, client certificates between 03:00 and 04:00 UTC, whatever the instance\'s time zone. The other daily jobs keep it.',
       'A backup that holds a certificate named apart from its domain must not be restored into an older version.',
       'The API contract is 2.61: host in every certificate answer (2.59), in events, deploy hooks and webhook targets (2.60), and name on create (2.61).',
+      'From v2.55.2 one restore writes at most 2 GiB in all; set CERTMATE_RESTORE_MAX_BYTES to restore a larger backup.',
+      'From v2.55.2 LETSENCRYPT_EMAIL and CLOUDFLARE_TOKEN are no longer saved to settings.json. If you set one, saved from the interface, and later unset it, the value saved through the interface comes back.',
     ],
-    href: releaseTag('v2.55.0'),
+    href: releaseTag('v2.55.2'),
   },
   {
     badge: 'feature',
