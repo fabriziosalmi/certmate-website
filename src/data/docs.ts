@@ -225,11 +225,13 @@ export const DOC_PAGES: DocPage[] = [
     slug: 'acme-server',
     title: 'ACME Server - CertMate Documentation',
     description:
-      'Use CertMate as the ACME CA for internal names and IPv4 addresses: certbot, lego, acme.sh and cert-manager enroll with EAB keys that limit what they order.',
+      'Use CertMate as the ACME CA for internal names and IPv4 addresses: ' +
+      'certbot, lego, acme.sh and cert-manager enroll with EAB keys that limit what they order.',
     hero: {
       heading: 'ACME Server',
       subtitle:
-        'Issue certificates for internal names and IPv4 addresses to certbot, lego, acme.sh and cert-manager, from a root of CertMate\'s own.',
+        'Issue certificates for internal names and IPv4 addresses to certbot, lego, acme.sh and cert-manager, ' +
+        'from a root of CertMate\'s own.',
       icon: 'fas fa-server',
     },
   },
