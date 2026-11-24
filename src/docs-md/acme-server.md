@@ -141,8 +141,11 @@ Not supported: IPv6 addresses.
 
 ## The certificates
 
-- **Signed by the root directly.** The chain a client downloads is the leaf
-  alone. The root is in the trust stores, and a TLS server need not send it.
+- **Signed by the root directly.** The chain a client downloads is the leaf,
+  then the root. The root is in the trust stores, and a TLS server need not send
+  it; it is in the download because certbot refuses a chain of one certificate
+  (#1484). A server that serves the whole file sends it too, which is redundant
+  and allowed.
 - **Built from the order, not copied from the CSR.** They carry the order's
   names as DNS names and its addresses as IP addresses, a subject of the first
   name, server authentication as their only extended key usage, and the key
@@ -235,20 +238,20 @@ The settings page fills these in when it creates a key. With placeholders:
 certbot certonly --standalone \
   --server https://<host>/acme/directory \
   --eab-kid <kid> --eab-hmac-key <hmac> \
-  --email ops@example.internal --agree-tos \
+  --email <YOUR-EMAIL> --agree-tos \
   -d host.lab.internal
 ```
 
 ```bash
 lego run --server https://<host>/acme/directory \
   --eab --eab.kid <kid> --eab.hmac <hmac> \
-  --email ops@example.internal --accept-tos \
+  --email <YOUR-EMAIL> --accept-tos \
   --domains host.lab.internal --http
 ```
 
 ```bash
 acme.sh --register-account --server https://<host>/acme/directory \
-  --eab-kid <kid> --eab-hmac-key <hmac> -m ops@example.internal
+  --eab-kid <kid> --eab-hmac-key <hmac> -m <YOUR-EMAIL>
 acme.sh --issue --standalone --server https://<host>/acme/directory -d host.lab.internal
 ```
 
@@ -268,7 +271,7 @@ metadata:
 spec:
   acme:
     server: https://<host>/acme/directory
-    email: ops@example.internal
+    email: <YOUR-EMAIL>
     privateKeySecretRef:
       name: certmate-acme-account
     externalAccountBinding:
@@ -284,8 +287,11 @@ spec:
 
 The lego, acme.sh and cert-manager forms are the ones the interoperability
 runs used against this server, cert-manager there as an Issuer, which takes the
-same spec. certbot's ACME library runs in the test suite. Its command line uses
-the flags certbot documents and was not run end to end.
+same spec. certbot's command line runs end to end in the test suite
+(`tests/test_certbot_gets_a_certificate_from_the_acme_server.py`): certbot 5.8.0
+registers with EAB, answers http-01 with `--standalone` and writes the
+certificate, against this server over plain HTTP on loopback. The interoperability
+runs have not been repeated since the root was added to the download (#1484).
 
 For an address, lego and acme.sh take it where they take a name, and order it
 as an `ip` identifier: `--domains 10.20.0.5` and `-d 10.20.0.5`. The

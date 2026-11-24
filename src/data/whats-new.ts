@@ -40,6 +40,23 @@ export interface UpdateCard {
 export const updates: UpdateCard[] = [
   {
     badge: 'feature',
+    badgeLabel: 'v2.56.0 - v2.58.0',
+    icon: 'fa6-solid:key',
+    title: 'v2.56.0-2.58.0 - ECDSA client certificates and CA, certbot gets certificates from CertMate\'s ACME server, and a failed issuance says what to check',
+    description:
+      'A client certificate can have an ECDSA P-256 or P-384 key or a larger RSA key, and the client CA can be created with an ECDSA key, so a whole chain can be ECDSA P-384 as WPA3-Enterprise 192-bit mode requires; an existing CA is never converted. A new Post-quantum cryptography page says what CertMate does today: outbound TLS offers the hybrid X25519MLKEM768 key exchange, certificates stay RSA or ECDSA, and the crypto report no longer counts an unrecognised key algorithm as quantum-safe. How urgent a certificate looks now follows the rule that decides when it renews, the HashiCorp Vault backend works in the published image, and Test Connection reports a backend it cannot reach as a failure. v2.56.1 stops anything on screen moving while a page loads, makes every text readable in both themes, and never issues through a DNS account without credentials. v2.57.0 keeps a CA account\'s EAB key out of certbot\'s log, refuses to overwrite or delete a DNS account that certificates renew through, and sends the dashboard to the login page when the session ends. v2.58.0 lets certbot get a certificate from CertMate\'s ACME server, counts the certificates CertMate manages in the inventory, leads a failed issuance with a hint, lets the first-run wizard finish with HTTP-01, and asks before Settings loses unsaved changes or Force renew spends a CA rate limit.',
+    date: 'November 2026',
+    released: '2026-11-17',
+    beforeUpgrading: [
+      'If you use Infisical and storage fell back to the local disk, enter the Infisical client ID again: before v2.56.0, saving any setting erased it.',
+      'From v2.57.0 creating a DNS account under a name that already has credentials answers 409 DNS_ACCOUNT_EXISTS, and deleting one that certificates renew through answers 409 DNS_ACCOUNT_IN_USE.',
+      'From v2.58.0 a complete, encrypted backup from the settings page needs CERTMATE_BACKUP_PASSPHRASE; without it, the page says its backups hold the configuration without credentials or private keys.',
+      'The API contract is 2.68: 2.65 with v2.56.0, 2.66 with v2.57.0, and 2.68 with v2.58.0.',
+    ],
+    href: releaseTag('v2.58.0'),
+  },
+  {
+    badge: 'feature',
     badgeLabel: 'v2.55.0 - v2.55.2',
     icon: 'fa6-solid:clock',
     title: 'v2.55.0-2.55.2 - CertMate starts again after the night the clocks go back, one domain can hold two certificates, and four fixes to what CertMate writes when something goes wrong halfway',
