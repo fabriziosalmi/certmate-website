@@ -135,6 +135,18 @@ const ldJson = {
       />
     )}
 
+    <!-- Cookieless page-view counts from the publisher's own Umami instance,
+         described on /privacy/. /s.js is its public tracker path; data-domains
+         keeps previews and local dev out of the numbers. No SRI: the script
+         changes with every Umami upgrade. -->
+    <script
+      is:inline
+      defer
+      src="https://umami.edge99.net/s.js"
+      data-website-id="59fcc70c-b98f-4161-ab41-c22ac4d033a1"
+      data-domains="www.certmate.org"
+    ></script>
+
     <!-- Per-page <head> extras (extra structured data, etc.) -->
     <slot name="head" />
 

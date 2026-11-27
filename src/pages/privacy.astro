@@ -4,13 +4,13 @@ import Navbar from '~/components/Navbar.astro';
 import Footer from '~/components/Footer.astro';
 
 // Privacy & legal notice. certmate.org is a static marketing site: no
-// cookies, no analytics, no third-party embeds. Served by GitHub Pages
-// behind Cloudflare. The only device storage is the user's chosen
+// cookies, no third-party embeds, cookieless page-view counts from the
+// publisher's own Umami instance. Served by GitHub Pages behind Cloudflare. The only device storage is the user's chosen
 // light/dark theme (functional). Bilingual EN/IT — the Italian version is
 // the legally relevant one for an EU (Italian) controller.
 const title = 'Privacy & legal — CertMate';
 const description =
-  'How certmate.org handles data: no cookies, no analytics, no tracking. Data controller, processors (GitHub, Cloudflare) and your GDPR rights.';
+  'How certmate.org handles data: no cookies, visit counts on a self-hosted Umami. Controller, processors (GitHub, Cloudflare) and your GDPR rights.';
 // Trailing slash: /privacy 301s to /privacy/, and a canonical that points
 // at a redirect is a canonical search engines have to resolve for you.
 const canonical = 'https://www.certmate.org/privacy/';
@@ -32,7 +32,7 @@ const kicker =
           Privacy &amp; legal notice
         </h1>
         <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-          Last updated: 20 July 2026 · certmate.org
+          Last updated: 27 November 2026 · certmate.org
         </p>
 
         <p class={kicker}>English</p>
@@ -53,7 +53,21 @@ const kicker =
             deliver the page and protect it against abuse. Legal basis:
             legitimate interest (Art. 6(1)(f) GDPR). We do not store this data.
           </li>
-          <li><strong>No analytics</strong>, no tracking pixels, no advertising — first- or third-party.</li>
+          <li>
+            <strong>Page-view statistics</strong> with Umami, an open-source
+            tool, on an instance run by the publisher at
+            <code>umami.edge99.net</code>: no analytics company receives the
+            data. For each page view the script sends the page address
+            (including any query string, such as UTM tags), page title,
+            referring page, browser, operating system, device type, screen size
+            and browser language. From your IP address the server derives the
+            country, region and city, and a session identifier computed with a
+            one-way hash. <strong>The IP address itself is not stored.</strong>
+            The data is not combined with other sources and is used only to see
+            which pages are read and where readers come from. Legal basis:
+            legitimate interest (Art. 6(1)(f) GDPR).
+          </li>
+          <li><strong>No tracking pixels, no advertising.</strong></li>
           <li><strong>No accounts, no forms, no newsletter.</strong> We collect no identifying information from visitors.</li>
         </ul>
 
@@ -65,11 +79,18 @@ const kicker =
           because you asked for it, never used to track you. No cookie-consent
           banner is therefore required.
         </p>
+        <p class={p}>
+          The statistics script stores nothing on your device. It only reads
+          one <code>localStorage</code> key, <code>umami.disabled</code>: if it
+          is set, nothing is sent. To opt out in this browser, open the
+          developer console on this site and run
+          <code>localStorage.setItem('umami.disabled', '1')</code>.
+        </p>
 
         <h2 class={h2}>Processors &amp; international transfers</h2>
         <ul class={ul}>
           <li><strong>GitHub, Inc.</strong> (USA) — static hosting (GitHub Pages).</li>
-          <li><strong>Cloudflare, Inc.</strong> (USA) — CDN, HTTPS and edge security.</li>
+          <li><strong>Cloudflare, Inc.</strong> (USA) — CDN, HTTPS and edge security; it also forwards the statistics requests to the Umami instance, so it sees your IP address in transit.</li>
         </ul>
         <p class={p}>
           Serving the site transfers technical data (such as your IP) to the
@@ -80,9 +101,10 @@ const kicker =
 
         <h2 class={h2}>Retention</h2>
         <p class={p}>
-          We keep no personal data. Any technical logs held by the providers
-          above are transient and retained only as long as needed for delivery
-          and security.
+          Page-view statistics are kept on the Umami instance until deleted;
+          its database backups are kept for 14 days. Any technical logs held by
+          the providers above are transient and retained only as long as needed
+          for delivery and security.
         </p>
 
         <h2 class={h2}>Your rights</h2>
@@ -113,7 +135,24 @@ const kicker =
             per erogare la pagina e proteggerla da abusi. Base giuridica:
             legittimo interesse (art. 6(1)(f) GDPR). Non conserviamo questi dati.
           </li>
-          <li><strong>Nessuna analitica</strong>, nessun pixel di tracciamento, nessuna pubblicità.</li>
+          <li>
+            <strong>Statistiche delle visite</strong> con Umami, strumento
+            open-source, su un'istanza gestita dall'editore su
+            <code>umami.edge99.net</code>: nessuna società di analytics riceve i
+            dati. Per ogni pagina vista lo script invia indirizzo della pagina
+            (compresa l'eventuale query string, per esempio i parametri UTM),
+            titolo, pagina di provenienza, browser, sistema operativo, tipo di
+            dispositivo, dimensione dello schermo e lingua del browser.
+            Dall'indirizzo IP il server ricava paese, regione e città, e un
+            identificativo di sessione calcolato con un hash non reversibile.
+            <strong>L'indirizzo IP non viene conservato.</strong> I dati non sono
+            incrociati con altre fonti e servono solo a capire quali pagine
+            vengono lette e da dove arrivano i lettori. Base giuridica:
+            legittimo interesse (art. 6(1)(f) GDPR). Le statistiche restano
+            sull'istanza finché non vengono cancellate; i backup del database
+            sono conservati 14 giorni.
+          </li>
+          <li><strong>Nessun pixel di tracciamento, nessuna pubblicità.</strong></li>
           <li><strong>Nessun account, modulo o newsletter.</strong> Non raccogliamo informazioni identificative.</li>
         </ul>
 
@@ -125,11 +164,19 @@ const kicker =
           funzionale, impostata solo perché richiesta, mai usata per tracciarti.
           Non è quindi richiesto alcun banner di consenso.
         </p>
+        <p class={p}>
+          Lo script delle statistiche non salva nulla sul dispositivo: legge
+          solo la chiave <code>umami.disabled</code> in
+          <code>localStorage</code> e, se è presente, non invia nulla. Per
+          escluderti in questo browser, apri la console sviluppatore su questo
+          sito ed esegui
+          <code>localStorage.setItem('umami.disabled', '1')</code>.
+        </p>
 
         <h2 class={h2}>Responsabili e trasferimenti extra-UE</h2>
         <ul class={ul}>
           <li><strong>GitHub, Inc.</strong> (USA) — hosting statico (GitHub Pages).</li>
-          <li><strong>Cloudflare, Inc.</strong> (USA) — CDN, HTTPS e sicurezza edge.</li>
+          <li><strong>Cloudflare, Inc.</strong> (USA) — CDN, HTTPS e sicurezza edge; inoltra anche le richieste delle statistiche all'istanza Umami, quindi vede l'indirizzo IP in transito.</li>
         </ul>
         <p class={p}>
           L'erogazione del sito trasferisce dati tecnici (come l'IP) verso gli
