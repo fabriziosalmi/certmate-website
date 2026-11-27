@@ -109,6 +109,11 @@ export function inlineFontAwesome(html: string, source: string): string {
  * reader who chose dark on the home does not get a white flash here. A
  * storage error (private window, site data off) leaves the system preference.
  */
+// Same tracker tag as BaseLayout.astro: cookieless page-view counts from the
+// publisher's own Umami instance, described on /privacy/.
+export const ANALYTICS =
+  '<script defer src="https://umami.edge99.net/s.js" data-website-id="59fcc70c-b98f-4161-ab41-c22ac4d033a1" data-domains="www.certmate.org"></script>';
+
 export const THEME_INIT =
   "<script>(()=>{try{const s=localStorage.getItem('theme');" +
   "const d=s?s==='dark':matchMedia('(prefers-color-scheme: dark)').matches;" +
@@ -351,7 +356,7 @@ export function applyShell(
   let out = inlineFontAwesome(html, opts.source);
   out = swap(out, /<!-- SITE_HEADER:[^>]*-->/, renderHeader(opts), 'SITE_HEADER');
   out = swap(out, /<!-- SITE_FOOTER:[^>]*-->/, renderFooter(), 'SITE_FOOTER');
-  out = swap(out, /<\/head>/, `    ${THEME_INIT}\n</head>`, '</head>');
+  out = swap(out, /<\/head>/, `    ${THEME_INIT}\n    ${ANALYTICS}\n</head>`, '</head>');
   out = swap(out, /<\/body>/, `    <script src="/docs/shell.js" defer></script>\n</body>`, '</body>');
   out = addToc(out, opts.locale);
   const pager = renderPager(opts.locale, opts.prev, opts.next);
